@@ -12,6 +12,7 @@
 // The corner is [0, 0, 0]; the floor runs to 1 on both axes; the walls are 1 high.
 
 import type { Pt, Sketch } from "./sketch";
+import { look, shade, soften } from "./style";
 
 export type V3 = [number, number, number];
 export type IsoPopUp = { size: number; at: [number, number]; draw: (s: Sketch) => void; halo: number };
@@ -24,13 +25,6 @@ const BASE = 0.996;
 type Layout = { Sf: number; Xc: number; size: number };
 type Fill = string | null;
 type LineOpts = { w?: number; alpha?: number; rough?: number };
-
-/** Pen used for pop-up furniture: "sketchy" (loose, hand-drawn) or "clean" (steady). */
-export type Pen = "sketchy" | "clean";
-let PEN: Pen = "sketchy";
-export function setPen(p: Pen) {
-  PEN = p;
-}
 
 export const WHITE = "#ffffff";
 export const SIDE_A = "#f1f0f8"; // faces turned to the right
@@ -65,7 +59,7 @@ export class Iso {
 
   /** Clean lines for furniture: one steady pen stroke, no doubled edges. */
   private lo(o: LineOpts) {
-    if (PEN === "clean") return { mask: true, w: 2, rough: 0.35, overshoot: 0, ...o };
+    if (look.pen === "clean") return { mask: true, w: 2, rough: 0.35, overshoot: 0, ...o };
     // a lighter, looser hand: thinner line, more wobble, ends that run past the corners
     const s = this.s!;
     return { mask: true, rough: 1.15, overshoot: 0.05, ...o, w: (o.w ?? 2) * 0.82, alpha: (o.alpha ?? 1) * (0.72 + s.r() * 0.28) };
@@ -74,7 +68,7 @@ export class Iso {
   /** Nudge each vertex a touch so corners don't meet perfectly (sketchy pen only). */
   private jig(q: Pt[]): Pt[] {
     // curves (many points) keep their shape; only straight-edged outlines get loose corners
-    if (PEN === "clean" || !this.s || q.length > 8) return q;
+    if (look.pen === "clean" || !this.s || q.length > 8) return q;
     const s = this.s;
     const a = 0.0035;
     return q.map(([x, y]) => [x + (s.r() - 0.5) * 2 * a, y + (s.r() - 0.5) * 2 * a] as Pt);
@@ -104,13 +98,20 @@ export class Iso {
     const { closed, ...rest } = o;
     const j = this.jig(q);
     // sketchy: close the loop by hand, letting the end run past the start
-    if (closed && PEN === "sketchy") this.s.stroke([...j, j[0]], { ...this.lo(rest), closed: false });
+    if (closed && look.pen === "sketchy") this.s.stroke([...j, j[0]], { ...this.lo(rest), closed: false });
     else this.s.stroke(j, { ...this.lo(rest), closed });
   }
 
   /** Axis-aligned box: fills the three visible faces, then draws each edge once. */
-  box(x: number, y: number, z: number, dx: number, dy: number, dz: number, top: Fill = WHITE, o: LineOpts & { sideA?: Fill; sideB?: Fill } = {}) {
-    const { sideA = SIDE_A, sideB = SIDE_B, ...lo } = o;
+  box(x: number, y: number, z: number, dx: number, dy: number, dz: number, top: Fill = WHITE, o: LineOpts & { sideA?: Fill; sideB?: Fill; color?: string } = {}) {
+    const { color, ...rest } = o;
+    // coloured version: the colour on top, a little darker on the sides
+    if (color && look.color) {
+      top = soften(color);
+      rest.sideA = shade(top, 0.95);
+      rest.sideB = shade(top, 0.89);
+    }
+    const { sideA = SIDE_A, sideB = SIDE_B, ...lo } = rest;
     const X = x + dx;
     const Y = y + dy;
     const Z = z + dz;
@@ -135,8 +136,13 @@ export class Iso {
   }
 
   /** Upright cylinder (or a cone when r2 differs). */
-  cyl(cx: number, cy: number, z: number, r: number, h: number, fill: Fill = WHITE, o: LineOpts & { r2?: number; side?: Fill } = {}) {
-    const { r2 = r, side = SIDE_A, ...lo } = o;
+  cyl(cx: number, cy: number, z: number, r: number, h: number, fill: Fill = WHITE, o: LineOpts & { r2?: number; side?: Fill; color?: string } = {}) {
+    const { color, ...rest } = o;
+    if (color && look.color) {
+      fill = soften(color);
+      rest.side = shade(fill, 0.93);
+    }
+    const { r2 = r, side = SIDE_A, ...lo } = rest;
     // the visible half faces the camera: from -45° round through +45° to 135°
     const a0 = -Math.PI / 4;
     const a1 = (3 * Math.PI) / 4;

@@ -9,7 +9,7 @@ import { N, logicalOf, physicalOf } from "@/lib/fold";
 import { ROOMS } from "@/lib/rooms";
 import { book } from "@/lib/store";
 import { buildTextures, type BookTextures } from "@/lib/textures";
-import { setPen } from "@/lib/iso";
+import { look, type Pen } from "@/lib/style";
 
 const FONT = "Caveat";
 
@@ -19,8 +19,26 @@ export default function Experience() {
   const [open, setOpen] = useState(false);
   const drag = useRef({ x: 0, startX: 0, active: false });
 
-  // Draw every surface once the handwriting font is ready.
+  // Drawing style: loose or neat pen, ink-only or softly coloured. Remembered per browser;
+  // ?pen=clean / ?color=1 in the URL also work.
+  const [pen, setPen] = useState<Pen>("sketchy");
+  const [color, setColor] = useState(false);
+  const [fontReady, setFontReady] = useState(false);
+
   useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    let p: Pen = "sketchy";
+    let c = false;
+    try {
+      p = (localStorage.getItem("unfold.pen") as Pen) || p;
+      c = localStorage.getItem("unfold.color") === "1";
+    } catch {
+      /* storage can be unavailable */
+    }
+    if (q.get("pen") === "clean" || q.get("pen") === "sketchy") p = q.get("pen") as Pen;
+    if (q.has("color")) c = q.get("color") !== "0";
+    setPen(p);
+    setColor(c);
     let alive = true;
     (async () => {
       try {
@@ -28,14 +46,34 @@ export default function Experience() {
       } catch {
         /* fall back to whatever cursive font is around */
       }
-      // ?pen=clean switches the pop-up furniture back to the steady pen
-      setPen(new URLSearchParams(window.location.search).get("pen") === "clean" ? "clean" : "sketchy");
-      if (alive) setTex(buildTextures(`${FONT}, cursive`));
+      if (alive) setFontReady(true);
     })();
     return () => {
       alive = false;
     };
   }, []);
+
+  // (Re)draw every surface whenever the style changes.
+  useEffect(() => {
+    if (!fontReady) return;
+    look.pen = pen;
+    look.color = color;
+    try {
+      localStorage.setItem("unfold.pen", pen);
+      localStorage.setItem("unfold.color", color ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+    const next = buildTextures(`${FONT}, cursive`);
+    setTex((prev) => {
+      if (prev) {
+        for (const r of prev.rooms) [r.left, r.right, r.floor, ...r.popups].forEach((x) => x.dispose());
+        prev.front.dispose();
+        prev.back.dispose();
+      }
+      return next;
+    });
+  }, [fontReady, pen, color]);
 
   const goTo = useCallback((logical: number) => {
     const li = Math.max(0, Math.min(N - 1, logical));
@@ -97,6 +135,14 @@ export default function Experience() {
           <HandUnderline />
         </div>
         <div className="topright">
+          <div className="style-toggles" aria-label="Drawing style">
+            <button className={`chip ${pen === "sketchy" ? "on" : ""}`} onClick={() => setPen(pen === "sketchy" ? "clean" : "sketchy")}>
+              {pen === "sketchy" ? "loose pen" : "neat pen"}
+            </button>
+            <button className={`chip ${color ? "on" : ""}`} onClick={() => setColor(!color)}>
+              {color ? "a little colour" : "ink only"}
+            </button>
+          </div>
           <span className="counter">{open ? `room ${room + 1} of ${N}` : "closed"}</span>
           <button className="hand-btn" onClick={() => setBookOpen(!open)}>
             {open ? "close the book" : "open the book"}

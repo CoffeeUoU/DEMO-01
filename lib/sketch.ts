@@ -320,7 +320,7 @@ export class Sketch {
    * A paper cut-out stuck onto the surface: white shape with a small white margin and a
    * soft drop shadow (the shadow only shows once the room is coloured in).
    */
-  sticker(points: Pt[], halo = 7, shadow = 0.22) {
+  sticker(points: Pt[], halo = 7, shadow = 0.22, color = "#fff") {
     const c = this.wash;
     c.save();
     c.globalCompositeOperation = "source-over";
@@ -328,7 +328,6 @@ export class Sketch {
     c.shadowBlur = 14 * this.k;
     c.shadowOffsetX = 3 * this.k;
     c.shadowOffsetY = 6 * this.k;
-    c.fillStyle = "#fff";
     c.strokeStyle = "#fff";
     c.lineJoin = "round";
     c.lineWidth = halo * 2 * this.k;
@@ -340,6 +339,8 @@ export class Sketch {
     });
     c.closePath();
     c.stroke();
+    c.shadowColor = "transparent";
+    c.fillStyle = color;
     c.fill();
     c.restore();
   }

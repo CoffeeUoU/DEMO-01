@@ -73,6 +73,28 @@ body {
   gap: 18px;
 }
 
+.style-toggles {
+  display: flex;
+  gap: 8px;
+}
+
+.chip {
+  font-family: var(--hand);
+  font-size: 19px;
+  color: var(--ink);
+  background: transparent;
+  border: 1.4px dashed var(--ink-soft);
+  border-radius: 14px 255px 15px 225px / 225px 15px 255px 15px;
+  padding: 1px 12px 3px;
+  cursor: pointer;
+}
+
+.chip.on,
+.chip:hover {
+  border-style: solid;
+  border-color: var(--ink);
+}
+
 .counter {
   font-size: 22px;
   opacity: 0.7;
@@ -176,7 +198,29 @@ body {
   .wordmark {
     font-size: 32px;
   }
-  .counter {
+  .style-toggles {
+  display: flex;
+  gap: 8px;
+}
+
+.chip {
+  font-family: var(--hand);
+  font-size: 19px;
+  color: var(--ink);
+  background: transparent;
+  border: 1.4px dashed var(--ink-soft);
+  border-radius: 14px 255px 15px 225px / 225px 15px 255px 15px;
+  padding: 1px 12px 3px;
+  cursor: pointer;
+}
+
+.chip.on,
+.chip:hover {
+  border-style: solid;
+  border-color: var(--ink);
+}
+
+.counter {
     display: none;
   }
   .caption {
