@@ -56,15 +56,15 @@ Same paper cut-out style as the bedroom, after Dakshi's reference sketch; ink-on
 Same paper cut-out style; ink-only or soft colour.
 
 - **Left wall** — window with clouds and curtains on a rod, two floating shelves near the corner
-  (a leafy plant and books, two jars), tiled backsplash over the counter, a trailing plant and two
+  (a leafy plant and books, two jars), tiled backsplash, and the counter drawn flat on the wall
+  (three doors, a tea towel, sink rim, gooseneck tap, soap, kettle); a trailing plant and two
   taped notes (heart, checklist) near the front edge.
-- **Right wall** — framed picture, upper cabinet with a plant on top, range hood over the stove,
-  tiled backsplash.
+- **Right wall** — framed picture, range hood, upper cabinet with a plant on top, tiled
+  backsplash, and the counter drawn flat (door, oven, drawers, kettle, utensil jar, pot,
+  cutting board, fruit bowl).
 - **Floor** — boards and a scalloped rug, soft shadows.
 - **Pop-ups**
-  - L-shaped counter: sink with a gooseneck tap, soap, a tea towel over the front; kettle,
-    cutting board, fruit bowl, toaster and mug in the corner; oven with a hob and a pot; drawers
-    with a utensil crock; a tall fridge with notes and a plant on top
+  - a tall fridge with notes and a plant on top
   - round table with flowers in a vase, a fruit bowl and a mug; spindle-back chair and a stool
 - **Colour version** — butter-yellow walls, sage cabinets, pale blue fridge, coral curtains, kettle
   and rug, wooden floor and furniture.

@@ -1051,6 +1051,47 @@ function note(s: Sketch, x: number, y: number, w: number, h: number, rot: number
   }
 }
 
+
+/** A flat, front-on kitchen counter drawn on a wall: base cabinets + worktop. */
+function counterFront(s: Sketch, x0: number, x1: number, top = 0.62) {
+  const base = s.rectPts(x0, top + 0.035, x1 - x0, 1.02 - top - 0.035);
+  s.sticker(base, 4, 0.2, tint(KIT.cabinet));
+  s.stroke(
+    [
+      [x0, 1.01],
+      [x0, top + 0.035],
+      [x1, top + 0.035],
+      [x1, 1.01],
+    ],
+    { w: 2.4 },
+  );
+  const wt = s.rectPts(x0 - 0.01, top, x1 - x0 + 0.02, 0.035);
+  s.sticker(wt, 3, 0.18, tint(KIT.counter));
+  s.stroke(wt, { closed: true, w: 2.4 });
+  s.line(x0, 0.965, x1, 0.965, { w: 1.4, alpha: 0.8 });
+}
+
+/** Cabinet door with a bar handle. */
+function cabDoor(s: Sketch, x0: number, x1: number, top: number, bottom: number, handleLeft: boolean) {
+  s.rect(x0, top, x1 - x0, bottom - top, { w: 1.6 });
+  const hx = handleLeft ? x0 + 0.02 : x1 - 0.02;
+  s.line(hx, top + 0.03, hx, top + 0.08, { w: 2.6 });
+}
+
+function frontKettle(s: Sketch, cx: number, base: number) {
+  const body: Pt[] = [
+    [cx - 0.04, base],
+    [cx + 0.04, base],
+    [cx + 0.03, base - 0.07],
+    [cx - 0.03, base - 0.07],
+  ];
+  s.stroke(s.ellipsePts(cx, base - 0.07, 0.03, 0.04, Math.PI, Math.PI * 2, 10), { w: 2 });
+  s.sticker(body, 3, 0.16, tint(KIT.kettle));
+  s.stroke(body, { closed: true, w: 2 });
+  s.line(cx + 0.035, base - 0.03, cx + 0.065, base - 0.06, { w: 2.4 });
+  s.circle(cx, base - 0.08, 0.008, { w: 1.6 });
+}
+
 const kitchen: Room = {
   name: "kitchen",
   mood: "nourishment, home, people over",
@@ -1062,6 +1103,44 @@ const kitchen: Room = {
     for (let y = 0.465; y < 0.66; y += 0.045) s.line(0.44, y, 1, y, { w: 1, alpha: 0.45 });
     s.line(0.44, 0.42, 1, 0.42, { w: 1.6 });
     s.line(0.44, 0.42, 0.44, 0.66, { w: 1.6 });
+    // counter run along this wall: sink, soap, a tea towel on the door
+    counterFront(s, 0.45, 1.02);
+    cabDoor(s, 0.48, 0.62, 0.68, 0.94, true);
+    cabDoor(s, 0.63, 0.77, 0.68, 0.94, false);
+    cabDoor(s, 0.8, 0.98, 0.68, 0.94, true);
+    const towel: Pt[] = [
+      [0.735, 0.7],
+      [0.785, 0.7],
+      [0.79, 0.84],
+      [0.73, 0.84],
+    ];
+    s.sticker(towel, 3, 0.16, tint(KIT.towel));
+    s.stroke(towel, { closed: true, w: 1.8 });
+    for (const x of [0.75, 0.77]) s.line(x, 0.71, x, 0.83, { w: 1, alpha: 0.6 });
+    // sink rim + gooseneck tap
+    s.line(0.58, 0.62, 0.74, 0.62, { w: 3 });
+    s.stroke(
+      [
+        [0.66, 0.62],
+        [0.66, 0.53],
+        [0.69, 0.51],
+        [0.72, 0.53],
+        [0.72, 0.56],
+      ],
+      { w: 3 },
+    );
+    const soap = s.rectPts(0.52, 0.565, 0.035, 0.055);
+    s.sticker(soap, 2, 0.12, tint(KIT.towel));
+    s.stroke(soap, { closed: true, w: 1.8 });
+    s.stroke(
+      [
+        [0.5375, 0.565],
+        [0.5375, 0.545],
+        [0.555, 0.545],
+      ],
+      { w: 1.8 },
+    );
+    frontKettle(s, 0.88, 0.62);
     // window with clouds
     const win = s.rectPts(0.2, 0.2, 0.32, 0.38);
     s.sticker(win, 7);
@@ -1120,31 +1199,83 @@ const kitchen: Room = {
     for (let x = 0.025; x < 0.74; x += 0.045) s.line(x, 0.42, x, 0.66, { w: 1, alpha: 0.45 });
     for (let y = 0.465; y < 0.66; y += 0.045) s.line(0, y, 0.74, y, { w: 1, alpha: 0.45 });
     s.line(0, 0.42, 0.74, 0.42, { w: 1.6 });
+    // counter run along this wall: door, oven, drawers, door (the fridge hides the far end)
+    counterFront(s, -0.02, 0.735);
+    cabDoor(s, 0.02, 0.22, 0.68, 0.94, false);
+    const oven = s.rectPts(0.24, 0.655, 0.18, 0.31);
+    s.sticker(oven, 2, 0.1);
+    s.stroke(oven, { closed: true, w: 2 });
+    for (const x of [0.275, 0.33, 0.385]) s.circle(x, 0.69, 0.012, { w: 1.6 });
+    s.line(0.26, 0.725, 0.4, 0.725, { w: 2.4 });
+    s.fill(s.rectPts(0.265, 0.75, 0.13, 0.17), tint(KIT.glass), { alpha: 1, jitter: 0.2 });
+    s.rect(0.265, 0.75, 0.13, 0.17, { w: 1.6 });
+    s.line(0.28, 0.8, 0.31, 0.77, { w: 1, alpha: 0.6 });
+    for (let i = 0; i < 3; i++) {
+      const y = 0.67 + i * 0.095;
+      s.rect(0.44, y, 0.1, 0.08, { w: 1.5 });
+      s.line(0.47, y + 0.04, 0.51, y + 0.04, { w: 2.2 });
+    }
+    cabDoor(s, 0.56, 0.72, 0.68, 0.94, true);
+    // on the worktop: kettle, pot on the hob, cutting board, fruit bowl, utensils, toaster
+    frontKettle(s, 0.1, 0.62);
+    const pot = s.rectPts(0.29, 0.56, 0.08, 0.06);
+    s.sticker(pot, 3, 0.15, tint(KIT.pan));
+    s.stroke(pot, { closed: true, w: 2 });
+    s.line(0.285, 0.555, 0.375, 0.555, { w: 2.2 });
+    s.circle(0.33, 0.545, 0.008, { w: 1.6 });
+    s.line(0.37, 0.575, 0.4, 0.57, { w: 2.4 });
+    const board: Pt[] = [
+      [0.44, 0.62],
+      [0.5, 0.62],
+      [0.5, 0.5],
+      [0.44, 0.5],
+    ];
+    s.sticker(board, 3, 0.15, tint(KIT.wood));
+    s.stroke(board, { closed: true, w: 2 });
+    s.circle(0.47, 0.485, 0.012, { w: 1.6 });
+    for (const [dx, dy] of [
+      [-0.025, 0.585],
+      [0.02, 0.585],
+      [0, 0.565],
+    ]) {
+      const ap = s.ellipsePts(0.56 + dx, dy, 0.018, 0.017);
+      s.sticker(ap, 2, 0.12, tint(KIT.apple));
+      s.stroke(ap, { closed: true, w: 1.6 });
+    }
+    const bowlShape: Pt[] = [[0.61, 0.6], ...s.ellipsePts(0.56, 0.6, 0.05, 0.03, 0, Math.PI, 12)];
+    s.sticker(bowlShape, 3, 0.15, tint(KIT.bowl));
+    s.stroke(bowlShape, { closed: true, w: 2 });
+    const crock = s.rectPts(0.18, 0.57, 0.045, 0.05);
+    s.sticker(crock, 2, 0.12);
+    s.stroke(crock, { closed: true, w: 1.8 });
+    s.line(0.192, 0.57, 0.185, 0.5, { w: 2 });
+    s.stroke(s.ellipsePts(0.185, 0.49, 0.012, 0.018), { closed: true, w: 1.6 });
+    s.line(0.21, 0.57, 0.22, 0.51, { w: 2 });
     // framed picture near the corner
-    tapedPhoto(s, 0.08, 0.08, 0.11, 0.13, 0.02, "mountain");
-    // upper cabinet with a plant on top
-    const cab = s.rectPts(0.2, 0.2, 0.22, 0.2);
-    s.sticker(cab, 5, 0.2, tint(KIT.cabinet));
-    s.stroke(cab, { closed: true, w: 2.6 });
-    s.line(0.31, 0.2, 0.31, 0.4, { w: 1.8 });
-    s.line(0.29, 0.31, 0.29, 0.36, { w: 2.4 });
-    s.line(0.33, 0.31, 0.33, 0.36, { w: 2.4 });
-    leafyPlant(s, 0.32, 0.2, 1.0, 0);
-    // range hood over the stove
-    const chim = s.rectPts(0.5, 0.08, 0.08, 0.22);
+    tapedPhoto(s, 0.06, 0.1, 0.11, 0.13, 0.02, "mountain");
+    // range hood over the oven
+    const chim = s.rectPts(0.29, 0.06, 0.08, 0.24);
     s.sticker(chim, 3, 0.18);
     s.stroke(chim, { closed: true, w: 2.2 });
     const hood: Pt[] = [
-      [0.5, 0.3],
-      [0.58, 0.3],
-      [0.64, 0.4],
-      [0.44, 0.4],
+      [0.29, 0.3],
+      [0.37, 0.3],
+      [0.43, 0.4],
+      [0.23, 0.4],
     ];
     s.sticker(hood, 4, 0.2);
     s.stroke(hood, { closed: true, w: 2.4 });
-    s.box(0.44, 0.4, 0.2, 0.025, null, { w: 2 });
-    for (const x of [0.58, 0.6, 0.62]) s.circle(x, 0.4125, 0.004, { w: 1 });
-    s.line(0.47, 0.37, 0.52, 0.33, { w: 1.1, alpha: 0.6 });
+    s.box(0.23, 0.4, 0.2, 0.022, null, { w: 2 });
+    for (const x of [0.37, 0.39, 0.41]) s.circle(x, 0.411, 0.004, { w: 1 });
+    s.line(0.26, 0.37, 0.31, 0.33, { w: 1.1, alpha: 0.6 });
+    // upper cabinet with a plant on top
+    const cab = s.rectPts(0.47, 0.2, 0.22, 0.2);
+    s.sticker(cab, 5, 0.2, tint(KIT.cabinet));
+    s.stroke(cab, { closed: true, w: 2.6 });
+    s.line(0.58, 0.2, 0.58, 0.4, { w: 1.8 });
+    s.line(0.56, 0.31, 0.56, 0.36, { w: 2.4 });
+    s.line(0.6, 0.31, 0.6, 0.36, { w: 2.4 });
+    leafyPlant(s, 0.56, 0.2, 1.0, 0);
   },
   floor(s) {
     if (look.color) s.washAll(tint(KIT.floor), 1);
@@ -1157,204 +1288,13 @@ const kitchen: Room = {
       }
     }
     const quad = (x: number, y: number, ax: number, ay: number) => [F(x, y), F(x + ax, y), F(x + ax, y + ay), F(x, y + ay)];
-    s.shadow(quad(0.0, 0.0, 0.3, 0.58), 0.24, 16);
-    s.shadow(quad(0.27, 0.0, 0.48, 0.3), 0.24, 16);
     s.shadow(quad(0.74, 0.0, 0.26, 0.31), 0.26, 16);
     s.shadow(s.ellipsePts(...F(0.36, 0.78), 0.09, 0.09), 0.2, 12);
     scallopRug(s, [F(0.44, 0.4), F(0.84, 0.4), F(0.84, 0.82), F(0.44, 0.82)], KIT.rug, 11);
   },
   popups: isoLayers([
-    // L-shaped counter, oven, fridge
+    // tall fridge with a plant on top
     (iso) => {
-      const CZ = 0.33;
-      const D = 0.27; // counter depth
-      const T = CZ + 0.035;
-      // --- run along the left wall (corner to xb 0.56) ---
-      iso.box(0.015, 0.02, 0, D - 0.025, 0.53, CZ, WHITE, { color: KIT.cabinet });
-      for (const [b0, b1] of [
-        [0.3, 0.42],
-        [0.43, 0.55],
-      ]) {
-        iso.face(
-          [
-            [D - 0.01, b0, 0.04],
-            [D - 0.01, b1, 0.04],
-            [D - 0.01, b1, 0.29],
-            [D - 0.01, b0, 0.29],
-          ],
-          null,
-          { w: 1.5 },
-        );
-        iso.line([D - 0.01, b0 + 0.02, 0.2], [D - 0.01, b0 + 0.02, 0.25], { w: 2.4 });
-      }
-      // --- run along the right wall (from the corner piece to xa 0.73) ---
-      iso.box(D - 0.01, 0.015, 0, 0.475, D - 0.025, CZ, WHITE, { color: KIT.cabinet });
-      // oven front
-      const FB = D - 0.01;
-      iso.face(
-        [
-          [0.44, FB, 0.02],
-          [0.62, FB, 0.02],
-          [0.62, FB, CZ],
-          [0.44, FB, CZ],
-        ],
-        WHITE,
-        { w: 1.8 },
-      );
-      iso.face(
-        [
-          [0.46, FB, 0.06],
-          [0.6, FB, 0.06],
-          [0.6, FB, 0.22],
-          [0.46, FB, 0.22],
-        ],
-        look.color ? KIT.glass : WHITE,
-        { w: 1.6 },
-      );
-      iso.line([0.48, FB, 0.12], [0.51, FB, 0.18], { w: 1, alpha: 0.6 });
-      iso.line([0.46, FB, 0.25], [0.6, FB, 0.25], { w: 2.2 });
-      for (const a of [0.475, 0.53, 0.585]) iso.at([a, FB, 0.29], (s, [x, y], u) => s.circle(x, y, 0.012 * u, { w: 1.5, mask: true }));
-      // doors left of the oven, drawers right of it
-      iso.face(
-        [
-          [0.29, FB, 0.04],
-          [0.42, FB, 0.04],
-          [0.42, FB, 0.29],
-          [0.29, FB, 0.29],
-        ],
-        null,
-        { w: 1.5 },
-      );
-      iso.line([0.4, FB, 0.2], [0.4, FB, 0.25], { w: 2.4 });
-      for (let i = 0; i < 3; i++) {
-        const z0 = 0.04 + i * 0.09;
-        iso.face(
-          [
-            [0.635, FB, z0],
-            [0.73, FB, z0],
-            [0.73, FB, z0 + 0.075],
-            [0.635, FB, z0 + 0.075],
-          ],
-          null,
-          { w: 1.4 },
-        );
-        iso.line([0.665, FB, z0 + 0.04], [0.7, FB, z0 + 0.04], { w: 2.2 });
-      }
-      // worktops (one along each wall)
-      iso.box(0.005, 0.01, CZ, D, 0.56, 0.035, WHITE, { color: KIT.counter });
-      iso.box(D, 0.005, CZ, 0.475, D, 0.035, WHITE, { color: KIT.counter });
-      // hob on top of the oven + pot
-      iso.face(
-        [
-          [0.44, 0.03, T],
-          [0.62, 0.03, T],
-          [0.62, 0.25, T],
-          [0.44, 0.25, T],
-        ],
-        null,
-        { w: 1.3 },
-      );
-      for (const [a, b] of [
-        [0.49, 0.09],
-        [0.57, 0.09],
-        [0.49, 0.19],
-        [0.57, 0.19],
-      ])
-        iso.path(iso.ring(a, b, T, 0.03), { w: 1.4 });
-      iso.cyl(0.565, 0.1, T, 0.045, 0.055, WHITE, { color: KIT.pan });
-      iso.cyl(0.565, 0.1, T + 0.055, 0.047, 0.008, WHITE, { color: KIT.pan });
-      iso.cyl(0.565, 0.1, T + 0.063, 0.008, 0.01);
-      iso.line([0.61, 0.1, T + 0.04], [0.64, 0.1, T + 0.045], { w: 2.4 });
-      // utensil crock on the drawer section
-      iso.cyl(0.69, 0.18, T, 0.025, 0.05);
-      iso.line([0.685, 0.18, T + 0.05], [0.675, 0.18, T + 0.12], { w: 2 });
-      iso.at([0.675, 0.18, T + 0.12], (s, [x, y], u) => s.blob(x, y, 0.012 * u, 0.02 * u, WHITE, { w: 1.5, mask: true }));
-      iso.line([0.7, 0.18, T + 0.05], [0.71, 0.18, T + 0.11], { w: 2 });
-      // corner: kettle, cutting board, fruit bowl, toaster, mug
-      iso.face(
-        [
-          [0.3, 0.02, T],
-          [0.38, 0.02, T],
-          [0.38, 0.01, T + 0.13],
-          [0.3, 0.01, T + 0.13],
-        ],
-        look.color ? KIT.wood : WHITE,
-        { w: 1.8 },
-      );
-      iso.at([0.34, 0.015, T + 0.15], (s, [x, y], u) => s.circle(x, y, 0.012 * u, { w: 1.5, mask: true }));
-      iso.cyl(0.11, 0.1, T, 0.048, 0.06, WHITE, { r2: 0.036, color: KIT.kettle });
-      iso.cyl(0.11, 0.1, T + 0.06, 0.01, 0.012);
-      iso.path(
-        [
-          [0.13, 0.12, T + 0.03],
-          [0.16, 0.14, T + 0.06],
-        ],
-        { w: 2.4 },
-      );
-      iso.path(
-        [
-          [0.08, 0.08, T + 0.06],
-          [0.1, 0.09, T + 0.11],
-          [0.12, 0.11, T + 0.11],
-          [0.135, 0.12, T + 0.06],
-        ],
-        { w: 2 },
-      );
-      iso.cyl(0.38, 0.13, T, 0.04, 0.025, WHITE, { r2: 0.055, color: KIT.bowl });
-      iso.at([0.38, 0.13, T + 0.025], (s, [x, y], u) => {
-        for (const [dx, dy] of [
-          [-0.025, -0.01],
-          [0.02, -0.012],
-          [0, -0.03],
-        ])
-          s.blob(x + dx * u, y + dy * u, 0.017 * u, 0.016 * u, tint(KIT.apple), { w: 1.5, mask: true });
-      });
-      iso.box(0.21, 0.06, T, 0.05, 0.035, 0.045, WHITE, { color: KIT.pan });
-      iso.cyl(0.2, 0.17, T, 0.022, 0.035, WHITE, { color: KIT.mug });
-      // sink + gooseneck tap + soap on the left run
-      iso.face(
-        [
-          [0.05, 0.3, T],
-          [0.22, 0.3, T],
-          [0.22, 0.47, T],
-          [0.05, 0.47, T],
-        ],
-        WHITE,
-        { w: 1.8 },
-      );
-      iso.face(
-        [
-          [0.065, 0.315, T],
-          [0.205, 0.315, T],
-          [0.205, 0.455, T],
-          [0.065, 0.455, T],
-        ],
-        null,
-        { w: 1.2 },
-      );
-      iso.path(
-        [
-          [0.03, 0.385, T],
-          [0.03, 0.385, T + 0.11],
-          [0.07, 0.385, T + 0.13],
-          [0.1, 0.385, T + 0.1],
-        ],
-        { w: 2.8 },
-      );
-      iso.cyl(0.07, 0.52, T, 0.018, 0.05, WHITE, { color: KIT.towel });
-      iso.line([0.07, 0.52, T + 0.05], [0.07, 0.52, T + 0.075], { w: 2 });
-      // tea towel hanging over the front of the left run
-      iso.face(
-        [
-          [D + 0.005, 0.36, T - 0.005],
-          [D + 0.005, 0.42, T - 0.005],
-          [D + 0.01, 0.425, T - 0.13],
-          [D + 0.01, 0.355, T - 0.13],
-        ],
-        look.color ? KIT.towel : WHITE,
-        { w: 1.6 },
-      );
-      for (let i = 1; i < 3; i++) iso.line([D + 0.008, 0.36 + i * 0.02, T - 0.01], [D + 0.01, 0.36 + i * 0.02, T - 0.125], { w: 1, alpha: 0.6 });
       // --- fridge with a plant on top ---
       iso.box(0.745, 0.025, 0, 0.23, 0.25, 0.8, WHITE, { color: KIT.fridge });
       const FF = 0.275;
