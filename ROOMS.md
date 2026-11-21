@@ -75,15 +75,16 @@ Same paper cut-out style, set at night; ink-only or soft colour.
 - **Left wall** — sliding glass door with the lit room inside (a glowing floor lamp, an armchair, a
   picture) and a curtain; a wall lantern with a warm glow; two little plant prints; floating
   shelves near the corner with books and a trailing pothos.
-- **Right wall** — open to the night: a crescent moon, stars, dark hills and a little town with lit
-  windows (hatched sky in ink, deep blue in colour); a railing with a flower box; a macrame
-  hanging planter near the corner; string lights with glowing bulbs.
+- **Right wall** — open to the night, sky filling the whole wall: a crescent moon, stars, dark
+  hills and a little town with lit windows (hatched in ink, deep blue in colour); a railing with a
+  flower box and fairy lights draped along it; a macrame hanging planter near the corner.
 - **Floor** — deck boards, a soft scalloped rug, a big shadow under the bean bag.
 - **Pop-ups**
-  - monstera in the corner, a leafy plant by the railing
-  - a big squishy bean bag with a tufted pillow and a knitted throw slung over the arm (tassels and
-    all), plus a book with a mug of tea, steaming
-  - hydrangea by the door, a watering can, a flower pot, and a short front railing with a flower box
+  - monstera in the corner
+  - a big squishy bean bag in the corner with a tufted pillow and a knitted throw slung over the arm
+    (tassels and all), and a book with a steaming mug of tea beside it
+  - hydrangea by the door with a small pink flower pot next to it, and a short front railing with
+    a flower box and fairy lights
 - **Colour version** — lavender-grey walls, blue night sky, warm light from the door, lantern, bulbs
   and moon; oat bean bag, lilac pillow, pink throw.
 - **Entries hung here** — late nights, gratitude, the big picture, what you want next.
