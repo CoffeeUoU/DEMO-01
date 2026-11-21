@@ -1822,10 +1822,10 @@ const balcony: Room = {
         s.line(p, v, p, v + 1 / 12, { w: 1.2, alpha: 0.45 });
       }
     }
-    s.shadow(s.ellipsePts(...F(0.37, 0.39), 0.24, 0.22), 0.28, 20);
+    s.shadow(s.ellipsePts(...F(0.27, 0.29), 0.24, 0.22), 0.28, 20);
     s.shadow(s.ellipsePts(...F(0.12, 0.1), 0.07, 0.07), 0.2, 10);
-    s.shadow(s.ellipsePts(...F(0.66, 0.4), 0.06, 0.06), 0.2, 10);
-    scallopRug(s, [F(0.16, 0.2), F(0.62, 0.2), F(0.62, 0.76), F(0.16, 0.76)], BAL.rug, 12);
+    s.shadow(s.ellipsePts(...F(0.56, 0.3), 0.06, 0.06), 0.2, 10);
+    scallopRug(s, [F(0.1, 0.14), F(0.56, 0.14), F(0.56, 0.68), F(0.1, 0.68)], BAL.rug, 12);
   },
   popups: isoLayers([
     // against the walls: monstera in the corner, a leafy plant by the railing
@@ -1856,8 +1856,8 @@ const balcony: Room = {
     },
     // a big, squishy bean bag with a tufted pillow and a knitted throw; a mug of tea on a book
     (iso) => {
-      const BX = 0.36;
-      const BY = 0.38;
+      const BX = 0.26;
+      const BY = 0.28;
       iso.p([BX + 0.2, BY - 0.2, 0]);
       iso.p([BX - 0.2, BY + 0.2, 0]);
       iso.p([BX, BY, 0.48]);
@@ -1980,11 +1980,11 @@ const balcony: Room = {
         }
       });
       // a little stack: book + mug of tea with steam
-      iso.box(0.58, 0.6, 0, 0.11, 0.08, 0.022, WHITE, { color: BAL.book });
-      iso.box(0.59, 0.605, 0.022, 0.09, 0.07, 0.018, WHITE, { color: BAL.pillow });
-      iso.cyl(0.635, 0.64, 0.04, 0.022, 0.042, WHITE, { color: BAL.mug });
-      iso.at([0.66, 0.64, 0.065], (s, [x, y], u) => s.stroke(s.ellipsePts(x, y, 0.012 * u, 0.015 * u, -1.4, 1.4, 8), { w: 1.6, mask: true }));
-      iso.at([0.635, 0.64, 0.09], (s, [x, y], u) => {
+      iso.box(0.46, 0.5, 0, 0.11, 0.08, 0.022, WHITE, { color: BAL.book });
+      iso.box(0.47, 0.505, 0.022, 0.09, 0.07, 0.018, WHITE, { color: BAL.pillow });
+      iso.cyl(0.515, 0.54, 0.04, 0.022, 0.042, WHITE, { color: BAL.mug });
+      iso.at([0.54, 0.54, 0.065], (s, [x, y], u) => s.stroke(s.ellipsePts(x, y, 0.012 * u, 0.015 * u, -1.4, 1.4, 8), { w: 1.6, mask: true }));
+      iso.at([0.515, 0.54, 0.09], (s, [x, y], u) => {
         for (const dx of [-0.008, 0.006]) s.stroke([[x + dx * u, y], [x + (dx - 0.006) * u, y - 0.025 * u], [x + dx * u, y - 0.05 * u]], { w: 1.1, mask: true });
       });
     },
@@ -2037,9 +2037,9 @@ const balcony: Room = {
         almondLeaf(s, x + 0.012 * u, y - 0.018 * u, 0.012 * u, 0.8, BAL.leaf, true);
       });
       // flower pot beside the bean bag
-      iso.p([0.6, 0.42, 0.3]);
-      iso.cyl(0.66, 0.4, 0, 0.055, 0.1, WHITE, { r2: 0.065, color: BAL.pot });
-      iso.at([0.66, 0.4, 0.1], (s, [x, y], u) =>
+      iso.p([0.5, 0.32, 0.3]);
+      iso.cyl(0.56, 0.3, 0, 0.055, 0.1, WHITE, { r2: 0.065, color: BAL.pot });
+      iso.at([0.56, 0.3, 0.1], (s, [x, y], u) =>
         potPlant(
           s,
           x,
