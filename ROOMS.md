@@ -25,8 +25,8 @@ shadow (after Dakshi's reference sketch).
 
 - **Left wall** — big window with clouds, curtains on a rod with gathered tops and scalloped hems,
   stars near the corner, two taped photos near the front edge.
-- **Right wall** — taped mountain poster, stars, shelf with books, a box and a trailing plant,
-  cork board with pinned notes above the desk.
+- **Right wall** — hanging plant on three cords near the corner, stars, and a big cork board with
+  pinned notes above the desk.
 - **Floor** — boards, scalloped rug, slippers, soft shadows under the furniture.
 - **Pop-ups** (drawn isometrically so they read as solid furniture from the camera)
   - against the walls: a simple bed (frame, mattress, quilt with a folded edge, pillow); desk with

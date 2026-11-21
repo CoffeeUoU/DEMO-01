@@ -98,7 +98,7 @@ export default function Book({ tex }: { tex: BookTextures }) {
         return ROOMS[li].popups.map((spec, j) => ({
           spec,
           geo: new THREE.PlaneGeometry(spec.size, spec.size).translate(0, spec.size / 2, 0),
-          mat: makePaperMaterial(tex.rooms[li].popups[j], { side: THREE.DoubleSide, blankBack: true, seed: 60 + p * 4 + j, flat: 0.85 }),
+          mat: makePaperMaterial(tex.rooms[li].popups[j], { side: THREE.DoubleSide, blankBack: true, seed: 60 + p * 4 + j, flat: 0.85, transparent: true }),
         }));
       }),
     [tex],
@@ -111,6 +111,7 @@ export default function Book({ tex }: { tex: BookTextures }) {
   // ---- refs ---------------------------------------------------------------
   const pageRefs = useRef<(THREE.Group | null)[]>([]);
   const floorLineRefs = useRef<(Line2 | null)[]>([]);
+  const outlineRefs = useRef<(Line2 | null)[]>([]);
   const popRefs = useRef<{ outer: THREE.Group | null; hinge: THREE.Group | null }[][]>(Array.from({ length: N }, () => []));
   const target = useMemo(() => new THREE.Vector3(), []);
 
@@ -138,6 +139,12 @@ export default function Book({ tex }: { tex: BookTextures }) {
       m.front.uniforms.uReveal.value = rf;
       m.back.uniforms.uReveal.value = rb;
       m.front.uniforms.uInkAmt.value = k === N ? 1 : 0.55 + 0.45 * rf;
+      // the cover carries its own drawn border, so page edges stay unlined while the book is shut
+      const ol = outlineRefs.current[k];
+      if (ol) {
+        ol.material.opacity = smooth((book.open - 0.05) / 0.25);
+        ol.visible = ol.material.opacity > 0.01;
+      }
       m.back.uniforms.uInkAmt.value = k === 0 ? 1 : 0.55 + 0.45 * rb;
     }
 
@@ -169,23 +176,28 @@ export default function Book({ tex }: { tex: BookTextures }) {
         writeEdge(edgeBuf, EDGE_STEPS + 1, P, B, p * 3 + 2);
         writeEdge(edgeBuf, (EDGE_STEPS + 1) * 2, O, P, p * 3 + 3);
         line.geometry.setPositions(edgeBuf);
+        line.material.opacity = smooth((book.open - 0.05) / 0.25);
+        line.visible = line.material.opacity > 0.01;
       }
 
       const open = roomOpenness(phi, p);
-      const rise = smooth((open - 0.86) / 0.14) * smooth((book.open - 0.85) / 0.15);
+      // Pop-ups are drawn for the fully open room seen head-on, so they only appear once the
+      // room has settled at a right angle and fade out as soon as it starts to fold.
+      const rise = smooth((open - 0.965) / 0.035) * smooth((book.open - 0.96) / 0.04);
       const mid = (a + b) / 2;
       const dA = dirOf(a);
       const dB = dirOf(b);
       popups[p].forEach((pu, j) => {
         const r = popRefs.current[p][j];
         if (!r?.outer || !r.hinge) return;
-        r.outer.visible = rise > 0.01;
+        const vis = smooth((rise - j * 0.3) / (1 - j * 0.3 + 1e-3));
+        r.outer.visible = vis > 0.01;
         const [s, t] = pu.spec.at;
         r.outer.position.set((dA[0] * s + dB[0] * t) * L, 0.001, (dA[2] * s + dB[2] * t) * L);
         r.outer.rotation.y = Math.PI / 2 - mid;
-        // cards stand up one after another, swinging up from the floor behind them
-        const stagger = smooth((rise - j * 0.12) / (1 - j * 0.12 + 1e-3));
-        r.hinge.rotation.x = -(1 - stagger) * (Math.PI / 2) * 0.96;
+        // fade in one layer after another with a small lift
+        r.hinge.scale.y = 0.9 + 0.1 * vis;
+        pu.mat.uniforms.uOpacity.value = vis;
         pu.mat.uniforms.uReveal.value = fr;
       });
     }
@@ -212,7 +224,13 @@ export default function Book({ tex }: { tex: BookTextures }) {
         <group key={k} ref={(el) => void (pageRefs.current[k] = el)}>
           <mesh geometry={pageGeo.front} material={m.front} />
           <mesh geometry={pageGeo.back} material={m.back} />
-          <Line points={outlines[k]} color={INK_HEX} lineWidth={1.7} />
+          <Line
+            ref={(el) => void (outlineRefs.current[k] = el as unknown as Line2 | null)}
+            points={outlines[k]}
+            color={INK_HEX}
+            lineWidth={1.7}
+            transparent
+          />
         </group>
       ))}
       {floors.map((fl, p) => (
@@ -221,6 +239,7 @@ export default function Book({ tex }: { tex: BookTextures }) {
           <Line
             ref={(el) => void (floorLineRefs.current[p] = el as unknown as Line2 | null)}
             points={floorLinePts[p]}
+            transparent
             color={INK_HEX}
             lineWidth={1.5}
           />

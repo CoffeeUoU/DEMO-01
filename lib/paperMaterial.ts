@@ -20,6 +20,7 @@ const fragment = /* glsl */ `
   uniform float uSeed;
   uniform float uBlankBack; // pop-ups: plain paper on the back
   uniform float uFlat;      // covers: no shading or hatching
+  uniform float uOpacity;   // pop-ups fade in
   uniform vec3 uInk;
   uniform vec3 uPaper;
   uniform vec3 uLight;
@@ -61,13 +62,13 @@ const fragment = /* glsl */ `
 
     // the drawing itself
     col = mix(col, uInk, ink * uInkAmt);
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = vec4(col, uOpacity);
   }
 `;
 
 const light = new THREE.Vector3(-0.55, 0.7, 0.45).normalize();
 
-export function makePaperMaterial(tex: THREE.Texture, opts: { side?: THREE.Side; blankBack?: boolean; seed?: number; flat?: boolean | number } = {}) {
+export function makePaperMaterial(tex: THREE.Texture, opts: { side?: THREE.Side; blankBack?: boolean; seed?: number; flat?: boolean | number; transparent?: boolean } = {}) {
   return new THREE.ShaderMaterial({
     vertexShader: vertex,
     fragmentShader: fragment,
@@ -78,11 +79,13 @@ export function makePaperMaterial(tex: THREE.Texture, opts: { side?: THREE.Side;
       uInkAmt: { value: 1 },
       uSeed: { value: opts.seed ?? Math.random() * 10 },
       uBlankBack: { value: opts.blankBack ? 1 : 0 },
+      uOpacity: { value: 1 },
       uFlat: { value: typeof opts.flat === "number" ? opts.flat : opts.flat ? 1 : 0 },
       uInk: { value: INK },
       uPaper: { value: PAPER },
       uLight: { value: light },
     },
+    transparent: opts.transparent ?? false,
     polygonOffset: true,
     polygonOffsetFactor: 1,
     polygonOffsetUnits: 1,

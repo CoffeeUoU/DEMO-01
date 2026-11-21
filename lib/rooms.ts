@@ -228,55 +228,9 @@ const bedroom: Room = {
   },
   right(s) {
     // stars
-    s.star(0.14, 0.12, 0.016);
-    s.star(0.2, 0.17, 0.022);
-    // taped poster
-    tapedPhoto(s, 0.08, 0.22, 0.15, 0.2, 0.02, "mountain");
-    // shelf + books
-    const shelf = s.rectPts(0.4, 0.3, 0.5, 0.026);
-    s.sticker(shelf, 4);
-    s.box(0.4, 0.3, 0.5, 0.026, null, { w: 2.2 });
-    s.stroke(
-      [
-        [0.47, 0.326],
-        [0.47, 0.36],
-        [0.5, 0.326],
-      ],
-      { w: 1.6 },
-    );
-    s.stroke(
-      [
-        [0.83, 0.326],
-        [0.83, 0.36],
-        [0.86, 0.326],
-      ],
-      { w: 1.6 },
-    );
-    const books: [number, number, number][] = [
-      [0.66, 0.03, 0.13],
-      [0.692, 0.028, 0.12],
-      [0.722, 0.034, 0.14],
-      [0.758, 0.03, 0.11],
-    ];
-    for (const [x, w, h] of books) {
-      const b = s.rectPts(x, 0.3 - h, w, h);
-      s.sticker(b, 2, 0.12);
-      s.stroke(b, { closed: true, w: 1.8 });
-      s.line(x + w * 0.2, 0.3 - h + 0.02, x + w * 0.8, 0.3 - h + 0.02, { w: 1, alpha: 0.6 });
-    }
-    const box = s.rectPts(0.8, 0.25, 0.08, 0.05);
-    s.sticker(box, 3, 0.12);
-    s.stroke(box, { closed: true, w: 1.8 });
-    s.line(0.8, 0.265, 0.88, 0.265, { w: 1.2 });
-    // trailing plant on the shelf
-    const pot: Pt[] = [
-      [0.44, 0.24],
-      [0.54, 0.24],
-      [0.525, 0.3],
-      [0.455, 0.3],
-    ];
-    s.sticker(pot, 3, 0.15);
-    s.stroke(pot, { closed: true, w: 2 });
+    s.star(0.33, 0.1, 0.016);
+    s.star(0.38, 0.16, 0.022);
+    // hanging plant (replaces the poster): three cords from the ceiling, a bowl pot, trailing vines
     const leaf = (x: number, y: number, r: number, rot: number) => {
       const almond: Pt[] = [];
       for (let i = 0; i <= 8; i++) almond.push([Math.sin((i / 8) * Math.PI) * r * 0.55, -r + (2 * r * i) / 8]);
@@ -284,72 +238,88 @@ const bedroom: Room = {
       const pts = almond.map(([a, b]) => [x + a * Math.cos(rot) - b * Math.sin(rot), y + a * Math.sin(rot) + b * Math.cos(rot)] as Pt);
       s.sticker(pts, 2, 0.12);
       s.stroke(pts, { closed: true, w: 1.6 });
-      s.line(x - Math.sin(rot) * r * -0.8, y + Math.cos(rot) * r * -0.8, x - Math.sin(rot) * r * 0.8, y + Math.cos(rot) * r * 0.8, { w: 1, alpha: 0.7 });
+      s.line(x + Math.sin(rot) * r * 0.8, y - Math.cos(rot) * r * 0.8, x - Math.sin(rot) * r * 0.8, y + Math.cos(rot) * r * 0.8, { w: 1, alpha: 0.7 });
     };
-    const vines: [number, number][][] = [
+    const px = 0.18;
+    const potTop = 0.27;
+    s.line(px, 0, px, 0.04, { w: 1.6 });
+    s.circle(px, 0.05, 0.01, { w: 1.6 });
+    for (const dx of [-0.065, 0, 0.065]) s.line(px, 0.058, px + dx, potTop, { w: 1.3 });
+    // leaves poking out of the top of the pot
+    for (const [dx, dy, rot] of [
+      [-0.05, -0.03, -0.7],
+      [0.0, -0.045, 0.1],
+      [0.05, -0.03, 0.8],
+    ] as const)
+      leaf(px + dx, potTop + dy, 0.028, rot);
+    const pot = s.ellipsePts(px, potTop, 0.075, 0.07, 0, Math.PI, 16);
+    s.sticker(pot, 4, 0.18);
+    s.stroke(pot, { closed: true, w: 2.2 });
+    s.line(px - 0.075, potTop + 0.012, px + 0.075, potTop + 0.012, { w: 1.2, alpha: 0.6 });
+    const vines: Pt[][] = [
       [
-        [0.45, 0.25],
-        [0.4, 0.3],
-        [0.38, 0.38],
-        [0.39, 0.46],
+        [px - 0.06, potTop + 0.02],
+        [px - 0.09, potTop + 0.12],
+        [px - 0.08, potTop + 0.22],
+        [px - 0.1, potTop + 0.3],
       ],
       [
-        [0.48, 0.25],
-        [0.44, 0.33],
-        [0.44, 0.4],
+        [px - 0.01, potTop + 0.06],
+        [px - 0.02, potTop + 0.16],
+        [px + 0.0, potTop + 0.26],
       ],
       [
-        [0.52, 0.24],
-        [0.55, 0.2],
-        [0.5, 0.16],
-      ],
-      [
-        [0.47, 0.24],
-        [0.45, 0.17],
-        [0.4, 0.15],
+        [px + 0.05, potTop + 0.03],
+        [px + 0.08, potTop + 0.12],
+        [px + 0.07, potTop + 0.19],
       ],
     ];
     vines.forEach((v, i) => {
       s.stroke(v, { w: 1.4 });
       for (let j = 0; j < v.length - 1; j++)
-        for (const t of [0.35, 0.85]) {
-          const x = v[j][0] + (v[j + 1][0] - v[j][0]) * t;
-          const y = v[j][1] + (v[j + 1][1] - v[j][1]) * t;
-          const sideways = (j + (t > 0.5 ? 1 : 0)) % 2 ? 1 : -1;
-          leaf(x + sideways * 0.018, y, 0.026, sideways * 0.9 + i * 0.1);
+        for (const tt of [0.4, 0.9]) {
+          const x = v[j][0] + (v[j + 1][0] - v[j][0]) * tt;
+          const y = v[j][1] + (v[j + 1][1] - v[j][1]) * tt;
+          const side = (j + (tt > 0.5 ? 1 : 0) + i) % 2 ? 1 : -1;
+          leaf(x + side * 0.018, y, 0.026, side * 0.9);
         }
     });
-    // cork board with pinned notes
-    const board = s.rectPts(0.55, 0.37, 0.36, 0.22);
-    s.sticker(board, 5);
-    s.box(0.55, 0.37, 0.36, 0.22, null, { w: 2.6 });
-    s.rect(0.565, 0.385, 0.33, 0.19, { w: 1.2, alpha: 0.6 });
-    for (let i = 0; i < 40; i++) s.circle(0.57 + s.r() * 0.32, 0.39 + s.r() * 0.18, 0.002, { w: 1, alpha: 0.5 });
+    // big cork board above the desk with pinned notes
+    const bx = 0.44;
+    const by = 0.22;
+    const bw = 0.5;
+    const bh = 0.37;
+    s.sticker(s.rectPts(bx, by, bw, bh), 6);
+    s.box(bx, by, bw, bh, null, { w: 2.8 });
+    s.rect(bx + 0.018, by + 0.018, bw - 0.036, bh - 0.036, { w: 1.2, alpha: 0.6 });
+    for (let i = 0; i < 70; i++) s.circle(bx + 0.03 + s.r() * (bw - 0.06), by + 0.03 + s.r() * (bh - 0.06), 0.0022, { w: 1, alpha: 0.45 });
     const note = (x: number, y: number, w: number, h: number, lines: number, rot = 0) => {
       const c: Pt = [x + w / 2, y + h / 2];
-      const pts = s.rectPts(x, y, w, h).map(([px, py]) => [c[0] + (px - c[0]) * Math.cos(rot) - (py - c[1]) * Math.sin(rot), c[1] + (px - c[0]) * Math.sin(rot) + (py - c[1]) * Math.cos(rot)] as Pt);
+      const pts = s.rectPts(x, y, w, h).map(([qx, qy]) => [c[0] + (qx - c[0]) * Math.cos(rot) - (qy - c[1]) * Math.sin(rot), c[1] + (qx - c[0]) * Math.sin(rot) + (qy - c[1]) * Math.cos(rot)] as Pt);
       s.sticker(pts, 2, 0.15);
       s.stroke(pts, { closed: true, w: 1.6 });
-      for (let i = 0; i < lines; i++) s.line(x + w * 0.18, y + h * (0.35 + i * 0.18), x + w * 0.82, y + h * (0.35 + i * 0.18), { w: 1, alpha: 0.6 });
-      s.blob(x + w / 2, y + 0.006, 0.006, 0.006, "#d9d6ec", { w: 1.3 });
+      for (let i = 0; i < lines; i++) s.line(x + w * 0.18, y + h * (0.32 + i * 0.16), x + w * 0.82, y + h * (0.32 + i * 0.16), { w: 1, alpha: 0.6 });
+      s.blob(x + w / 2, y + 0.008, 0.007, 0.007, "#d9d6ec", { w: 1.3 });
     };
-    note(0.59, 0.4, 0.07, 0.09, 3, -0.06);
-    note(0.68, 0.405, 0.1, 0.075, 0, 0.02);
+    note(0.48, 0.26, 0.1, 0.12, 4, -0.05);
+    note(0.61, 0.27, 0.14, 0.1, 0, 0.02);
     s.stroke(
       [
-        [0.69, 0.47],
-        [0.715, 0.43],
-        [0.735, 0.455],
-        [0.75, 0.44],
-        [0.77, 0.47],
+        [0.625, 0.355],
+        [0.655, 0.3],
+        [0.68, 0.335],
+        [0.7, 0.315],
+        [0.735, 0.355],
       ],
-      { w: 1.3 },
+      { w: 1.4 },
     );
-    note(0.8, 0.395, 0.08, 0.09, 3, 0.05);
-    note(0.62, 0.5, 0.06, 0.06, 2, 0.08);
-    note(0.71, 0.5, 0.06, 0.06, 0, -0.04);
-    s.circle(0.74, 0.535, 0.012, { w: 1.2 });
-    note(0.8, 0.5, 0.07, 0.06, 2, -0.03);
+    s.circle(0.71, 0.295, 0.009, { w: 1.2 });
+    note(0.79, 0.26, 0.11, 0.12, 4, 0.05);
+    note(0.49, 0.43, 0.09, 0.09, 3, 0.07);
+    note(0.62, 0.42, 0.09, 0.1, 0, -0.04);
+    s.circle(0.665, 0.47, 0.018, { w: 1.3 });
+    note(0.75, 0.43, 0.08, 0.08, 2, 0.03);
+    note(0.85, 0.44, 0.07, 0.1, 3, -0.06);
   },
   floor(s) {
     // floor boards running away from the left wall
@@ -434,21 +404,16 @@ const bedroom: Room = {
       // desk top
       iso.box(0.41, 0.02, DZ - 0.025, 0.56, 0.27, 0.025, WHITE);
       const T = DZ;
-      // lamp
-      iso.cyl(0.47, 0.07, T, 0.035, 0.012);
-      iso.path(
-        [
-          [0.47, 0.07, T + 0.012],
-          [0.47, 0.07, T + 0.14],
-          [0.53, 0.1, T + 0.2],
-        ],
-        { w: 2.4 },
-      );
-      iso.cyl(0.55, 0.11, T + 0.12, 0.05, 0.07, WHITE, { r2: 0.018 });
-      iso.at([0.56, 0.12, T + 0.1], (s, [x, y], u) => {
+      // lamp: weighted base, straight stem, shade centred above it
+      const LX = 0.49;
+      const LY = 0.08;
+      iso.cyl(LX, LY, T, 0.035, 0.018);
+      iso.line([LX, LY, T + 0.018], [LX, LY, T + 0.13], { w: 2.4 });
+      iso.cyl(LX, LY, T + 0.11, 0.06, 0.08, WHITE, { r2: 0.028 });
+      iso.at([LX, LY, T + 0.11], (s, [x, y], u) => {
         for (let i = 0; i < 4; i++) {
-          const a = 0.5 + i * 0.55;
-          s.line(x + Math.cos(a) * 0.08 * u, y + Math.sin(a) * 0.08 * u, x + Math.cos(a) * 0.12 * u, y + Math.sin(a) * 0.12 * u, { w: 1.4, mask: true });
+          const a = 0.35 + i * 0.6;
+          s.line(x + Math.cos(a) * 0.09 * u, y + Math.sin(a) * 0.07 * u, x + Math.cos(a) * 0.13 * u, y + Math.sin(a) * 0.1 * u, { w: 1.4, mask: true });
         }
       });
       // laptop
@@ -1194,30 +1159,20 @@ export const ROOMS: Room[] = [bedroom, bathroom, kitchen, gym, lounge, balcony];
 // ---------------------------------------------------------------------------
 
 export function drawFrontCover(s: Sketch) {
-  // a hand-drawn double border
-  s.rect(0.06, 0.06, 0.88, 0.88, { w: 3 });
-  s.rect(0.09, 0.09, 0.82, 0.82, { w: 1.5, alpha: 0.75 });
-  for (const [x, y] of [
-    [0.09, 0.09],
-    [0.91, 0.09],
-    [0.09, 0.91],
-    [0.91, 0.91],
-  ])
-    s.circle(x, y, 0.012, { w: 1.6 });
-  s.text("dakshie's", 0.5, 0.4, 0.13);
-  s.text("journal", 0.5, 0.54, 0.13);
+  s.rect(0.07, 0.07, 0.86, 0.86, { w: 3 });
+  s.text("dakshie's", 0.5, 0.31, 0.13);
+  s.text("journal", 0.5, 0.45, 0.13);
   // a small heart, drawn in one go with the pen overlapping at the bottom
   const heart: Pt[] = [];
-  for (let i = 0; i <= 44; i++) {
-    const t = (i / 44) * Math.PI * 2.06;
+  for (let i = 0; i <= 40; i++) {
+    const t = (i / 40) * Math.PI * 2.06;
     const x = 16 * Math.sin(t) ** 3;
     const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-    heart.push([0.5 + x * 0.0036, 0.705 - y * 0.0036]);
+    heart.push([0.5 + x * 0.0019, 0.575 - y * 0.0019]);
   }
-  s.stroke(heart, { w: 3, overshoot: 0 });
+  s.stroke(heart, { w: 2.4, overshoot: 0 });
 }
 
 export function drawBackCover(s: Sketch) {
-  s.rect(0.06, 0.06, 0.88, 0.88, { w: 3 });
-  s.rect(0.09, 0.09, 0.82, 0.82, { w: 1.5, alpha: 0.75 });
+  s.rect(0.07, 0.07, 0.86, 0.86, { w: 3 });
 }
