@@ -1445,6 +1445,7 @@ const BAL = {
   bag: "#f1dccb",
   pillow: "#ddd3f2",
   throw: "#f4c9cf",
+  diary: "#c9d8f3",
   leaf: "#c6e0bd",
   pot: "#efc2aa",
   flower: "#f7ccd6",
@@ -1953,6 +1954,21 @@ const balcony: Room = {
           const hy = y + (0.07 + Math.sin(t * Math.PI) * 0.012) * u;
           s.line(hx, hy, hx + 0.003 * u, hy + 0.035 * u, { w: 1.7, mask: true });
         }
+        // a small diary left lying on the seat: cover, page edges, elastic band, ribbon, a heart
+        const D = (dx: number, dy: number): Pt => [x + dx * u, y + dy * u];
+        const pagesEdge: Pt[] = [D(0.035, -0.135), D(0.135, -0.18), D(0.185, -0.15), D(0.185, -0.137), D(0.085, -0.092), D(0.035, -0.122)];
+        solid(pagesEdge, "#ffffff", 1.8);
+        for (const k of [0.4, 0.7]) s.line(...D(0.085, -0.105 + k * 0.012), ...D(0.185, -0.15 + k * 0.012), { w: 0.9, alpha: 0.6 });
+        const cover: Pt[] = [D(0.03, -0.138), D(0.13, -0.183), D(0.188, -0.153), D(0.088, -0.108)];
+        solid(cover, BAL.diary, 2);
+        s.line(...D(0.145, -0.176), ...D(0.103, -0.115), { w: 1.6 });
+        s.stroke([D(0.06, -0.125), D(0.055, -0.098), D(0.07, -0.088)], { w: 1.4, mask: true });
+        const hp: Pt[] = [];
+        for (let i = 0; i <= 20; i++) {
+          const a = (i / 20) * Math.PI * 2;
+          hp.push(D(0.085 + 16 * Math.sin(a) ** 3 * 0.0009, -0.147 - (13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a)) * 0.0006));
+        }
+        s.stroke(hp, { w: 1.2 });
       });
       // a little stack: book + mug of tea with steam
       iso.box(0.51, 0.26, 0, 0.11, 0.08, 0.022, WHITE, { color: BAL.book });

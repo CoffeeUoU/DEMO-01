@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows } from "@react-three/drei";
 import Book from "./Book";
-import { HandArrow } from "./Hand";
+import { HandArrow, HandUnderline } from "./Hand";
 import { N, logicalOf, physicalOf } from "@/lib/fold";
 import { ROOMS } from "@/lib/rooms";
 import { book } from "@/lib/store";
@@ -54,7 +54,10 @@ export default function Experience() {
         if (!open) setBookOpen(true);
         else goTo(room + 1);
       } else if (ev.key === "ArrowLeft") {
-        if (open) goTo(room - 1);
+        if (open) {
+          if (room === 0) setBookOpen(false);
+          else goTo(room - 1);
+        }
       } else if (ev.key === "Enter" || ev.key === " ") {
         setBookOpen(!open);
       } else if (ev.key === "Escape") setBookOpen(false);
@@ -91,6 +94,12 @@ export default function Experience() {
 
   return (
     <main className="stage">
+      <header className="topbar">
+        <div className="wordmark">
+          unfold
+          <HandUnderline />
+        </div>
+      </header>
 
       <div className="canvas-wrap" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onDoubleClick={() => setBookOpen(!open)}>
         {tex && (
@@ -102,7 +111,12 @@ export default function Experience() {
         {!tex && <div className="loading">sharpening pencils…</div>}
       </div>
 
-      <button className={`arrow arrow-left ${open && room > 0 ? "" : "is-off"}`} aria-label="Previous room" onClick={() => goTo(room - 1)} disabled={!open || room === 0}>
+      <button
+        className={`arrow arrow-left ${open ? "" : "is-off"}`}
+        aria-label={room === 0 ? "Close the book" : "Previous room"}
+        onClick={() => (room === 0 ? setBookOpen(false) : goTo(room - 1))}
+        disabled={!open}
+      >
         <HandArrow flip />
       </button>
       <button
