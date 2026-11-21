@@ -201,10 +201,11 @@ export default function Book({ tex }: { tex: BookTextures }) {
     const yaw = Math.PI / 2 + (gF - Math.PI / 2) * e;
     const pitch = THREE.MathUtils.degToRad(8 + 24 * e);
     const dF = dirOf(gF);
-    target.set(L / 2 + (dF[0] * 0.45 - L / 2) * e, H / 2 + (0.36 - H / 2) * e, dF[2] * 0.45 * e);
+    target.set(L / 2 + (dF[0] * 0.45 - L / 2) * e, H / 2 + (0.5 - H / 2) * e, dF[2] * 0.45 * e);
     camera.position.set(target.x + Math.cos(yaw) * Math.cos(pitch) * 10, target.y + Math.sin(pitch) * 10, target.z + Math.sin(yaw) * Math.cos(pitch) * 10);
     camera.lookAt(target);
-    const viewH = 1.7 + 0.55 * e;
+    // tall enough for the folded page stacks, which rise well above the open room
+    const viewH = 1.7 + 1.0 * e;
     const narrow = size.width < 640;
     const viewW = (narrow ? 1.35 : 1.9) + (narrow ? 1.0 : 1.2) * e;
     const ortho = camera as THREE.OrthographicCamera;
