@@ -43,7 +43,7 @@ Same paper cut-out style as the bedroom, after Dakshi's reference sketch; ink-on
 - **Right wall** — framed picture, two floating shelves (folded towels, reed diffuser, a jar and a
   little trailing plant), toilet-paper holder, arched mirror with three sticky notes and a wall
   lamp above it, sparkles.
-- **Floor** — square tiles, a small mat in the shower, a big mat in the middle, soft shadows.
+- **Floor** — square tiles, a small blue mat by the shower, a big mat in the middle, soft shadows.
 - **Pop-ups** — shower curtain on a rod just off the left wall, pulled to the inner end;
   toilet; vanity with two doors, basin, faucet, soap pump and toothbrush cup; a
   woven bin with a towel over the edge.

@@ -527,6 +527,7 @@ const BATH = {
   floor: "#e6f0f3",
   curtain: "#d3e8f6",
   rug: "#f8d2c6",
+  mat: "#cfe0f8",
   towel: "#f8d2c6",
   towel2: "#dbe8fb",
   vanity: "#d6e8ef",
@@ -834,7 +835,7 @@ const bathroom: Room = {
     s.shadow(quad(0.54, 0.0, 0.42, 0.32), 0.24, 16);
     s.shadow(s.ellipsePts(...F(0.93, 0.44), 0.06, 0.06), 0.2, 10);
     // rugs
-    scallopRug(s, [F(0.07, 0.6), F(0.25, 0.6), F(0.25, 0.86), F(0.07, 0.86)], BATH.rug, 9);
+    scallopRug(s, [F(0.17, 0.54), F(0.35, 0.54), F(0.35, 0.8), F(0.17, 0.8)], BATH.mat, 9);
     scallopRug(s, [F(0.52, 0.42), F(0.86, 0.42), F(0.86, 0.86), F(0.52, 0.86)], BATH.rug, 11);
   },
   popups: isoLayers([
@@ -847,8 +848,8 @@ const bathroom: Room = {
       iso.line([0, 0.89, RZ], [CX, 0.89, RZ], { w: 2.2 });
       iso.line([CX, 0.41, RZ], [CX, 0.89, RZ], { w: 3 });
       const c0 = 0.42;
-      const c1 = 0.6;
-      const HEM = 0.1;
+      const c1 = 0.65;
+      const HEM = 0.04;
       const folds = 6;
       const curtain: V3[] = [
         [CX, c0, RZ - 0.01],
