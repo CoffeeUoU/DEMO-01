@@ -38,14 +38,14 @@ shadow (after Dakshi's reference sketch).
 
 Same paper cut-out style as the bedroom, after Dakshi's reference sketch; ink-only or soft colour.
 
-- **Left wall** — tiled shower recess with a shower head and falling water, a shelf with two
-  bottles, a curtain on a rod with rings, gathered at the inner end; a towel on a hook near the
-  front edge, sparkles, and a hanging plant near the corner.
+- **Left wall** — tiled shower recess with a shower head and falling water and a shelf with two
+  bottles; a towel on a hook near the front edge, sparkles, and a hanging plant near the corner.
 - **Right wall** — framed picture, two floating shelves (folded towels, reed diffuser, a jar and a
-  little trailing plant), toilet-paper holder, arched mirror with a wall lamp above it, sparkles,
-  three taped photos near the front edge.
-- **Floor** — square tiles, shower curb and drain, two scalloped bath mats, soft shadows.
-- **Pop-ups** — toilet; vanity with two doors, basin, faucet, soap pump and toothbrush cup; a
+  little trailing plant), toilet-paper holder, arched mirror with three sticky notes and a wall
+  lamp above it, sparkles.
+- **Floor** — square tiles, a small mat in the shower, a big mat in the middle, soft shadows.
+- **Pop-ups** — shower curtain on a rod across the front of the shower, pulled to the inner end;
+  toilet; vanity with two doors, basin, faucet, soap pump and toothbrush cup; a
   woven bin with a towel over the edge.
 - **Colour version** — sea-glass walls and shower tiles, pale blue curtain and vanity, coral mats
   and towel, wooden shelves.

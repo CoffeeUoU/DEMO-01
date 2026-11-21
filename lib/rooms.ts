@@ -10,7 +10,7 @@
 // Pop-up positions are [s, t]: s = distance along the right wall, t = along the left wall.
 
 import type { Pt, Sketch } from "./sketch";
-import { isoLayers, WHITE, SIDE_A, SIDE_B } from "./iso";
+import { isoLayers, WHITE, SIDE_A, SIDE_B, type V3 } from "./iso";
 import { look, tint } from "./style";
 
 export type PopUp = { size: number; at: [number, number]; draw: (s: Sketch) => void; halo?: number };
@@ -667,30 +667,6 @@ const bathroom: Room = {
       s.stroke(b, { closed: true, w: 1.8 });
       s.box(x + 0.012, 0.6 - h - 0.02, 0.016, 0.02, null, { w: 1.6 });
     }
-    // curtain rod with rings, curtain gathered at the inner end
-    s.line(sx0 - 0.01, 0.27, sx1 + 0.03, 0.27, { w: 3 });
-    for (let i = 0; i < 4; i++) s.circle(0.47 + i * 0.04, 0.27, 0.012, { w: 1.6 });
-    const cx0 = 0.45;
-    const cx1 = 0.63;
-    const hemY = 0.88;
-    const cur: Pt[] = [
-      [cx0, 0.28],
-      [cx1, 0.28],
-    ];
-    for (let i = 0; i <= 10; i++) cur.push([cx1 - ((cx1 - cx0) * i) / 10, hemY + (i % 2 ? 0.014 : -0.004)]);
-    s.sticker(cur, 5, 0.22, tint(BATH.curtain));
-    s.stroke(cur, { closed: true, w: 2.4 });
-    for (let i = 1; i < 5; i++) {
-      const x = cx0 + ((cx1 - cx0) * i) / 5;
-      s.stroke(
-        [
-          [x, 0.3],
-          [x + 0.005, 0.6],
-          [x - 0.003, hemY - 0.01],
-        ],
-        { w: 1.4, alpha: 0.8 },
-      );
-    }
     // towel on a hook near the front edge
     s.circle(0.075, 0.44, 0.012, { w: 2 });
     const towel: Pt[] = [
@@ -805,6 +781,28 @@ const bathroom: Room = {
     s.stroke(glass, { closed: true, w: 1.5 });
     s.line(0.68, 0.36, 0.72, 0.3, { w: 1.2, alpha: 0.6 });
     s.line(0.69, 0.42, 0.76, 0.32, { w: 1.2, alpha: 0.6 });
+    // little sticky notes on the mirror
+    const postit = (x: number, y: number, w: number, rot: number, c: string, lines: number) => {
+      const cx = x + w / 2;
+      const cy = y + w / 2;
+      const pts = s.rectPts(x, y, w, w).map(([qx, qy]) => [cx + (qx - cx) * Math.cos(rot) - (qy - cy) * Math.sin(rot), cy + (qx - cx) * Math.sin(rot) + (qy - cy) * Math.cos(rot)] as Pt);
+      s.sticker(pts, 2, 0.14, tint(c));
+      s.stroke(pts, { closed: true, w: 1.5 });
+      for (let i = 0; i < lines; i++) s.line(x + w * 0.2, y + w * (0.38 + i * 0.2), x + w * 0.8, y + w * (0.38 + i * 0.2), { w: 1, alpha: 0.6 });
+    };
+    postit(0.66, 0.44, 0.05, -0.12, "#fff3b5", 2);
+    postit(0.77, 0.47, 0.045, 0.1, "#fadbe2", 0);
+    s.stroke(
+      [
+        [0.783, 0.495],
+        [0.792, 0.488],
+        [0.8, 0.497],
+        [0.792, 0.506],
+        [0.783, 0.495],
+      ],
+      { w: 1.2 },
+    );
+    postit(0.72, 0.5, 0.046, 0.05, "#dbe8fb", 2);
     // wall lamp above the mirror
     s.line(0.74, 0.11, 0.74, 0.15, { w: 2.2 });
     const lamp: Pt[] = [
@@ -822,10 +820,6 @@ const bathroom: Room = {
     ])
       s.line(a, b, a + (a - 0.74) * 0.4, b - 0.02, { w: 1.4 });
     sparkle(s, 0.56, 0.3, 0.022);
-    // photos taped near the front edge
-    tapedPhoto(s, 0.9, 0.34, 0.07, 0.08, 0.05);
-    tapedPhoto(s, 0.88, 0.46, 0.065, 0.075, -0.04);
-    tapedPhoto(s, 0.92, 0.56, 0.065, 0.075, 0.06);
   },
   floor(s) {
     if (look.color) s.washAll(tint(BATH.floor), 1);
@@ -834,24 +828,40 @@ const bathroom: Room = {
       s.line(i / 9, 0, i / 9, 1, { w: 1.4, alpha: 0.5 });
       s.line(0, i / 9, 1, i / 9, { w: 1.4, alpha: 0.5 });
     }
-    // shower floor: curb + drain
-    s.line(...F(0.3, 0.42), ...F(0.3, 0.89), { w: 2.2 });
-    s.line(...F(0, 0.42), ...F(0.3, 0.42), { w: 2.2 });
-    const [dx, dy] = F(0.14, 0.62);
-    s.box(dx - 0.022, dy - 0.022, 0.044, 0.044, null, { w: 1.8 });
-    for (let i = 1; i < 4; i++) s.line(dx - 0.02 + i * 0.01, dy - 0.02, dx - 0.02 + i * 0.01, dy + 0.02, { w: 1 });
     // contact shadows
     const quad = (x: number, y: number, ax: number, ay: number) => [F(x, y), F(x + ax, y), F(x + ax, y + ay), F(x, y + ay)];
     s.shadow(quad(0.16, 0.0, 0.2, 0.3), 0.22, 14);
     s.shadow(quad(0.54, 0.0, 0.42, 0.32), 0.24, 16);
     s.shadow(s.ellipsePts(...F(0.93, 0.44), 0.06, 0.06), 0.2, 10);
     // rugs
-    scallopRug(s, [F(0.33, 0.52), F(0.47, 0.52), F(0.47, 0.82), F(0.33, 0.82)], BATH.rug, 9);
+    scallopRug(s, [F(0.07, 0.6), F(0.25, 0.6), F(0.25, 0.86), F(0.07, 0.86)], BATH.rug, 9);
     scallopRug(s, [F(0.52, 0.42), F(0.86, 0.42), F(0.86, 0.86), F(0.52, 0.86)], BATH.rug, 11);
   },
   popups: isoLayers([
-    // against the walls: toilet + vanity
+    // against the walls: shower curtain, toilet, vanity
     (iso) => {
+      // --- shower curtain: rod across the front of the recess, curtain pulled to the inner end ---
+      const CX = 0.3; // distance out from the left wall
+      const RZ = 0.78;
+      iso.line([0, 0.41, RZ], [CX, 0.41, RZ], { w: 2.2 });
+      iso.line([0, 0.89, RZ], [CX, 0.89, RZ], { w: 2.2 });
+      iso.line([CX, 0.41, RZ], [CX, 0.89, RZ], { w: 3 });
+      const c0 = 0.42;
+      const c1 = 0.6;
+      const HEM = 0.1;
+      const folds = 6;
+      const curtain: V3[] = [
+        [CX, c0, RZ - 0.01],
+        [CX, c1, RZ - 0.01],
+      ];
+      for (let i = 0; i <= folds * 2; i++) curtain.push([CX, c1 - ((c1 - c0) * i) / (folds * 2), HEM + (i % 2 ? 0 : 0.015)]);
+      iso.face(curtain, look.color ? BATH.curtain : WHITE, { w: 2.4 });
+      for (let i = 1; i < folds; i++) {
+        const y = c0 + ((c1 - c0) * i) / folds;
+        iso.line([CX, y, RZ - 0.03], [CX, y + 0.004, HEM + 0.03], { w: 1.4 });
+      }
+      for (let i = 0; i < 5; i++) iso.at([CX, c0 + 0.02 + i * 0.04, RZ], (s, [x, y], u) => s.circle(x, y, 0.012 * u, { w: 1.6, mask: true }));
+
       // --- toilet (against the right wall, near the corner) ---
       iso.box(0.215, 0.02, 0, 0.07, 0.07, 0.2); // back of the base, under the tank
       iso.cyl(0.25, 0.15, 0, 0.045, 0.14, WHITE, { r2: 0.06 });
