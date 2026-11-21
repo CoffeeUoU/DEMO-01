@@ -23,14 +23,14 @@ Wall A is the left wall as you look into the room, wall B is the right wall.
 Blue ink on white paper, no colour: every piece is a paper cut-out with a white margin and a soft
 shadow (after Dakshi's reference sketch).
 
-- **Left wall** — big window with clouds, stars near the corner, two taped photos near the front
-  edge.
+- **Left wall** — big window with clouds, the bed drawn flat under it (headboard, mattress, lilac
+  quilt, pillow), stars near the corner, two taped photos near the front edge.
 - **Right wall** — hanging plant on three cords near the corner, stars, a big cork board with
-  pinned notes, and the desk drawn flat on the wall (drawers, lamp, laptop, mug, pencil cup, book).
+  pinned notes above the desk.
 - **Floor** — boards, scalloped rug, slippers, soft shadows under the furniture.
 - **Pop-ups** (drawn isometrically so they read as solid furniture from the camera)
   - curtains on a rod hanging just off the left wall, either side of the window
-  - a simple bed (frame, mattress, quilt with a folded edge, pillow)
+  - desk with drawers, lamp, laptop, mug, pencil cup and a book
   - in front: chair at the desk, woven waste bin
 - **Entries hung here** — dreams, sleep, late-night thoughts, what you're studying.
 
@@ -55,10 +55,10 @@ Same paper cut-out style as the bedroom, after Dakshi's reference sketch; ink-on
 Same paper cut-out style; ink-only or soft colour.
 
 - **Left wall** — window with clouds and curtains on a rod, two floating shelves near the corner
-  (a leafy plant and books, two jars), tiled backsplash, and the counter drawn flat on the wall
+  (books, two jars), tiled backsplash, and the counter drawn flat on the wall
   (three doors, a tea towel, sink rim, gooseneck tap, soap, kettle); a trailing plant and two
   taped notes (heart, checklist) near the front edge.
-- **Right wall** — framed picture, range hood, upper cabinet with a plant on top, tiled
+- **Right wall** — framed picture, range hood, upper cabinet, tiled
   backsplash, and the counter drawn flat (door, oven, drawers, kettle, utensil jar, pot,
   cutting board, fruit bowl).
 - **Floor** — boards and a scalloped rug, soft shadows.

@@ -257,6 +257,28 @@ const bedroom: Room = {
       s.line(x + 0.015, y + 0.06, x + 0.05, y + 0.015, { w: 1.2, alpha: 0.6 });
     }
     // (the curtains and their rod are pop-ups that hang just in front of this wall)
+    // the bed, drawn flat against the wall under the window (headboard nearest the corner)
+    const bedPart = (pts: Pt[], c: string) => {
+      s.sticker(pts, 4, 0.2, tint(c));
+      s.stroke(pts, { closed: true, w: 2.4 });
+    };
+    bedPart([[0.715, 1.0], [0.715, 0.66], ...s.ellipsePts(0.735, 0.66, 0.02, 0.02, Math.PI, Math.PI * 2, 8), [0.755, 1.0]], BED.wood);
+    bedPart([[0.1, 1.0], [0.1, 0.79], ...s.ellipsePts(0.115, 0.79, 0.015, 0.015, Math.PI, Math.PI * 2, 6), [0.13, 1.0]], BED.wood);
+    bedPart(s.rectPts(0.13, 0.86, 0.585, 0.08), BED.wood);
+    bedPart(s.rectPts(0.13, 0.775, 0.585, 0.085), "#ffffff");
+    bedPart(s.rectPts(0.6, 0.725, 0.11, 0.055), "#ffffff");
+    s.line(0.61, 0.752, 0.7, 0.752, { w: 1, alpha: 0.5 });
+    bedPart(
+      [
+        [0.13, 0.765],
+        [0.57, 0.765],
+        [0.575, 0.905],
+        [0.13, 0.905],
+      ],
+      BED.quilt,
+    );
+    bedPart(s.rectPts(0.52, 0.76, 0.055, 0.15), BED.quiltFold);
+    for (const x of [0.25, 0.39]) s.line(x, 0.77, x, 0.9, { w: 1, alpha: 0.5 });
     // stars near the corner
     s.star(0.88, 0.22, 0.026, { w: 2 });
     s.star(0.92, 0.33, 0.016, { w: 1.8 });
@@ -361,54 +383,6 @@ const bedroom: Room = {
     s.circle(0.665, 0.47, 0.018, { w: 1.3 });
     note(0.75, 0.43, 0.08, 0.08, 2, 0.03);
     note(0.85, 0.44, 0.07, 0.1, 3, -0.06);
-    // the desk, drawn flat against the wall
-    const desk = (pts: Pt[], c = BED.wood) => {
-      s.sticker(pts, 3, 0.18, tint(c));
-      s.stroke(pts, { closed: true, w: 2.2 });
-    };
-    desk(s.rectPts(0.425, 0.66, 0.025, 0.36));
-    desk(s.rectPts(0.76, 0.66, 0.19, 0.36));
-    for (let i = 0; i < 3; i++) {
-      const y = 0.68 + i * 0.1;
-      s.rect(0.775, y, 0.16, 0.08, { w: 1.5 });
-      s.line(0.835, y + 0.04, 0.875, y + 0.04, { w: 2.2 });
-    }
-    desk(s.rectPts(0.4, 0.625, 0.57, 0.035));
-    // lamp
-    desk(s.ellipsePts(0.49, 0.62, 0.035, 0.01), BED.wood);
-    s.line(0.49, 0.615, 0.49, 0.52, { w: 2.4 });
-    desk(
-      [
-        [0.455, 0.53],
-        [0.525, 0.53],
-        [0.51, 0.46],
-        [0.47, 0.46],
-      ],
-      BED.shade,
-    );
-    for (const [x, y, dx, dy] of [
-      [0.43, 0.5, -0.03, 0],
-      [0.55, 0.5, 0.03, 0],
-      [0.44, 0.55, -0.025, 0.02],
-      [0.54, 0.55, 0.025, 0.02],
-    ])
-      s.line(x, y, x + dx, y + dy, { w: 1.4 });
-    // laptop
-    desk(s.rectPts(0.58, 0.5, 0.15, 0.11), BED.laptop);
-    s.rect(0.592, 0.512, 0.126, 0.086, { w: 1.3 });
-    desk(s.rectPts(0.565, 0.61, 0.18, 0.015), BED.laptop);
-    // mug, pencil cup, book
-    desk(s.rectPts(0.77, 0.575, 0.035, 0.05), BED.mug);
-    s.stroke(s.ellipsePts(0.81, 0.6, 0.01, 0.014, -1.4, 1.4, 8), { w: 1.8 });
-    for (const [x0, x1] of [
-      [0.845, 0.835],
-      [0.86, 0.865],
-      [0.872, 0.885],
-    ])
-      s.line(x0, 0.575, x1, 0.51, { w: 2 });
-    desk(s.rectPts(0.835, 0.57, 0.045, 0.055), BED.cup);
-    desk(s.rectPts(0.9, 0.52, 0.035, 0.105), BED.book);
-    s.line(0.907, 0.54, 0.928, 0.54, { w: 1, alpha: 0.6 });
   },
   floor(s) {
     if (look.color) s.washAll(tint(BED.floor), 1);
@@ -423,7 +397,7 @@ const bedroom: Room = {
     }
     // contact shadows under the furniture (coords: F(xa, xb))
     const quad = (x: number, y: number, dx: number, dy: number) => [F(x, y), F(x + dx, y), F(x + dx, y + dy), F(x, y + dy)];
-    s.shadow(quad(0.03, 0.27, 0.36, 0.62), 0.28, 16);
+    s.shadow(quad(0.42, 0.02, 0.56, 0.27), 0.22, 16);
     s.shadow(quad(0.52, 0.3, 0.18, 0.16), 0.2, 12);
     s.shadow(s.ellipsePts(0.9, 1 - 0.36, 0.05, 0.05), 0.2, 8);
     // rug with a scalloped edge
@@ -467,7 +441,7 @@ const bedroom: Room = {
     }
   },
   popups: isoLayers([
-    // against the walls: bed + desk
+    // against the walls: curtains + desk
     (iso) => {
       // --- curtains on a rod, hanging just off the left wall over the bed ---
       const CX = 0.05;
@@ -478,17 +452,75 @@ const bedroom: Room = {
       isoCurtain(iso, CX, 0.24, 0.37, RZ, 0.34, BED.curtain);
       isoCurtain(iso, CX, 0.73, 0.86, RZ, 0.34, BED.curtain);
 
-      // --- bed (against the left wall), kept simple ---
-      const B0 = 0.28;
-      const B1 = 0.87;
-      iso.box(0.03, B0, 0, 0.34, B1 - B0, 0.08, WHITE, { color: BED.wood });
-      iso.box(0.03, B0, 0.08, 0.34, B1 - B0, 0.09);
-      // pillow
-      iso.box(0.08, 0.31, 0.17, 0.24, 0.1, 0.04);
-      // quilt over the front part with a folded-back edge
-      const Q0 = 0.46;
-      iso.box(0.025, Q0, 0.06, 0.35, B1 + 0.01 - Q0, 0.115, WHITE, { color: BED.quilt });
-      iso.box(0.025, Q0, 0.175, 0.35, 0.06, 0.008, WHITE, { color: BED.quiltFold });
+      // --- desk (against the right wall) ---
+      const DZ = 0.36;
+      // far leg pair at the left end
+      iso.box(0.43, 0.03, 0, 0.025, 0.025, DZ - 0.02, WHITE, { color: BED.wood });
+      // drawer unit at the right end
+      iso.box(0.76, 0.03, 0, 0.19, 0.22, DZ - 0.02, WHITE, { color: BED.wood });
+      for (let i = 0; i < 3; i++) {
+        const z0 = 0.03 + i * 0.105;
+        iso.face(
+          [
+            [0.775, 0.25, z0],
+            [0.935, 0.25, z0],
+            [0.935, 0.25, z0 + 0.085],
+            [0.775, 0.25, z0 + 0.085],
+          ],
+          null,
+          { w: 1.6 },
+        );
+        iso.line([0.835, 0.25, z0 + 0.045], [0.875, 0.25, z0 + 0.045], { w: 2.2 });
+      }
+      iso.box(0.43, 0.22, 0, 0.025, 0.025, DZ - 0.02, WHITE, { color: BED.wood });
+      // desk top
+      iso.box(0.41, 0.02, DZ - 0.025, 0.56, 0.27, 0.025, WHITE, { color: BED.wood });
+      const T = DZ;
+      // lamp: weighted base, straight stem, shade centred above it
+      const LX = 0.49;
+      const LY = 0.08;
+      iso.cyl(LX, LY, T, 0.035, 0.018, WHITE, { color: BED.wood });
+      iso.line([LX, LY, T + 0.018], [LX, LY, T + 0.13], { w: 2.4 });
+      iso.cyl(LX, LY, T + 0.11, 0.06, 0.08, WHITE, { r2: 0.028, color: BED.shade });
+      iso.at([LX, LY, T + 0.11], (s, [x, y], u) => {
+        for (let i = 0; i < 4; i++) {
+          const a = 0.35 + i * 0.6;
+          s.line(x + Math.cos(a) * 0.09 * u, y + Math.sin(a) * 0.07 * u, x + Math.cos(a) * 0.13 * u, y + Math.sin(a) * 0.1 * u, { w: 1.4, mask: true });
+        }
+      });
+      // laptop
+      iso.box(0.6, 0.06, T, 0.16, 0.12, 0.01, WHITE, { color: BED.laptop });
+      iso.face(
+        [
+          [0.6, 0.06, T + 0.01],
+          [0.76, 0.06, T + 0.01],
+          [0.76, 0.035, T + 0.13],
+          [0.6, 0.035, T + 0.13],
+        ],
+        tint(BED.laptop),
+        { w: 2.2 },
+      );
+      iso.face(
+        [
+          [0.615, 0.057, T + 0.025],
+          [0.745, 0.057, T + 0.025],
+          [0.745, 0.039, T + 0.115],
+          [0.615, 0.039, T + 0.115],
+        ],
+        null,
+        { w: 1.3 },
+      );
+      // mug, pencil cup, books
+      iso.cyl(0.8, 0.2, T, 0.028, 0.05, WHITE, { color: BED.mug });
+      iso.at([0.83, 0.2, T + 0.03], (s, [x, y], u) => s.stroke(s.ellipsePts(x, y, 0.018 * u, 0.022 * u, -1.3, 1.3, 8), { w: 2, mask: true }));
+      iso.cyl(0.87, 0.1, T, 0.03, 0.07, WHITE, { color: BED.cup });
+      for (const [dx, dy] of [
+        [-0.01, 0],
+        [0.008, -0.01],
+        [0.004, 0.012],
+      ])
+        iso.line([0.87 + dx, 0.1 + dy, T + 0.07], [0.87 + dx * 2.5, 0.1 + dy * 2.5, T + 0.13], { w: 2 });
+      iso.box(0.9, 0.18, T, 0.035, 0.08, 0.1, WHITE, { color: BED.book });
     },
     // loose pieces: chair, bin
     (iso) => {
@@ -1167,7 +1199,7 @@ const kitchen: Room = {
     s.line(0.13, 0.17, 0.59, 0.17, { w: 2.6 });
     curtain(s, 0.13, 0.25, 0.17, 0.68);
     curtain(s, 0.47, 0.59, 0.17, 0.48);
-    // floating shelves near the corner: plant + books, jars
+    // floating shelves near the corner: books, jars
     const shelf = (y: number) => {
       s.sticker(s.rectPts(0.64, y, 0.3, 0.026), 3, 0.18, tint(KIT.wood));
       s.box(0.64, y, 0.3, 0.026, null, { w: 2 });
@@ -1183,7 +1215,6 @@ const kitchen: Room = {
       s.stroke(b, { closed: true, w: 1.6 });
       s.line(x + w * 0.2, 0.22 - h + 0.02, x + w * 0.8, 0.22 - h + 0.02, { w: 1, alpha: 0.6 });
     }
-    leafyPlant(s, 0.72, 0.22, 1.1, 2);
     for (const [x, w, h] of [
       [0.7, 0.06, 0.08],
       [0.8, 0.065, 0.07],
@@ -1196,8 +1227,7 @@ const kitchen: Room = {
       s.stroke(l, { closed: true, w: 1.5 });
       for (let i = 0; i < 6; i++) s.circle(x + 0.012 + s.r() * (w - 0.024), 0.36 - h * 0.15 - s.r() * h * 0.45, 0.003, { w: 1, alpha: 0.7 });
     }
-    // trailing plant near the front edge + taped notes
-    leafyPlant(s, 0.07, 0.36, 1.0, 1);
+    // taped notes near the front edge
     note(s, 0.03, 0.55, 0.07, 0.08, -0.04, "heart", KIT.note2);
     note(s, 0.035, 0.67, 0.075, 0.09, 0.03, "list", KIT.note);
   },
@@ -1277,14 +1307,13 @@ const kitchen: Room = {
     s.box(0.23, 0.4, 0.2, 0.022, null, { w: 2 });
     for (const x of [0.37, 0.39, 0.41]) s.circle(x, 0.411, 0.004, { w: 1 });
     s.line(0.26, 0.37, 0.31, 0.33, { w: 1.1, alpha: 0.6 });
-    // upper cabinet with a plant on top
+    // upper cabinet
     const cab = s.rectPts(0.47, 0.2, 0.22, 0.2);
     s.sticker(cab, 5, 0.2, tint(KIT.cabinet));
     s.stroke(cab, { closed: true, w: 2.6 });
     s.line(0.58, 0.2, 0.58, 0.4, { w: 1.8 });
     s.line(0.56, 0.31, 0.56, 0.36, { w: 2.4 });
     s.line(0.6, 0.31, 0.6, 0.36, { w: 2.4 });
-    leafyPlant(s, 0.56, 0.2, 1.0, 0);
   },
   floor(s) {
     if (look.color) s.washAll(tint(KIT.floor), 1);
