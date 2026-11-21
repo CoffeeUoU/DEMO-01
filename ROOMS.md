@@ -44,7 +44,7 @@ Same paper cut-out style as the bedroom, after Dakshi's reference sketch; ink-on
   little trailing plant), toilet-paper holder, arched mirror with three sticky notes and a wall
   lamp above it, sparkles.
 - **Floor** — square tiles, a small mat in the shower, a big mat in the middle, soft shadows.
-- **Pop-ups** — shower curtain on a rod across the front of the shower, pulled to the inner end;
+- **Pop-ups** — shower curtain on a rod just off the left wall, pulled to the inner end;
   toilet; vanity with two doors, basin, faucet, soap pump and toothbrush cup; a
   woven bin with a towel over the edge.
 - **Colour version** — sea-glass walls and shower tiles, pale blue curtain and vanity, coral mats

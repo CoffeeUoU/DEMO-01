@@ -841,7 +841,7 @@ const bathroom: Room = {
     // against the walls: shower curtain, toilet, vanity
     (iso) => {
       // --- shower curtain: rod across the front of the recess, curtain pulled to the inner end ---
-      const CX = 0.3; // distance out from the left wall
+      const CX = 0.07; // distance out from the left wall (hangs close to it)
       const RZ = 0.78;
       iso.line([0, 0.41, RZ], [CX, 0.41, RZ], { w: 2.2 });
       iso.line([0, 0.89, RZ], [CX, 0.89, RZ], { w: 2.2 });
