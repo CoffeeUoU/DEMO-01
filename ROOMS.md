@@ -34,13 +34,22 @@ shadow (after Dakshi's reference sketch).
   - in front: chair tucked at the desk, woven waste bin
 - **Entries hung here** — dreams, sleep, late-night thoughts, what you're studying.
 
-## 2. Bathroom
+## 2. Bathroom — redesigned
 
-- **Wall A** — round mirror above a sink, towel ring with towel, toothbrush cup.
-- **Wall B** — tiled shower wall with a rain shower head and a half-drawn curtain, small window.
-- **Floor** — small square tiles, bath mat.
-- **Pop-ups** — clawfoot bathtub, laundry basket, a potted fern.
-- **Entries hung here** — resets, self-talk, skincare/health routines, things you wash off.
+Same paper cut-out style as the bedroom, after Dakshi's reference sketch; ink-only or soft colour.
+
+- **Left wall** — tiled shower recess with a shower head and falling water, a shelf with two
+  bottles, a curtain on a rod with rings, gathered at the inner end; a towel on a hook near the
+  front edge, sparkles, and a hanging plant near the corner.
+- **Right wall** — framed picture, two floating shelves (folded towels, reed diffuser, a jar and a
+  little trailing plant), toilet-paper holder, arched mirror with a wall lamp above it, sparkles,
+  three taped photos near the front edge.
+- **Floor** — square tiles, shower curb and drain, two scalloped bath mats, soft shadows.
+- **Pop-ups** — toilet; vanity with two doors, basin, faucet, soap pump and toothbrush cup; a
+  woven bin with a towel over the edge.
+- **Colour version** — sea-glass walls and shower tiles, pale blue curtain and vanity, coral mats
+  and towel, wooden shelves.
+- **Entries hung here** — resets, self-talk, routines, things you wash off.
 
 ## 3. Kitchen
 

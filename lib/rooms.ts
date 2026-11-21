@@ -519,177 +519,439 @@ const bedroom: Room = {
   ]),
 };
 
+// Bathroom — same paper cut-out style as the bedroom (after Dakshi's reference sketch).
+
+const BATH = {
+  wall: "#eef7f4",
+  tile: "#d6eee6",
+  floor: "#e6f0f3",
+  curtain: "#d3e8f6",
+  rug: "#f8d2c6",
+  towel: "#f8d2c6",
+  towel2: "#dbe8fb",
+  vanity: "#d6e8ef",
+  wood: "#ead3b2",
+  glass: "#dcebfa",
+  leaf: "#cfe8c4",
+  pot: "#f3c8b0",
+  diffuser: "#f3e1c4",
+  jar: "#f7ccd6",
+  soap: "#cfe8c4",
+  cup: "#cfe0f7",
+  bin: "#f3e6cf",
+  lamp: "#fbe6a4",
+};
+
+/** Four-point sparkle. */
+function sparkle(s: Sketch, x: number, y: number, r: number) {
+  const k = r * 0.28;
+  s.stroke(
+    [
+      [x, y - r],
+      [x + k, y - k],
+      [x + r * 0.75, y],
+      [x + k, y + k],
+      [x, y + r],
+      [x - k, y + k],
+      [x - r * 0.75, y],
+      [x - k, y - k],
+    ],
+    { closed: true, w: 1.8 },
+  );
+}
+
+function almondLeaf(s: Sketch, x: number, y: number, r: number, rot: number, color: string) {
+  const almond: Pt[] = [];
+  for (let i = 0; i <= 8; i++) almond.push([Math.sin((i / 8) * Math.PI) * r * 0.62, -r + (2 * r * i) / 8]);
+  for (let i = 8; i >= 0; i--) almond.push([-Math.sin((i / 8) * Math.PI) * r * 0.62, -r + (2 * r * i) / 8]);
+  const pts = almond.map(([a, b]) => [x + a * Math.cos(rot) - b * Math.sin(rot), y + a * Math.sin(rot) + b * Math.cos(rot)] as Pt);
+  s.sticker(pts, 2, 0.12, tint(color));
+  s.stroke(pts, { closed: true, w: 1.6 });
+  s.line(x + Math.sin(rot) * r * 0.8, y - Math.cos(rot) * r * 0.8, x - Math.sin(rot) * r * 0.8, y + Math.cos(rot) * r * 0.8, { w: 1, alpha: 0.7 });
+}
+
+/** Trailing leaves along a few vines. */
+function vines(s: Sketch, lines: Pt[][], r: number, color: string) {
+  lines.forEach((v, i) => {
+    s.stroke(v, { w: 1.4 });
+    for (let j = 0; j < v.length - 1; j++)
+      for (const tt of [0.4, 0.9]) {
+        const x = v[j][0] + (v[j + 1][0] - v[j][0]) * tt;
+        const y = v[j][1] + (v[j + 1][1] - v[j][1]) * tt;
+        const side = (j + (tt > 0.5 ? 1 : 0) + i) % 2 ? 1 : -1;
+        almondLeaf(s, x + side * r * 0.7, y, r, side * 0.9, color);
+      }
+  });
+}
+
+/** Rug with a scalloped edge and a few stitch marks; corners given in canvas coords. */
+function scallopRug(s: Sketch, corners: Pt[], color: string, n = 10) {
+  s.sticker(corners, 4, 0.16, tint(color));
+  const edge: Pt[] = [];
+  for (let k = 0; k < 4; k++) {
+    const a = corners[k];
+    const b = corners[(k + 1) % 4];
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const len = Math.hypot(dx, dy);
+    const m = Math.max(4, Math.round((n * len) / 0.3));
+    for (let i = 0; i < m; i++) {
+      const t0 = i / m;
+      const tm = (i + 0.5) / m;
+      edge.push([a[0] + dx * t0, a[1] + dy * t0]);
+      edge.push([a[0] + dx * tm + (dy / len) * 0.01, a[1] + dy * tm - (dx / len) * 0.01]);
+    }
+  }
+  s.stroke(edge, { closed: true, w: 1.9 });
+  const cx = corners.reduce((q, p) => q + p[0], 0) / 4;
+  const cy = corners.reduce((q, p) => q + p[1], 0) / 4;
+  const inner = corners.map(([x, y]) => [cx + (x - cx) * 0.78, cy + (y - cy) * 0.78] as Pt);
+  for (let k = 0; k < 4; k++) {
+    const a = inner[k];
+    const b = inner[(k + 1) % 4];
+    for (let i = 0; i < 8; i++) {
+      const t = (i + 0.5) / 8;
+      s.circle(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 0.0025, { w: 1.2, alpha: 0.6 });
+    }
+  }
+}
+
 const bathroom: Room = {
   name: "bathroom",
   mood: "resets, mirror talks",
   left(s) {
-    s.washAll("#cfeee4");
-    s.box(-0.02, 0.5, 1.04, 0.52, "#f4fbf8", { w: 2 });
-    for (let i = 1; i < 10; i++) s.line(i / 10, 0.5, i / 10, 1, { w: 1.2, alpha: 0.45 });
-    for (let j = 1; j < 5; j++) s.line(0, 0.5 + j * 0.1, 1, 0.5 + j * 0.1, { w: 1.2, alpha: 0.45 });
-    // round mirror
-    s.blob(0.42, 0.28, 0.15, 0.15, "#e3eefa", { w: 3 });
-    s.line(0.35, 0.2, 0.42, 0.14, { w: 1.4, alpha: 0.6 });
-    s.line(0.36, 0.26, 0.47, 0.17, { w: 1.4, alpha: 0.6 });
-    // sink
-    s.shape(
-      [
-        [0.24, 0.5],
-        [0.6, 0.5],
-        [0.56, 0.6],
-        [0.28, 0.6],
-      ],
-      "#ffffff",
-      { w: 2.8 },
-    );
-    s.box(0.38, 0.6, 0.08, 0.34, "#ffffff", { w: 2.4 });
+    if (look.color) s.washAll(tint(BATH.wall), 1);
+    // shower recess: tiled panel from the floor up
+    const sx0 = 0.12;
+    const sx1 = 0.6;
+    const sy0 = 0.24;
+    s.sticker(s.rectPts(sx0, sy0, sx1 - sx0, 1.02 - sy0), 5, 0.18, tint(BATH.tile));
     s.stroke(
       [
-        [0.42, 0.5],
-        [0.42, 0.45],
-        [0.47, 0.45],
+        [sx0, 1.01],
+        [sx0, sy0],
+        [sx1, sy0],
+        [sx1, 1.01],
       ],
       { w: 2.4 },
     );
-    // toothbrush cup
-    s.box(0.27, 0.43, 0.045, 0.07, "#f6b2a0", { w: 2 });
-    s.line(0.285, 0.43, 0.275, 0.37, { w: 1.8 });
-    s.line(0.3, 0.43, 0.31, 0.38, { w: 1.8 });
-    // towel ring
-    s.circle(0.78, 0.36, 0.05, { w: 2.4 });
-    s.shape(
-      [
-        [0.73, 0.38],
-        [0.83, 0.38],
-        [0.85, 0.6],
-        [0.71, 0.6],
-      ],
-      "#f6b2a0",
-      { w: 2.4 },
-    );
-    s.line(0.72, 0.55, 0.84, 0.55, { w: 1.4, alpha: 0.7 });
-  },
-  right(s) {
-    s.washAll("#cfeee4");
-    s.box(0.04, 0.04, 0.6, 0.98, "#f4fbf8", { w: 2.2 });
-    for (let i = 1; i < 6; i++) s.line(0.04 + i * 0.1, 0.04, 0.04 + i * 0.1, 1, { w: 1.2, alpha: 0.45 });
-    for (let j = 1; j < 10; j++) s.line(0.04, 0.04 + j * 0.1, 0.64, 0.04 + j * 0.1, { w: 1.2, alpha: 0.45 });
-    // shower pipe + head
+    for (let x = sx0 + 0.06; x < sx1 - 0.01; x += 0.06) s.line(x, sy0, x, 1, { w: 1.1, alpha: 0.5 });
+    for (let y = sy0 + 0.06; y < 1; y += 0.06) s.line(sx0, y, sx1, y, { w: 1.1, alpha: 0.5 });
+    // shower arm + head + water
     s.stroke(
       [
-        [0.12, 0.6],
-        [0.12, 0.14],
-        [0.24, 0.14],
+        [sx0, 0.32],
+        [0.21, 0.31],
+        [0.25, 0.34],
       ],
       { w: 3 },
     );
-    s.shape(
+    const head = s.ellipsePts(0.27, 0.375, 0.055, 0.03, Math.PI, Math.PI * 2, 14);
+    const headShape: Pt[] = [[0.235, 0.345], ...head.reverse(), [0.305, 0.345]];
+    s.sticker(headShape, 3, 0.15);
+    s.stroke(headShape, { closed: true, w: 2.4 });
+    for (let i = 0; i < 7; i++) {
+      const x = 0.225 + i * 0.015;
+      s.line(x, 0.395, x + (i - 3) * 0.012, 0.5 + (i % 2) * 0.03, { w: 1, alpha: 0.55 });
+      if (i % 2 === 0) s.circle(x + (i - 3) * 0.014, 0.53 + (i % 3) * 0.02, 0.003, { w: 1, alpha: 0.5 });
+    }
+    // shower shelf with bottles
+    s.sticker(s.rectPts(sx0 + 0.01, 0.6, 0.2, 0.025), 3, 0.15, tint(BATH.wood));
+    s.box(sx0 + 0.01, 0.6, 0.2, 0.025, null, { w: 2 });
+    for (const [x, h, c] of [
+      [0.16, 0.08, BATH.towel2],
+      [0.21, 0.1, BATH.soap],
+    ] as const) {
+      const b = s.rectPts(x, 0.6 - h, 0.04, h);
+      s.sticker(b, 2, 0.12, tint(c));
+      s.stroke(b, { closed: true, w: 1.8 });
+      s.box(x + 0.012, 0.6 - h - 0.02, 0.016, 0.02, null, { w: 1.6 });
+    }
+    // curtain rod with rings, curtain gathered at the inner end
+    s.line(sx0 - 0.01, 0.27, sx1 + 0.03, 0.27, { w: 3 });
+    for (let i = 0; i < 4; i++) s.circle(0.47 + i * 0.04, 0.27, 0.012, { w: 1.6 });
+    const cx0 = 0.45;
+    const cx1 = 0.63;
+    const hemY = 0.88;
+    const cur: Pt[] = [
+      [cx0, 0.28],
+      [cx1, 0.28],
+    ];
+    for (let i = 0; i <= 10; i++) cur.push([cx1 - ((cx1 - cx0) * i) / 10, hemY + (i % 2 ? 0.014 : -0.004)]);
+    s.sticker(cur, 5, 0.22, tint(BATH.curtain));
+    s.stroke(cur, { closed: true, w: 2.4 });
+    for (let i = 1; i < 5; i++) {
+      const x = cx0 + ((cx1 - cx0) * i) / 5;
+      s.stroke(
+        [
+          [x, 0.3],
+          [x + 0.005, 0.6],
+          [x - 0.003, hemY - 0.01],
+        ],
+        { w: 1.4, alpha: 0.8 },
+      );
+    }
+    // towel on a hook near the front edge
+    s.circle(0.075, 0.44, 0.012, { w: 2 });
+    const towel: Pt[] = [
+      [0.035, 0.46],
+      [0.115, 0.46],
+      [0.125, 0.75],
+      [0.03, 0.75],
+    ];
+    s.sticker(towel, 4, 0.18, tint(BATH.towel));
+    s.stroke(towel, { closed: true, w: 2.2 });
+    s.line(0.04, 0.7, 0.12, 0.7, { w: 1.3, alpha: 0.7 });
+    s.line(0.06, 0.48, 0.065, 0.66, { w: 1.1, alpha: 0.6 });
+    sparkle(s, 0.07, 0.3, 0.025);
+    sparkle(s, 0.05, 0.37, 0.014);
+    // hanging plant near the corner
+    const px = 0.81;
+    const potTop = 0.24;
+    s.line(px, 0, px, 0.03, { w: 1.6 });
+    s.circle(px, 0.04, 0.01, { w: 1.6 });
+    for (const dx of [-0.06, 0.06]) s.line(px, 0.05, px + dx, potTop, { w: 1.3 });
+    for (const [dx, dy, rot] of [
+      [-0.06, -0.04, -0.8],
+      [-0.02, -0.06, -0.2],
+      [0.03, -0.06, 0.3],
+      [0.07, -0.035, 0.9],
+    ] as const)
+      almondLeaf(s, px + dx, potTop + dy, 0.032, rot, BATH.leaf);
+    const pot = s.ellipsePts(px, potTop, 0.065, 0.06, 0, Math.PI, 16);
+    s.sticker(pot, 4, 0.18, tint(BATH.pot));
+    s.stroke(pot, { closed: true, w: 2.2 });
+    vines(
+      s,
       [
-        [0.2, 0.14],
-        [0.32, 0.14],
-        [0.29, 0.19],
-        [0.23, 0.19],
+        [
+          [px - 0.04, potTop + 0.04],
+          [px - 0.06, potTop + 0.14],
+          [px - 0.05, potTop + 0.24],
+        ],
+        [
+          [px + 0.03, potTop + 0.05],
+          [px + 0.05, potTop + 0.13],
+        ],
       ],
-      "#d8dde6",
-      { w: 2.4 },
+      0.026,
+      BATH.leaf,
     );
-    for (let i = 0; i < 6; i++) s.line(0.24 + i * 0.01, 0.22, 0.21 + i * 0.02, 0.4 + (i % 2) * 0.04, { w: 1.2, alpha: 0.5 });
-    // curtain rod + coral curtain
-    s.line(0.04, 0.08, 0.7, 0.08, { w: 3 });
-    s.shape(
+  },
+  right(s) {
+    if (look.color) s.washAll(tint(BATH.wall), 1);
+    // framed picture
+    tapedPhoto(s, 0.14, 0.12, 0.12, 0.13, 0.02, "mountain");
+    // floating shelves
+    const shelf = (y: number) => {
+      s.sticker(s.rectPts(0.13, y, 0.3, 0.028), 3, 0.18, tint(BATH.wood));
+      s.box(0.13, y, 0.3, 0.028, null, { w: 2.2 });
+    };
+    shelf(0.37);
+    shelf(0.51);
+    // folded towels + reed diffuser on the top shelf
+    for (const [y, c] of [
+      [0.33, BATH.towel],
+      [0.29, BATH.towel2],
+    ] as const) {
+      const t = s.rectPts(0.15, y, 0.13, 0.04);
+      s.sticker(t, 2, 0.12, tint(c));
+      s.stroke(t, { closed: true, w: 1.8 });
+      s.line(0.16, y + 0.02, 0.27, y + 0.02, { w: 1, alpha: 0.6 });
+    }
+    const dif = s.rectPts(0.33, 0.31, 0.05, 0.06);
+    s.sticker(dif, 2, 0.12, tint(BATH.diffuser));
+    s.stroke(dif, { closed: true, w: 1.8 });
+    for (const dx of [-0.012, 0, 0.012]) s.line(0.355, 0.31, 0.355 + dx * 2.2, 0.23, { w: 1.3 });
+    // jar + little trailing plant on the lower shelf
+    const jar = s.rectPts(0.16, 0.475, 0.055, 0.035);
+    s.sticker(jar, 2, 0.12, tint(BATH.jar));
+    s.stroke(jar, { closed: true, w: 1.8 });
+    s.line(0.16, 0.485, 0.215, 0.485, { w: 1.2 });
+    const pot2 = s.rectPts(0.3, 0.47, 0.06, 0.04);
+    s.sticker(pot2, 2, 0.12, tint(BATH.pot));
+    s.stroke(pot2, { closed: true, w: 1.8 });
+    for (const [dx, rot] of [
+      [-0.02, -0.7],
+      [0.015, 0.1],
+      [0.045, 0.8],
+    ] as const)
+      almondLeaf(s, 0.32 + dx, 0.45, 0.024, rot, BATH.leaf);
+    vines(
+      s,
       [
-        [0.42, 0.08],
-        [0.69, 0.08],
-        [0.71, 0.86],
-        [0.66, 0.89],
-        [0.6, 0.86],
-        [0.54, 0.89],
-        [0.48, 0.86],
-        [0.43, 0.89],
+        [
+          [0.36, 0.5],
+          [0.38, 0.57],
+          [0.37, 0.64],
+        ],
       ],
-      "#f6b2a0",
-      { w: 2.6 },
+      0.022,
+      BATH.leaf,
     );
-    for (const x of [0.48, 0.54, 0.6, 0.66]) s.line(x, 0.1, x + 0.005, 0.86, { w: 1.4, alpha: 0.6 });
-    // little window
-    s.box(0.76, 0.14, 0.17, 0.2, "#bcd8f2", { w: 2.6 });
-    s.line(0.845, 0.14, 0.845, 0.34, { w: 1.8 });
-    baseboard(s, "#e6f3ee");
+    // toilet-paper holder
+    s.line(0.38, 0.64, 0.41, 0.64, { w: 2.2 });
+    const roll = s.rectPts(0.395, 0.62, 0.05, 0.05);
+    s.sticker(roll, 2, 0.12);
+    s.stroke(roll, { closed: true, w: 1.8 });
+    s.circle(0.42, 0.645, 0.008, { w: 1.4 });
+    // arched mirror over the vanity
+    const mx = 0.74;
+    const mirror: Pt[] = [[0.63, 0.58], ...s.ellipsePts(mx, 0.32, 0.11, 0.1, Math.PI, Math.PI * 2, 18), [0.85, 0.58]];
+    s.sticker(mirror, 6, 0.2, tint(BATH.vanity));
+    s.stroke(mirror, { closed: true, w: 2.6 });
+    const glass: Pt[] = [[0.65, 0.565], ...s.ellipsePts(mx, 0.325, 0.09, 0.082, Math.PI, Math.PI * 2, 18), [0.83, 0.565]];
+    s.fill(glass, tint(BATH.glass), { alpha: 1, jitter: 0.3 });
+    s.stroke(glass, { closed: true, w: 1.5 });
+    s.line(0.68, 0.36, 0.72, 0.3, { w: 1.2, alpha: 0.6 });
+    s.line(0.69, 0.42, 0.76, 0.32, { w: 1.2, alpha: 0.6 });
+    // wall lamp above the mirror
+    s.line(0.74, 0.11, 0.74, 0.15, { w: 2.2 });
+    const lamp: Pt[] = [
+      [0.71, 0.2],
+      [0.725, 0.15],
+      [0.755, 0.15],
+      [0.77, 0.2],
+    ];
+    s.sticker(lamp, 3, 0.18, tint(BATH.lamp));
+    s.stroke(lamp, { closed: true, w: 2 });
+    for (const [a, b] of [
+      [0.69, 0.13],
+      [0.79, 0.13],
+      [0.74, 0.06],
+    ])
+      s.line(a, b, a + (a - 0.74) * 0.4, b - 0.02, { w: 1.4 });
+    sparkle(s, 0.56, 0.3, 0.022);
+    // photos taped near the front edge
+    tapedPhoto(s, 0.9, 0.34, 0.07, 0.08, 0.05);
+    tapedPhoto(s, 0.88, 0.46, 0.065, 0.075, -0.04);
+    tapedPhoto(s, 0.92, 0.56, 0.065, 0.075, 0.06);
   },
   floor(s) {
-    s.washAll("#f4fbf8");
-    tiles(s, 12, 0.4);
-    s.box(0.35, 0.3, 0.38, 0.24, "#f6b2a0", { w: 2.6 });
-    for (let x = 0.38; x < 0.72; x += 0.03) s.line(x, 0.3, x, 0.27, { w: 1.2 });
-    for (let x = 0.38; x < 0.72; x += 0.03) s.line(x, 0.54, x, 0.57, { w: 1.2 });
+    if (look.color) s.washAll(tint(BATH.floor), 1);
+    // tiles
+    for (let i = 1; i < 9; i++) {
+      s.line(i / 9, 0, i / 9, 1, { w: 1.4, alpha: 0.5 });
+      s.line(0, i / 9, 1, i / 9, { w: 1.4, alpha: 0.5 });
+    }
+    // shower floor: curb + drain
+    s.line(...F(0.3, 0.42), ...F(0.3, 0.89), { w: 2.2 });
+    s.line(...F(0, 0.42), ...F(0.3, 0.42), { w: 2.2 });
+    const [dx, dy] = F(0.14, 0.62);
+    s.box(dx - 0.022, dy - 0.022, 0.044, 0.044, null, { w: 1.8 });
+    for (let i = 1; i < 4; i++) s.line(dx - 0.02 + i * 0.01, dy - 0.02, dx - 0.02 + i * 0.01, dy + 0.02, { w: 1 });
+    // contact shadows
+    const quad = (x: number, y: number, ax: number, ay: number) => [F(x, y), F(x + ax, y), F(x + ax, y + ay), F(x, y + ay)];
+    s.shadow(quad(0.16, 0.0, 0.2, 0.3), 0.22, 14);
+    s.shadow(quad(0.54, 0.0, 0.42, 0.32), 0.24, 16);
+    s.shadow(s.ellipsePts(...F(0.93, 0.44), 0.06, 0.06), 0.2, 10);
+    // rugs
+    scallopRug(s, [F(0.33, 0.52), F(0.47, 0.52), F(0.47, 0.82), F(0.33, 0.82)], BATH.rug, 9);
+    scallopRug(s, [F(0.52, 0.42), F(0.86, 0.42), F(0.86, 0.86), F(0.52, 0.86)], BATH.rug, 11);
   },
-  popups: [
-    {
-      size: 0.52,
-      at: [0.26, 0.56],
-      draw(s) {
-        const tub: Pt[] = [
-          [0.04, 0.42],
-          [0.96, 0.42],
-          [0.9, 0.78],
-          [0.1, 0.78],
-        ];
-        s.shape(tub, "#ffffff", { mask: true, w: 3 });
-        s.blob(0.5, 0.42, 0.46, 0.035, "#cfe8f7", { mask: true, w: 2 });
-        for (const x of [0.16, 0.8]) s.blob(x + 0.03, 0.85, 0.04, 0.09, "#f0cf6e", { mask: true, w: 2.4 });
-        s.stroke(
+  popups: isoLayers([
+    // against the walls: toilet + vanity
+    (iso) => {
+      // --- toilet (against the right wall, near the corner) ---
+      iso.box(0.215, 0.02, 0, 0.07, 0.07, 0.2); // back of the base, under the tank
+      iso.cyl(0.25, 0.15, 0, 0.045, 0.14, WHITE, { r2: 0.06 });
+      iso.cyl(0.25, 0.15, 0.13, 0.08, 0.055);
+      iso.cyl(0.25, 0.15, 0.185, 0.085, 0.02);
+      iso.box(0.17, 0.012, 0.2, 0.16, 0.075, 0.2);
+      iso.box(0.163, 0.006, 0.4, 0.174, 0.087, 0.022);
+      iso.line([0.24, 0.093, 0.422], [0.26, 0.093, 0.422], { w: 2.6 });
+      // --- vanity (against the right wall) ---
+      for (const [lx, ly] of [
+        [0.56, 0.03],
+        [0.89, 0.03],
+        [0.56, 0.255],
+        [0.89, 0.255],
+      ])
+        iso.box(lx, ly, 0, 0.022, 0.022, 0.06, WHITE, { color: BATH.vanity });
+      iso.box(0.555, 0.02, 0.05, 0.36, 0.26, 0.25, WHITE, { color: BATH.vanity });
+      for (const [a0, a1] of [
+        [0.57, 0.725],
+        [0.745, 0.9],
+      ]) {
+        iso.face(
           [
-            [0.86, 0.42],
-            [0.86, 0.3],
-            [0.78, 0.3],
+            [a0, 0.28, 0.07],
+            [a1, 0.28, 0.07],
+            [a1, 0.28, 0.28],
+            [a0, 0.28, 0.28],
           ],
-          { w: 3, mask: true },
+          null,
+          { w: 1.6 },
         );
-        for (const [x, y, r] of [
-          [0.3, 0.37, 0.05],
-          [0.38, 0.33, 0.035],
-          [0.6, 0.36, 0.045],
-        ] as const)
-          s.blob(x, y, r, r, "#ffffff", { mask: true, w: 1.6 });
-      },
+      }
+      iso.line([0.71, 0.28, 0.16], [0.71, 0.28, 0.21], { w: 2.4 });
+      iso.line([0.76, 0.28, 0.16], [0.76, 0.28, 0.21], { w: 2.4 });
+      iso.box(0.54, 0.005, 0.3, 0.39, 0.295, 0.035);
+      // basin
+      iso.face(
+        [
+          [0.63, 0.07, 0.336],
+          [0.84, 0.07, 0.336],
+          [0.84, 0.22, 0.336],
+          [0.63, 0.22, 0.336],
+        ],
+        WHITE,
+        { w: 2 },
+      );
+      iso.face(
+        [
+          [0.65, 0.085, 0.336],
+          [0.82, 0.085, 0.336],
+          [0.82, 0.205, 0.336],
+          [0.65, 0.205, 0.336],
+        ],
+        null,
+        { w: 1.3 },
+      );
+      iso.at([0.74, 0.15, 0.336], (s, [x, y], u) => s.circle(x, y, 0.008 * u, { w: 1.4, mask: true }));
+      // faucet
+      iso.path(
+        [
+          [0.735, 0.03, 0.336],
+          [0.735, 0.03, 0.43],
+          [0.735, 0.08, 0.43],
+          [0.735, 0.085, 0.4],
+        ],
+        { w: 3 },
+      );
+      // soap pump + toothbrush cup
+      iso.cyl(0.585, 0.06, 0.336, 0.02, 0.06, WHITE, { color: BATH.soap });
+      iso.line([0.585, 0.06, 0.396], [0.585, 0.06, 0.42], { w: 2 });
+      iso.line([0.585, 0.06, 0.42], [0.6, 0.06, 0.42], { w: 2 });
+      iso.cyl(0.88, 0.23, 0.336, 0.024, 0.05, WHITE, { color: BATH.cup });
+      for (const [dx, dy] of [
+        [-0.008, 0],
+        [0.008, -0.006],
+        [0.002, 0.01],
+      ])
+        iso.line([0.88 + dx, 0.23 + dy, 0.386], [0.88 + dx * 2.2, 0.23 + dy * 2.2, 0.44], { w: 2 });
     },
-    {
-      size: 0.3,
-      at: [0.72, 0.16],
-      draw(s) {
-        plant(s, 0.5, 1, 1.9, "#f6b2a0", true);
-      },
+    // in front: waste bin with a towel over the edge
+    (iso) => {
+      iso.cyl(0.93, 0.44, 0, 0.045, 0.1, WHITE, { r2: 0.052, color: BATH.bin });
+      iso.at([0.93, 0.44, 0.05], (s, [x, y], u) => {
+        for (let i = -2; i <= 2; i++) {
+          s.line(x + (i * 0.018 - 0.02) * u, y - 0.045 * u, x + (i * 0.018 + 0.02) * u, y + 0.045 * u, { w: 1, alpha: 0.7, mask: true });
+          s.line(x + (i * 0.018 + 0.02) * u, y - 0.045 * u, x + (i * 0.018 - 0.02) * u, y + 0.045 * u, { w: 1, alpha: 0.7, mask: true });
+        }
+      });
+      iso.face(
+        [
+          [0.915, 0.47, 0.105],
+          [0.955, 0.47, 0.105],
+          [0.958, 0.49, 0.03],
+          [0.912, 0.49, 0.035],
+        ],
+        look.color ? BATH.towel : WHITE,
+        { w: 1.8 },
+      );
     },
-    {
-      size: 0.24,
-      at: [0.6, 0.66],
-      draw(s) {
-        s.shape(
-          [
-            [0.1, 0.35],
-            [0.9, 0.35],
-            [0.8, 1],
-            [0.2, 1],
-          ],
-          "#e8c79a",
-          { mask: true, w: 3 },
-        );
-        s.hatch(
-          [
-            [0.1, 0.35],
-            [0.9, 0.35],
-            [0.8, 1],
-            [0.2, 1],
-          ],
-          0.06,
-          -0.9,
-          1.6,
-          0.6,
-        );
-        s.blob(0.4, 0.33, 0.2, 0.08, "#ffffff", { mask: true, w: 2 });
-      },
-    },
-  ],
+  ]),
 };
 
 const kitchen: Room = {

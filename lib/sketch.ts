@@ -343,6 +343,22 @@ export class Sketch {
     c.fillStyle = color;
     c.fill();
     c.restore();
+    // a sticker sits on top: hide any pen lines drawn underneath it
+    const ink = this.ink;
+    ink.save();
+    ink.globalCompositeOperation = "destination-out";
+    ink.lineJoin = "round";
+    ink.lineWidth = halo * 2 * this.k;
+    ink.beginPath();
+    points.forEach((p, i) => {
+      const [x, y] = this.px(p);
+      if (i) ink.lineTo(x, y);
+      else ink.moveTo(x, y);
+    });
+    ink.closePath();
+    ink.fill();
+    ink.stroke();
+    ink.restore();
   }
 
   /** Soft contact shadow, e.g. under furniture on the floor. */
