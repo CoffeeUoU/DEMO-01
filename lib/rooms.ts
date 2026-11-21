@@ -965,122 +965,331 @@ const bathroom: Room = {
   ]),
 };
 
+// Kitchen — same paper cut-out style; ink-only or soft colour.
+
+const KIT = {
+  wall: "#fbf3da",
+  tile: "#d8eee7",
+  cabinet: "#d3e6c8",
+  counter: "#f4efe6",
+  wood: "#ead3b2",
+  fridge: "#cfeee4",
+  glass: "#dcebfa",
+  curtain: "#f8d2c6",
+  leaf: "#cfe8c4",
+  pot: "#f3c8b0",
+  jar: "#fff3cf",
+  lid: "#f3c8b0",
+  plate: "#dbe8fb",
+  pan: "#e2e2ea",
+  kettle: "#f8d2c6",
+  checker: "#e6e1f1",
+  runner: "#f3c8b0",
+  mug: "#f7ccd6",
+  bowl: "#dbe8fb",
+  apple: "#f6b7aa",
+  lemon: "#fbe6a4",
+  pear: "#cfe8c4",
+};
+
+function herbPot(s: Sketch, cx: number, by: number, w: number) {
+  const pot: Pt[] = [
+    [cx - w / 2, by - w * 0.9],
+    [cx + w / 2, by - w * 0.9],
+    [cx + w * 0.38, by],
+    [cx - w * 0.38, by],
+  ];
+  for (const [dx, dy, rot] of [
+    [-0.3, -1.25, -0.6],
+    [0.05, -1.45, 0.1],
+    [0.35, -1.2, 0.7],
+  ] as const)
+    almondLeaf(s, cx + dx * w, by + dy * w, w * 0.42, rot, KIT.leaf);
+  s.sticker(pot, 2, 0.14, tint(KIT.pot));
+  s.stroke(pot, { closed: true, w: 1.8 });
+}
+
 const kitchen: Room = {
   name: "kitchen",
   mood: "nourishment, home, people over",
   left(s) {
-    s.washAll("#f8e7a6");
-    baseboard(s, "#f3dfb6");
-    // window with herb pot
-    s.box(0.12, 0.14, 0.3, 0.32, "#bcd8f2", { w: 3 });
-    s.line(0.27, 0.14, 0.27, 0.46, { w: 2 });
-    s.box(0.1, 0.46, 0.34, 0.03, "#ffffff", { w: 2.2 });
-    plant(s, 0.2, 0.46, 0.5, "#e9a07c");
-    // shelves with jars
-    for (const y of [0.24, 0.44]) s.box(0.52, y, 0.4, 0.025, "#d6a46b", { w: 2.2 });
-    const jar = (x: number, y: number, h: number, c: string) => {
-      s.box(x, y - h, 0.07, h, c, { w: 2 });
-      s.box(x - 0.005, y - h - 0.02, 0.08, 0.02, "#e9a07c", { w: 1.8 });
-    };
-    jar(0.55, 0.24, 0.1, "#fff3cf");
-    jar(0.65, 0.24, 0.08, "#bcd4a8");
-    jar(0.76, 0.24, 0.11, "#f8d5c0");
-    s.blob(0.6, 0.41, 0.06, 0.03, "#ffffff", { w: 2 });
-    s.blob(0.6, 0.39, 0.06, 0.03, "#ffffff", { w: 2 });
-    s.box(0.72, 0.36, 0.06, 0.08, "#bcd8f2", { w: 2 });
-    s.box(0.82, 0.34, 0.06, 0.1, "#e9a07c", { w: 2 });
-    // hanging pans
-    s.line(0.5, 0.56, 0.95, 0.56, { w: 2.6 });
-    for (const [x, r] of [
-      [0.6, 0.07],
-      [0.78, 0.055],
-    ] as const) {
-      s.line(x, 0.56, x, 0.62, { w: 2 });
-      s.blob(x, 0.62 + r, r, r, "#cfcfd8", { w: 2.4 });
+    if (look.color) s.washAll(tint(KIT.wall), 1);
+    // window with a cafe curtain and herbs on the sill
+    const win = s.rectPts(0.4, 0.2, 0.34, 0.3);
+    s.sticker(win, 7);
+    s.fill(s.rectPts(0.42, 0.22, 0.3, 0.26), tint(KIT.glass), { alpha: 1, jitter: 0.3 });
+    s.box(0.4, 0.2, 0.34, 0.3, null, { w: 2.8 });
+    s.rect(0.42, 0.22, 0.3, 0.26, { w: 1.6 });
+    s.line(0.57, 0.22, 0.57, 0.48, { w: 2.2 });
+    s.line(0.44, 0.27, 0.48, 0.23, { w: 1.1, alpha: 0.6 });
+    s.line(0.45, 0.31, 0.52, 0.24, { w: 1.1, alpha: 0.6 });
+    s.line(0.39, 0.36, 0.75, 0.36, { w: 2 });
+    for (const [x0, x1] of [
+      [0.405, 0.565],
+      [0.575, 0.735],
+    ]) {
+      const c: Pt[] = [
+        [x0, 0.36],
+        [x1, 0.36],
+      ];
+      for (let i = 0; i <= 8; i++) c.push([x1 - ((x1 - x0) * i) / 8, 0.47 + (i % 2 ? 0.01 : -0.003)]);
+      s.sticker(c, 3, 0.16, tint(KIT.curtain));
+      s.stroke(c, { closed: true, w: 2 });
+      for (let i = 1; i < 4; i++) s.line(x0 + ((x1 - x0) * i) / 4, 0.37, x0 + ((x1 - x0) * i) / 4, 0.46, { w: 1.1, alpha: 0.6 });
+      if (look.color) for (let i = 1; i < 3; i++) s.line(x0, 0.36 + i * 0.035, x1, 0.36 + i * 0.035, { w: 1, alpha: 0.35 });
     }
-    // checker splashback strip
-    for (let i = 0; i < 10; i++) if (i % 2) s.box(i * 0.1, 0.8, 0.1, 0.06, "#e9a07c", { w: 1.2, alpha: 0.6 });
+    s.sticker(s.rectPts(0.38, 0.5, 0.38, 0.025), 3, 0.18, tint(KIT.wood));
+    s.box(0.38, 0.5, 0.38, 0.025, null, { w: 2 });
+    herbPot(s, 0.46, 0.5, 0.05);
+    herbPot(s, 0.57, 0.5, 0.045);
+    herbPot(s, 0.68, 0.5, 0.05);
+    // open shelves with jars, plates and mugs
+    const shelf = (y: number) => {
+      s.sticker(s.rectPts(0.06, y, 0.26, 0.025), 3, 0.18, tint(KIT.wood));
+      s.box(0.06, y, 0.26, 0.025, null, { w: 2 });
+    };
+    shelf(0.3);
+    shelf(0.46);
+    const jar = (x: number, base: number, w: number, h: number) => {
+      const b = s.rectPts(x, base - h, w, h);
+      s.sticker(b, 2, 0.12, tint(KIT.jar));
+      s.stroke(b, { closed: true, w: 1.8 });
+      const l = s.rectPts(x - 0.004, base - h - 0.018, w + 0.008, 0.018);
+      s.sticker(l, 1, 0.1, tint(KIT.lid));
+      s.stroke(l, { closed: true, w: 1.6 });
+      s.line(x + w * 0.25, base - h * 0.55, x + w * 0.75, base - h * 0.55, { w: 1, alpha: 0.6 });
+    };
+    jar(0.08, 0.3, 0.05, 0.08);
+    jar(0.145, 0.3, 0.045, 0.06);
+    jar(0.2, 0.3, 0.05, 0.09);
+    // plates standing on the lower shelf + mugs
+    for (const x of [0.11, 0.135]) {
+      const p = s.ellipsePts(x, 0.41, 0.04, 0.05);
+      s.sticker(p, 2, 0.12, tint(KIT.plate));
+      s.stroke(p, { closed: true, w: 1.8 });
+    }
+    s.circle(0.135, 0.41, 0.025, { w: 1.2, alpha: 0.7 });
+    for (const x of [0.21, 0.265]) {
+      const m = s.rectPts(x, 0.42, 0.04, 0.04);
+      s.sticker(m, 2, 0.12, tint(KIT.mug));
+      s.stroke(m, { closed: true, w: 1.8 });
+      s.stroke(s.ellipsePts(x + 0.045, 0.44, 0.01, 0.013, -1.4, 1.4, 8), { w: 1.6 });
+    }
+    // utensil rail near the corner: pan, ladle, whisk
+    s.line(0.78, 0.36, 0.96, 0.36, { w: 2.6 });
+    for (const x of [0.81, 0.87, 0.93]) s.line(x, 0.36, x, 0.385, { w: 1.6 });
+    const pan = s.ellipsePts(0.81, 0.47, 0.035, 0.035);
+    s.line(0.81, 0.385, 0.81, 0.435, { w: 3 });
+    s.sticker(pan, 3, 0.16, tint(KIT.pan));
+    s.stroke(pan, { closed: true, w: 2 });
+    s.line(0.87, 0.385, 0.87, 0.47, { w: 2 });
+    const ladle = s.ellipsePts(0.87, 0.48, 0.016, 0.014, 0, Math.PI, 10);
+    s.stroke(ladle, { closed: true, w: 1.8 });
+    s.line(0.93, 0.385, 0.93, 0.43, { w: 2 });
+    s.stroke(s.ellipsePts(0.93, 0.46, 0.014, 0.032), { closed: true, w: 1.5 });
+    s.line(0.93, 0.43, 0.93, 0.49, { w: 1, alpha: 0.7 });
   },
   right(s) {
-    s.washAll("#f8e7a6");
+    if (look.color) s.washAll(tint(KIT.wall), 1);
+    // backsplash tiles behind the counter
+    s.sticker(s.rectPts(0.02, 0.42, 0.7, 0.24), 3, 0.12, tint(KIT.tile));
+    for (let x = 0.02; x < 0.72; x += 0.05) s.line(x, 0.42, x, 0.66, { w: 1, alpha: 0.45 });
+    for (let y = 0.47; y < 0.66; y += 0.05) s.line(0.02, y, 0.72, y, { w: 1, alpha: 0.45 });
+    s.line(0.02, 0.42, 0.72, 0.42, { w: 1.8 });
     // upper cabinets
-    s.box(0.04, 0.1, 0.56, 0.22, "#bcd4a8", { w: 2.6 });
-    for (const x of [0.32]) s.line(x, 0.1, x, 0.32, { w: 2 });
-    for (const x of [0.28, 0.36]) s.line(x, 0.24, x, 0.28, { w: 2.4 });
-    // counter + lower cabinets
-    s.box(0.02, 0.58, 0.64, 0.04, "#e8c79a", { w: 2.8 });
-    s.box(0.04, 0.62, 0.6, 0.32, "#bcd4a8", { w: 2.6 });
-    for (const x of [0.24, 0.44]) s.line(x, 0.62, x, 0.94, { w: 2 });
-    for (const x of [0.2, 0.28, 0.4, 0.48]) s.line(x, 0.68, x, 0.72, { w: 2.4 });
-    // stove + kettle
-    s.box(0.08, 0.555, 0.2, 0.025, "#3b3b44", { w: 2 });
-    s.shape(
-      [
-        [0.12, 0.555],
-        [0.24, 0.555],
-        [0.22, 0.47],
-        [0.14, 0.47],
-      ],
-      "#e9a07c",
-      { w: 2.6 },
-    );
-    s.stroke(s.ellipsePts(0.18, 0.47, 0.05, 0.04, Math.PI, Math.PI * 2, 12), { w: 2.2 });
-    s.line(0.24, 0.5, 0.28, 0.47, { w: 2.2 });
-    for (let i = 0; i < 3; i++)
-      s.stroke(
-        [
-          [0.17 + i * 0.03, 0.42],
-          [0.15 + i * 0.03, 0.38],
-          [0.18 + i * 0.03, 0.34],
-        ],
-        { w: 1.4, alpha: 0.6 },
-      );
-    // cutting board + lemons
-    s.box(0.36, 0.52, 0.16, 0.06, "#d6a46b", { w: 2 });
-    s.blob(0.42, 0.51, 0.025, 0.02, "#f0cf6e", { w: 1.6 });
-    s.blob(0.47, 0.51, 0.025, 0.02, "#f0cf6e", { w: 1.6 });
-    // fridge
-    s.box(0.7, 0.14, 0.26, 0.8, "#fffdf5", { w: 3 });
-    s.line(0.7, 0.42, 0.96, 0.42, { w: 2.2 });
-    s.line(0.73, 0.2, 0.73, 0.34, { w: 2.6 });
-    s.line(0.73, 0.48, 0.73, 0.64, { w: 2.6 });
-    s.box(0.8, 0.22, 0.1, 0.12, "#bcd8f2", { w: 1.8 });
-    s.blob(0.84, 0.52, 0.02, 0.02, "#e9a07c", { w: 1.6 });
-    s.blob(0.89, 0.58, 0.02, 0.02, "#bcd4a8", { w: 1.6 });
-    baseboard(s, "#f3dfb6");
+    const cab = s.rectPts(0.04, 0.12, 0.62, 0.26);
+    s.sticker(cab, 5, 0.2, tint(KIT.cabinet));
+    s.stroke(cab, { closed: true, w: 2.6 });
+    for (const x of [0.245, 0.45]) s.line(x, 0.12, x, 0.38, { w: 2 });
+    for (const [x0, x1] of [
+      [0.04, 0.245],
+      [0.245, 0.45],
+      [0.45, 0.66],
+    ])
+      s.rect(x0 + 0.02, 0.14, x1 - x0 - 0.04, 0.22, { w: 1.2, alpha: 0.7 });
+    for (const x of [0.225, 0.265, 0.43, 0.47]) s.line(x, 0.32, x, 0.355, { w: 2.4 });
+    // clock above the fridge
+    const clock = s.ellipsePts(0.84, 0.13, 0.045, 0.045);
+    s.sticker(clock, 3, 0.16);
+    s.stroke(clock, { closed: true, w: 2.2 });
+    s.line(0.84, 0.13, 0.84, 0.1, { w: 1.8 });
+    s.line(0.84, 0.13, 0.862, 0.14, { w: 1.8 });
   },
   floor(s) {
-    s.washAll("#fffaf0");
+    if (look.color) s.washAll(tint(KIT.counter), 1);
     const n = 8;
-    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if ((i + j) % 2) s.fill(s.rectPts(i / n, j / n, 1 / n, 1 / n), "#d9d5e6", { alpha: 0.75, jitter: 0.3 });
-    tiles(s, n, 0.5);
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < n; j++) {
+        if ((i + j) % 2 === 0) continue;
+        const sq = [F(i / n, j / n), F((i + 1) / n, j / n), F((i + 1) / n, (j + 1) / n), F(i / n, (j + 1) / n)];
+        if (look.color) s.fill(sq, tint(KIT.checker), { alpha: 1, jitter: 0.2 });
+        else s.hatch(sq, 0.02, -0.8, 1, 0.22);
+      }
+    for (let i = 1; i < n; i++) {
+      s.line(i / n, 0, i / n, 1, { w: 1.2, alpha: 0.45 });
+      s.line(0, i / n, 1, i / n, { w: 1.2, alpha: 0.45 });
+    }
+    // shadows under the counter, fridge, table and stools
+    const quad = (x: number, y: number, ax: number, ay: number) => [F(x, y), F(x + ax, y), F(x + ax, y + ay), F(x, y + ay)];
+    s.shadow(quad(0.04, 0.0, 0.68, 0.3), 0.24, 16);
+    s.shadow(quad(0.72, 0.0, 0.26, 0.3), 0.26, 16);
+    s.shadow(s.ellipsePts(...F(0.34, 0.7), 0.1, 0.1), 0.2, 12);
+    // striped runner in front of the counter
+    const runner = [F(0.1, 0.33), F(0.66, 0.33), F(0.66, 0.47), F(0.1, 0.47)];
+    s.sticker(runner, 3, 0.16, tint(KIT.runner));
+    s.stroke(runner, { closed: true, w: 2 });
+    for (let i = 1; i < 9; i++) {
+      const a = 0.1 + (0.56 * i) / 9;
+      s.line(...F(a, 0.335), ...F(a, 0.465), { w: 1.1, alpha: 0.6 });
+    }
+    for (const a of [0.1, 0.66]) for (let k = 0; k < 6; k++) s.line(...F(a, 0.345 + k * 0.022), ...F(a + (a < 0.5 ? -0.02 : 0.02), 0.345 + k * 0.022), { w: 1, alpha: 0.7 });
   },
-  popups: [
-    {
-      size: 0.5,
-      at: [0.5, 0.5],
-      draw(s) {
-        // stools
-        for (const x of [0.06, 0.78]) {
-          s.blob(x + 0.08, 0.62, 0.1, 0.03, "#e9a07c", { mask: true, w: 2.4 });
-          s.box(x + 0.03, 0.64, 0.025, 0.36, "#d6a46b", { mask: true, w: 2 });
-          s.box(x + 0.11, 0.64, 0.025, 0.36, "#d6a46b", { mask: true, w: 2 });
-        }
-        // round table
-        s.blob(0.5, 0.5, 0.3, 0.05, "#d6a46b", { mask: true, w: 3 });
-        s.box(0.47, 0.54, 0.06, 0.38, "#d6a46b", { mask: true, w: 2.4 });
-        s.blob(0.5, 0.95, 0.14, 0.03, "#d6a46b", { mask: true, w: 2.4 });
-        // fruit bowl
-        s.shape(s.ellipsePts(0.5, 0.42, 0.1, 0.06, 0, Math.PI, 12), "#bcd8f2", { mask: true, w: 2.2 });
-        for (const [x, c] of [
-          [0.44, "#e9a07c"],
-          [0.5, "#f0cf6e"],
-          [0.56, "#a9d39a"],
-        ] as const)
-          s.blob(x, 0.39, 0.03, 0.03, c, { mask: true, w: 1.8 });
-      },
+  popups: isoLayers([
+    // against the right wall: counter run with sink and stove, and the fridge
+    (iso) => {
+      const CZ = 0.33;
+      iso.box(0.045, 0.02, 0.02, 0.655, 0.23, CZ - 0.02, WHITE, { color: KIT.cabinet });
+      iso.box(0.05, 0.02, 0, 0.645, 0.22, 0.025, WHITE, { color: KIT.wood });
+      // cabinet doors + knobs on the front (+xb) face
+      const FB = 0.25;
+      for (const [a0, a1] of [
+        [0.06, 0.26],
+        [0.27, 0.47],
+        [0.48, 0.69],
+      ]) {
+        iso.face(
+          [
+            [a0, FB, 0.05],
+            [a1, FB, 0.05],
+            [a1, FB, 0.26],
+            [a0, FB, 0.26],
+          ],
+          null,
+          { w: 1.5 },
+        );
+        iso.at([a1 - 0.02, FB, 0.235], (s, [x, y], u) => s.circle(x, y, 0.008 * u, { w: 1.6, mask: true }));
+      }
+      // stove knobs under the hob (hob sits near the corner)
+      for (const a of [0.09, 0.14, 0.19, 0.24]) iso.at([a, FB, 0.295], (s, [x, y], u) => s.circle(x, y, 0.009 * u, { w: 1.5, mask: true }));
+      iso.line([0.06, FB, 0.28], [0.26, FB, 0.28], { w: 1.2 });
+      // worktop
+      iso.box(0.035, 0.01, CZ, 0.675, 0.255, 0.035, WHITE, { color: KIT.counter });
+      const T = CZ + 0.035;
+      // hob: four rings
+      for (const [a, b] of [
+        [0.11, 0.08],
+        [0.21, 0.08],
+        [0.11, 0.18],
+        [0.21, 0.18],
+      ]) {
+        iso.path(iso.ring(a, b, T, 0.035), { w: 1.6 });
+        iso.path(iso.ring(a, b, T, 0.018), { w: 1.1 });
+      }
+      // kettle on the front-right ring
+      const KX = 0.21;
+      const KY = 0.18;
+      iso.cyl(KX, KY, T, 0.042, 0.065, WHITE, { r2: 0.03, color: KIT.kettle });
+      iso.cyl(KX, KY, T + 0.065, 0.009, 0.012);
+      iso.path(
+        [
+          [KX + 0.03, KY + 0.02, T + 0.02],
+          [KX + 0.062, KY + 0.04, T + 0.055],
+        ],
+        { w: 2.6 },
+      );
+      iso.path(
+        [
+          [KX - 0.025, KY - 0.02, T + 0.055],
+          [KX - 0.01, KY - 0.01, T + 0.105],
+          [KX + 0.015, KY + 0.01, T + 0.105],
+          [KX + 0.025, KY + 0.02, T + 0.055],
+        ],
+        { w: 2 },
+      );
+      // sink + tap in the middle
+      iso.face(
+        [
+          [0.34, 0.06, T],
+          [0.52, 0.06, T],
+          [0.52, 0.2, T],
+          [0.34, 0.2, T],
+        ],
+        WHITE,
+        { w: 1.8 },
+      );
+      iso.face(
+        [
+          [0.355, 0.075, T],
+          [0.505, 0.075, T],
+          [0.505, 0.185, T],
+          [0.355, 0.185, T],
+        ],
+        null,
+        { w: 1.2 },
+      );
+      iso.path(
+        [
+          [0.43, 0.03, T],
+          [0.43, 0.03, T + 0.09],
+          [0.43, 0.08, T + 0.09],
+          [0.43, 0.085, T + 0.065],
+        ],
+        { w: 2.8 },
+      );
+      // cutting board with a lemon
+      iso.box(0.56, 0.07, T, 0.12, 0.09, 0.012, WHITE, { color: KIT.wood });
+      iso.at([0.62, 0.115, T + 0.012], (s, [x, y], u) => s.blob(x, y - 0.015 * u, 0.025 * u, 0.018 * u, tint(KIT.lemon), { w: 1.6, mask: true }));
+      // fridge
+      iso.box(0.725, 0.02, 0, 0.245, 0.245, 0.78, WHITE, { color: KIT.fridge });
+      const FF = 0.265;
+      iso.line([0.725, FF, 0.5], [0.97, FF, 0.5], { w: 1.8 });
+      iso.line([0.75, FF, 0.53], [0.75, FF, 0.66], { w: 3 });
+      iso.line([0.75, FF, 0.3], [0.75, FF, 0.45], { w: 3 });
+      // magnets + a note on the door
+      iso.face(
+        [
+          [0.82, FF, 0.56],
+          [0.9, FF, 0.56],
+          [0.9, FF, 0.66],
+          [0.82, FF, 0.66],
+        ],
+        look.color ? KIT.lemon : WHITE,
+        { w: 1.4 },
+      );
+      for (const [a, z] of [
+        [0.84, 0.62],
+        [0.84, 0.6],
+        [0.84, 0.58],
+      ])
+        iso.line([a, FF, z], [a + 0.04, FF, z], { w: 1, alpha: 0.7 });
+      iso.at([0.86, FF, 0.665], (s, [x, y], u) => s.blob(x, y, 0.01 * u, 0.01 * u, tint(KIT.apple), { w: 1.4, mask: true }));
+      iso.at([0.92, FF, 0.45], (s, [x, y], u) => s.blob(x, y, 0.012 * u, 0.012 * u, tint(KIT.plate), { w: 1.4, mask: true }));
+      iso.at([0.8, FF, 0.4], (s, [x, y], u) => s.star(x, y, 0.016 * u, { w: 1.4, mask: true }));
     },
-  ],
+    // the little table by the window, with two stools
+    (iso) => {
+      const stool = (x: number, y: number) => {
+        for (const a of [0.3, 2.4, 4.3]) iso.line([x + Math.cos(a) * 0.035, y + Math.sin(a) * 0.035, 0], [x + Math.cos(a) * 0.02, y + Math.sin(a) * 0.02, 0.2], { w: 2.2 });
+        iso.cyl(x, y, 0.2, 0.05, 0.022, WHITE, { color: KIT.wood });
+      };
+      stool(0.18, 0.55);
+      // table: base, pedestal, round top
+      iso.cyl(0.34, 0.7, 0, 0.06, 0.015, WHITE, { color: KIT.wood });
+      iso.line([0.34, 0.7, 0.015], [0.34, 0.7, 0.29], { w: 3.2 });
+      iso.cyl(0.34, 0.7, 0.29, 0.13, 0.025, WHITE, { color: KIT.wood });
+      const TT = 0.315;
+      // fruit bowl + two mugs
+      iso.cyl(0.34, 0.68, TT, 0.04, 0.03, WHITE, { r2: 0.055, color: KIT.bowl });
+      iso.at([0.34, 0.68, TT + 0.03], (s, [x, y], u) => {
+        s.blob(x - 0.022 * u, y - 0.012 * u, 0.018 * u, 0.017 * u, tint(KIT.apple), { w: 1.5, mask: true });
+        s.blob(x + 0.02 * u, y - 0.014 * u, 0.02 * u, 0.015 * u, tint(KIT.lemon), { w: 1.5, mask: true });
+        s.blob(x, y - 0.03 * u, 0.015 * u, 0.02 * u, tint(KIT.pear), { w: 1.5, mask: true });
+      });
+      iso.cyl(0.26, 0.76, TT, 0.02, 0.035, WHITE, { color: KIT.mug });
+      iso.cyl(0.42, 0.62, TT, 0.02, 0.035, WHITE, { color: KIT.mug });
+      stool(0.5, 0.86);
+    },
+  ]),
 };
 
 const gym: Room = {

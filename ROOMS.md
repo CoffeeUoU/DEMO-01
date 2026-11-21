@@ -51,12 +51,21 @@ Same paper cut-out style as the bedroom, after Dakshi's reference sketch; ink-on
   and towel, wooden shelves.
 - **Entries hung here** — resets, self-talk, routines, things you wash off.
 
-## 3. Kitchen
+## 3. Kitchen — redesigned
 
-- **Wall A** — open shelves with jars and plates, hanging pans, a small window with a herb pot.
-- **Wall B** — counter cabinets, stove with a kettle, fridge with magnets and a photo.
-- **Floor** — checkerboard tiles.
-- **Pop-ups** — small round dining table with two stools, a fruit bowl.
+Same paper cut-out style; ink-only or soft colour.
+
+- **Left wall** — window with a half-height cafe curtain and three herb pots on the sill, two open
+  shelves (jars with lids, plates, mugs), a utensil rail with a pan, ladle and whisk near the corner.
+- **Right wall** — upper cabinets, tiled backsplash behind the counter, a clock above the fridge.
+- **Floor** — checkerboard tiles (hatched in ink, lilac in colour), a striped runner in front of
+  the counter, soft shadows.
+- **Pop-ups**
+  - against the wall: counter run with three cabinet doors, hob with four rings and a kettle, sink
+    and tap, a cutting board with a lemon; a tall fridge with a note, magnets and handles
+  - by the window: little round table with a fruit bowl and two mugs, two stools
+- **Colour version** — butter-yellow walls, sage cabinets, mint fridge, coral curtain, kettle and
+  runner, wooden worktop details.
 - **Entries hung here** — food, family, cooking experiments, people you fed or who fed you.
 
 ## 4. Gym / boxing / body
