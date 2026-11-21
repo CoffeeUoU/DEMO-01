@@ -23,14 +23,15 @@ Wall A is the left wall as you look into the room, wall B is the right wall.
 Blue ink on white paper, no colour: every piece is a paper cut-out with a white margin and a soft
 shadow (after Dakshi's reference sketch).
 
-- **Left wall** — big window with clouds, the bed drawn flat under it (headboard, mattress, lilac
-  quilt, pillow), stars near the corner, two taped photos near the front edge.
+- **Left wall** — big window with clouds, stars near the corner, two taped photos near the front
+  edge.
 - **Right wall** — hanging plant on three cords near the corner, stars, a big cork board with
   pinned notes above the desk.
 - **Floor** — boards, scalloped rug, slippers, soft shadows under the furniture.
 - **Pop-ups** (drawn isometrically so they read as solid furniture from the camera)
   - curtains on a rod hanging just off the left wall, either side of the window
   - desk with drawers, lamp, laptop, mug, pencil cup and a book
+  - a simple bed (frame, mattress, quilt with a folded edge, pillow)
   - in front: chair at the desk, woven waste bin
 - **Entries hung here** — dreams, sleep, late-night thoughts, what you're studying.
 
@@ -85,12 +86,23 @@ Same paper cut-out style; ink-only or soft colour.
 - **Pop-ups** — sofa with cushions, bean bag.
 - **Entries hung here** — fun, games, shows, friends, doing nothing on purpose.
 
-## 6. Balcony
+## 6. Balcony — redesigned (after Dakshi's reference)
 
-- **Wall A** — railing with hanging plants, dusk sky with moon and stars above.
-- **Wall B** — railing, city skyline with lit windows, fairy-light string.
-- **Floor** — wooden deck planks.
-- **Pop-ups** — two folding chairs, small round table with chai, tall potted plant.
+Same paper cut-out style; ink-only or soft colour.
+
+- **Left wall** — sliding glass door with a peek of the room inside (lamp, armchair, picture), a
+  curtain tied beside it, a wall lantern with a glow, two little plant prints, floating shelves
+  near the corner with books and a trailing pothos.
+- **Right wall** — open to the sky: clouds, hills and a little town; a wooden railing with a
+  flower box; a macrame hanging planter near the corner; string lights running to the front.
+- **Floor** — deck boards, a scalloped rug, soft shadows.
+- **Pop-ups**
+  - monstera in the corner, a tall leafy plant by the railing
+  - bean bag with a pillow and a knitted throw; a mug of something warm on a book beside it
+  - hydrangea pot and a watering can by the door, a flower pot, and a front railing along the open
+    edge with a flower box
+- **Colour version** — warm walls, pale sky, wooden deck and railings, peach bean bag, lilac throw,
+  coral rug, terracotta pots, pink and lilac flowers.
 - **Entries hung here** — evenings, gratitude, the big picture, what you want next.
 
 ---

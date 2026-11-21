@@ -257,28 +257,6 @@ const bedroom: Room = {
       s.line(x + 0.015, y + 0.06, x + 0.05, y + 0.015, { w: 1.2, alpha: 0.6 });
     }
     // (the curtains and their rod are pop-ups that hang just in front of this wall)
-    // the bed, drawn flat against the wall under the window (headboard nearest the corner)
-    const bedPart = (pts: Pt[], c: string) => {
-      s.sticker(pts, 4, 0.2, tint(c));
-      s.stroke(pts, { closed: true, w: 2.4 });
-    };
-    bedPart([[0.715, 1.0], [0.715, 0.66], ...s.ellipsePts(0.735, 0.66, 0.02, 0.02, Math.PI, Math.PI * 2, 8), [0.755, 1.0]], BED.wood);
-    bedPart([[0.1, 1.0], [0.1, 0.79], ...s.ellipsePts(0.115, 0.79, 0.015, 0.015, Math.PI, Math.PI * 2, 6), [0.13, 1.0]], BED.wood);
-    bedPart(s.rectPts(0.13, 0.86, 0.585, 0.08), BED.wood);
-    bedPart(s.rectPts(0.13, 0.775, 0.585, 0.085), "#ffffff");
-    bedPart(s.rectPts(0.6, 0.725, 0.11, 0.055), "#ffffff");
-    s.line(0.61, 0.752, 0.7, 0.752, { w: 1, alpha: 0.5 });
-    bedPart(
-      [
-        [0.13, 0.765],
-        [0.57, 0.765],
-        [0.575, 0.905],
-        [0.13, 0.905],
-      ],
-      BED.quilt,
-    );
-    bedPart(s.rectPts(0.52, 0.76, 0.055, 0.15), BED.quiltFold);
-    for (const x of [0.25, 0.39]) s.line(x, 0.77, x, 0.9, { w: 1, alpha: 0.5 });
     // stars near the corner
     s.star(0.88, 0.22, 0.026, { w: 2 });
     s.star(0.92, 0.33, 0.016, { w: 1.8 });
@@ -397,6 +375,7 @@ const bedroom: Room = {
     }
     // contact shadows under the furniture (coords: F(xa, xb))
     const quad = (x: number, y: number, dx: number, dy: number) => [F(x, y), F(x + dx, y), F(x + dx, y + dy), F(x, y + dy)];
+    s.shadow(quad(0.03, 0.27, 0.36, 0.62), 0.28, 16);
     s.shadow(quad(0.42, 0.02, 0.56, 0.27), 0.22, 16);
     s.shadow(quad(0.52, 0.3, 0.18, 0.16), 0.2, 12);
     s.shadow(s.ellipsePts(0.9, 1 - 0.36, 0.05, 0.05), 0.2, 8);
@@ -441,7 +420,7 @@ const bedroom: Room = {
     }
   },
   popups: isoLayers([
-    // against the walls: curtains + desk
+    // against the walls: curtains, desk, bed
     (iso) => {
       // --- curtains on a rod, hanging just off the left wall over the bed ---
       const CX = 0.05;
@@ -521,6 +500,18 @@ const bedroom: Room = {
       ])
         iso.line([0.87 + dx, 0.1 + dy, T + 0.07], [0.87 + dx * 2.5, 0.1 + dy * 2.5, T + 0.13], { w: 2 });
       iso.box(0.9, 0.18, T, 0.035, 0.08, 0.1, WHITE, { color: BED.book });
+
+      // --- bed (against the left wall), kept simple ---
+      const B0 = 0.28;
+      const B1 = 0.87;
+      iso.box(0.03, B0, 0, 0.34, B1 - B0, 0.08, WHITE, { color: BED.wood });
+      iso.box(0.03, B0, 0.08, 0.34, B1 - B0, 0.09);
+      // pillow
+      iso.box(0.08, 0.31, 0.17, 0.24, 0.1, 0.04);
+      // quilt over the front part with a folded-back edge
+      const Q0 = 0.46;
+      iso.box(0.025, Q0, 0.06, 0.35, B1 + 0.01 - Q0, 0.115, WHITE, { color: BED.quilt });
+      iso.box(0.025, Q0, 0.175, 0.35, 0.06, 0.008, WHITE, { color: BED.quiltFold });
     },
     // loose pieces: chair, bin
     (iso) => {
@@ -592,13 +583,14 @@ function sparkle(s: Sketch, x: number, y: number, r: number) {
   );
 }
 
-function almondLeaf(s: Sketch, x: number, y: number, r: number, rot: number, color: string) {
+function almondLeaf(s: Sketch, x: number, y: number, r: number, rot: number, color: string, mask = false) {
   const almond: Pt[] = [];
   for (let i = 0; i <= 8; i++) almond.push([Math.sin((i / 8) * Math.PI) * r * 0.62, -r + (2 * r * i) / 8]);
   for (let i = 8; i >= 0; i--) almond.push([-Math.sin((i / 8) * Math.PI) * r * 0.62, -r + (2 * r * i) / 8]);
   const pts = almond.map(([a, b]) => [x + a * Math.cos(rot) - b * Math.sin(rot), y + a * Math.sin(rot) + b * Math.cos(rot)] as Pt);
   s.sticker(pts, 2, 0.12, tint(color));
-  s.stroke(pts, { closed: true, w: 1.6 });
+  if (mask) s.maskFill(pts);
+  s.stroke(pts, { closed: true, w: 1.6, mask });
   s.line(x + Math.sin(rot) * r * 0.8, y - Math.cos(rot) * r * 0.8, x - Math.sin(rot) * r * 0.8, y + Math.cos(rot) * r * 0.8, { w: 1, alpha: 0.7 });
 }
 
@@ -1693,120 +1685,505 @@ const lounge: Room = {
   ],
 };
 
+// Balcony — after Dakshi's reference: sliding door, plants everywhere, a bean bag with a throw,
+// railings open to the sky. Ink-only or soft colour.
+
+const BAL = {
+  wall: "#f7efe6",
+  sky: "#e0ecfa",
+  hills: "#d9ecd2",
+  deck: "#ecd2ae",
+  wood: "#ead3b2",
+  glass: "#e3eefa",
+  curtain: "#f6eee2",
+  bag: "#f5d9cf",
+  pillow: "#fbe6a4",
+  throw: "#d9d0f3",
+  leaf: "#cfe8c4",
+  pot: "#f3c8b0",
+  flower: "#f7ccd6",
+  hydrangea: "#d9d0f3",
+  can: "#cfe0f7",
+  mug: "#f7ccd6",
+  book: "#dbe8fb",
+  lantern: "#fbe6a4",
+  bulb: "#fff3b5",
+  rug: "#f8d2c6",
+};
+
+/** Five-petal flower. */
+function flower(s: Sketch, x: number, y: number, r: number, color: string, mask = false) {
+  for (let k = 0; k < 5; k++) {
+    const a = (k / 5) * Math.PI * 2 - Math.PI / 2;
+    s.blob(x + Math.cos(a) * r, y + Math.sin(a) * r, r * 0.75, r * 0.75, tint(color), { w: 1.3, mask });
+  }
+  s.circle(x, y, r * 0.35, { w: 1.2, mask });
+}
+
+/** Round, slightly notched monstera-ish leaf. */
+function bigLeaf(s: Sketch, x: number, y: number, r: number, rot: number, mask: boolean) {
+  const pts: Pt[] = [];
+  for (let i = 0; i <= 24; i++) {
+    const a = (i / 24) * Math.PI * 2;
+    const notch = i % 4 === 2 ? 0.7 : 1;
+    pts.push([x + Math.cos(a + rot) * r * notch, y + Math.sin(a + rot) * r * 0.85 * notch]);
+  }
+  s.shape(pts, tint(BAL.leaf), { mask, w: 1.6 });
+  s.line(x - Math.cos(rot) * r * 0.9, y - Math.sin(rot) * r * 0.8, x + Math.cos(rot) * r * 0.9, y + Math.sin(rot) * r * 0.8, { w: 1.1 });
+}
+
+/** Railing seen from the front on a wall: top rail + balusters down to the floor. */
+function wallRailing(s: Sketch, x0: number, x1: number, top: number) {
+  const rail = s.rectPts(x0, top, x1 - x0, 0.03);
+  s.sticker(rail, 3, 0.18, tint(BAL.wood));
+  s.stroke(rail, { closed: true, w: 2.2 });
+  for (let x = x0 + 0.02; x < x1 - 0.01; x += 0.045) {
+    const b = s.rectPts(x, top + 0.03, 0.022, 1.0 - top - 0.03);
+    s.sticker(b, 1, 0.1, tint(BAL.wood));
+    s.stroke(b, { closed: true, w: 1.6 });
+  }
+  s.line(x0, 0.96, x1, 0.96, { w: 2 });
+}
+
 const balcony: Room = {
   name: "balcony",
   mood: "evenings, the big picture, gratitude",
   left(s) {
-    s.washAll("#b9c6f2");
-    s.fill(s.rectPts(-0.02, 0.3, 1.04, 0.72), "#e4c8ee", { alpha: 0.7, jitter: 0 });
-    // moon + stars
-    s.shape(s.ellipsePts(0.3, 0.2, 0.08, 0.08, 0.7, 5.6, 22), "#fff2b0", { w: 2.4 });
-    for (let i = 0; i < 14; i++) s.text("*", 0.05 + s.r() * 0.9, 0.06 + s.r() * 0.36, 0.035 + s.r() * 0.02);
-    // railing
-    s.box(-0.02, 0.52, 1.04, 0.035, "#d6a46b", { w: 2.8 });
-    for (let x = 0.04; x < 1; x += 0.08) s.box(x, 0.555, 0.022, 0.38, "#fffdf5", { w: 1.8 });
-    baseboard(s, "#d6a46b");
-    // hanging planters on the rail
-    for (const x of [0.2, 0.62]) {
-      s.box(x - 0.08, 0.46, 0.16, 0.08, "#e9a07c", { w: 2.4 });
-      for (let i = 0; i < 4; i++)
-        s.stroke(
-          [
-            [x - 0.06 + i * 0.04, 0.46],
-            [x - 0.08 + i * 0.05, 0.38],
-            [x - 0.05 + i * 0.04, 0.33],
-          ],
-          { w: 1.8 },
-        );
-      for (let i = 0; i < 3; i++)
-        s.stroke(
-          [
-            [x - 0.06 + i * 0.06, 0.54],
-            [x - 0.07 + i * 0.06, 0.62],
-            [x - 0.05 + i * 0.06, 0.68],
-          ],
-          { w: 1.6 },
-        );
-      for (let i = 0; i < 3; i++) s.blob(x - 0.06 + i * 0.06, 0.4 - (i % 2) * 0.04, 0.025, 0.018, "#a9d39a", { w: 1.6 });
+    if (look.color) s.washAll(tint(BAL.wall), 1);
+    // sliding glass door with a peek of the room inside
+    const door = s.rectPts(0.14, 0.2, 0.46, 0.8);
+    s.sticker(door, 6, 0.2);
+    s.fill(s.rectPts(0.165, 0.23, 0.2, 0.74), tint(BAL.glass), { alpha: 1, jitter: 0.2 });
+    s.fill(s.rectPts(0.385, 0.23, 0.19, 0.74), tint(BAL.glass), { alpha: 1, jitter: 0.2 });
+    s.stroke(
+      [
+        [0.14, 1.0],
+        [0.14, 0.2],
+        [0.6, 0.2],
+        [0.6, 1.0],
+      ],
+      { w: 3 },
+    );
+    s.rect(0.165, 0.23, 0.2, 0.74, { w: 1.8 });
+    s.rect(0.385, 0.23, 0.19, 0.74, { w: 1.8 });
+    s.line(0.39, 0.6, 0.39, 0.67, { w: 2.6 });
+    for (const [x, y] of [
+      [0.2, 0.3],
+      [0.42, 0.28],
+    ]) {
+      s.line(x, y + 0.08, x + 0.05, y, { w: 1.1, alpha: 0.6 });
+      s.line(x + 0.02, y + 0.12, x + 0.08, y + 0.03, { w: 1.1, alpha: 0.6 });
     }
+    // inside: floor lamp, armchair, picture (faint)
+    s.line(0.22, 0.88, 0.22, 0.5, { w: 1.4, alpha: 0.55 });
+    s.stroke(
+      [
+        [0.19, 0.5],
+        [0.25, 0.5],
+        [0.24, 0.44],
+        [0.2, 0.44],
+      ],
+      { w: 1.4, alpha: 0.55, closed: true },
+    );
+    s.stroke(
+      [
+        [0.18, 0.9],
+        [0.18, 0.72],
+        [0.24, 0.7],
+        [0.32, 0.72],
+        [0.33, 0.8],
+        [0.33, 0.9],
+      ],
+      { w: 1.4, alpha: 0.55 },
+    );
+    s.line(0.18, 0.8, 0.33, 0.8, { w: 1.4, alpha: 0.55 });
+    s.rect(0.44, 0.4, 0.07, 0.08, { w: 1.3, alpha: 0.55 });
+    // curtain tied to the right of the door
+    const cur: Pt[] = [
+      [0.55, 0.2],
+      [0.64, 0.2],
+      [0.63, 0.95],
+      [0.6, 0.97],
+      [0.57, 0.95],
+      [0.54, 0.97],
+    ];
+    s.sticker(cur, 4, 0.18, tint(BAL.curtain));
+    s.stroke(cur, { closed: true, w: 2.2 });
+    for (const x of [0.575, 0.6, 0.62]) s.line(x, 0.22, x - 0.004, 0.94, { w: 1.2, alpha: 0.7 });
+    s.line(0.13, 0.19, 0.66, 0.19, { w: 2.6 });
+    // wall lantern with a glow
+    s.stroke(
+      [
+        [0.03, 0.3],
+        [0.06, 0.28],
+        [0.08, 0.31],
+      ],
+      { w: 2 },
+    );
+    const lan: Pt[] = [
+      [0.055, 0.33],
+      [0.105, 0.33],
+      [0.1, 0.42],
+      [0.06, 0.42],
+    ];
+    s.sticker(lan, 3, 0.18, tint(BAL.lantern));
+    s.stroke(lan, { closed: true, w: 2 });
+    s.stroke(
+      [
+        [0.05, 0.33],
+        [0.08, 0.305],
+        [0.11, 0.33],
+      ],
+      { w: 2 },
+    );
+    s.line(0.08, 0.34, 0.08, 0.41, { w: 1.2 });
+    for (const [a, b, c, d] of [
+      [0.04, 0.44, 0.025, 0.46],
+      [0.12, 0.44, 0.135, 0.46],
+      [0.08, 0.45, 0.08, 0.48],
+    ])
+      s.line(a, b, c, d, { w: 1.4 });
+    // two little plant prints
+    note(s, 0.03, 0.52, 0.07, 0.08, -0.03, "leaf", BAL.flower);
+    note(s, 0.05, 0.64, 0.07, 0.08, 0.04, "leaf", BAL.bulb);
+    // floating shelves near the corner with books and a trailing pothos
+    const shelf = (y: number) => {
+      s.sticker(s.rectPts(0.68, y, 0.25, 0.025), 3, 0.18, tint(BAL.wood));
+      s.box(0.68, y, 0.25, 0.025, null, { w: 2 });
+    };
+    shelf(0.22);
+    shelf(0.38);
+    for (const [x, w, h, y] of [
+      [0.83, 0.03, 0.09, 0.22],
+      [0.862, 0.035, 0.08, 0.22],
+      [0.75, 0.035, 0.1, 0.38],
+      [0.787, 0.03, 0.09, 0.38],
+      [0.82, 0.04, 0.085, 0.38],
+    ] as const) {
+      const b = s.rectPts(x, y - h, w, h);
+      s.sticker(b, 2, 0.12, tint(BAL.book));
+      s.stroke(b, { closed: true, w: 1.6 });
+      s.line(x + w * 0.2, y - h + 0.02, x + w * 0.8, y - h + 0.02, { w: 1, alpha: 0.6 });
+    }
+    const pot: Pt[] = [[0.765, 0.17], ...s.ellipsePts(0.72, 0.17, 0.045, 0.05, 0, Math.PI, 12)];
+    vines(
+      s,
+      [
+        [
+          [0.69, 0.18],
+          [0.66, 0.28],
+          [0.67, 0.4],
+          [0.65, 0.5],
+        ],
+        [
+          [0.73, 0.2],
+          [0.72, 0.3],
+        ],
+      ],
+      0.026,
+      BAL.leaf,
+    );
+    for (const [dx, dy, rot] of [
+      [-0.04, -0.03, -0.9],
+      [0, -0.05, 0],
+      [0.04, -0.03, 0.9],
+    ] as const)
+      almondLeaf(s, 0.72 + dx, 0.17 + dy, 0.028, rot, BAL.leaf);
+    s.sticker(pot, 3, 0.16, tint(BAL.pot));
+    s.stroke(pot, { closed: true, w: 2 });
   },
   right(s) {
-    s.washAll("#b9c6f2");
-    s.fill(s.rectPts(-0.02, 0.3, 1.04, 0.72), "#e4c8ee", { alpha: 0.7, jitter: 0 });
-    fairyLights(s, 0.0, 1.0, 0.06, 0.07);
-    // skyline
-    const bld: [number, number, number][] = [
-      [0.02, 0.3, 0.12],
-      [0.15, 0.22, 0.1],
-      [0.26, 0.36, 0.14],
-      [0.42, 0.18, 0.09],
-      [0.52, 0.28, 0.16],
-      [0.7, 0.34, 0.1],
-      [0.81, 0.24, 0.14],
-    ];
-    for (const [x, top, w] of bld) {
-      s.box(x, top, w, 0.56 - top, "#8f8fc4", { w: 2.2 });
-      for (let wy = top + 0.04; wy < 0.5; wy += 0.06)
-        for (let wx = x + 0.02; wx < x + w - 0.03; wx += 0.04) if (s.r() > 0.45) s.box(wx, wy, 0.018, 0.025, "#ffe08a", { w: 1 });
+    if (look.color) s.washAll(tint(BAL.wall), 1);
+    // open to the sky: clouds, hills and a little town
+    const sky = s.rectPts(0.05, 0.12, 0.97, 0.5);
+    s.sticker(sky, 2, 0.08, tint(BAL.sky));
+    s.stroke(
+      [
+        [0.05, 0.62],
+        [0.05, 0.12],
+        [1.02, 0.12],
+      ],
+      { w: 2.2 },
+    );
+    cloud(s, 0.45, 0.32, 0.03);
+    cloud(s, 0.78, 0.26, 0.035);
+    const hills: Pt[] = [[0.05, 0.6]];
+    for (let i = 0; i <= 20; i++) {
+      const x = 0.05 + (0.97 * i) / 20;
+      hills.push([x, 0.5 - Math.sin(i * 0.9) * 0.02 - Math.sin(i * 0.37) * 0.025]);
     }
-    s.box(-0.02, 0.52, 1.04, 0.035, "#d6a46b", { w: 2.8 });
-    for (let x = 0.04; x < 1; x += 0.08) s.box(x, 0.555, 0.022, 0.38, "#fffdf5", { w: 1.8 });
-    baseboard(s, "#d6a46b");
+    hills.push([1.02, 0.6]);
+    s.sticker(hills, 1, 0.05, tint(BAL.hills));
+    s.stroke(hills.slice(1, -1), { w: 1.6 });
+    for (let i = 0; i < 10; i++) {
+      const x = 0.1 + i * 0.09 + s.r() * 0.02;
+      s.blob(x, 0.52 - s.r() * 0.02, 0.025, 0.02, null, { w: 1.2, alpha: 0.8 });
+    }
+    s.stroke(
+      [
+        [0.7, 0.5],
+        [0.7, 0.42],
+        [0.73, 0.42],
+        [0.73, 0.38],
+        [0.755, 0.38],
+        [0.755, 0.42],
+        [0.78, 0.42],
+        [0.78, 0.5],
+      ],
+      { w: 1.4 },
+    );
+    // railing along the open side
+    wallRailing(s, 0.05, 1.02, 0.6);
+    // flower box hanging on the railing
+    const box = s.rectPts(0.6, 0.63, 0.18, 0.07);
+    for (const [x, c] of [
+      [0.63, BAL.flower],
+      [0.68, BAL.hydrangea],
+      [0.73, BAL.flower],
+    ] as const)
+      flower(s, x, 0.6, 0.012, c);
+    s.sticker(box, 3, 0.18, tint(BAL.pot));
+    s.stroke(box, { closed: true, w: 2 });
+    // macrame hanging planter near the corner
+    const mx = 0.2;
+    s.line(mx, 0, mx, 0.04, { w: 1.6 });
+    s.circle(mx, 0.05, 0.01, { w: 1.6 });
+    for (const dx of [-0.05, -0.02, 0.02, 0.05]) s.stroke([[mx, 0.06], [mx + dx, 0.2], [mx + dx * 0.6, 0.3]], { w: 1.2 });
+    for (const y of [0.15, 0.22]) s.stroke([[mx - 0.04, y], [mx, y + 0.02], [mx + 0.04, y]], { w: 1.1 });
+    for (const [dx, dy, rot] of [
+      [-0.05, -0.03, -1],
+      [-0.02, -0.06, -0.3],
+      [0.02, -0.06, 0.3],
+      [0.05, -0.03, 1],
+    ] as const)
+      almondLeaf(s, mx + dx, 0.28 + dy, 0.03, rot, BAL.leaf);
+    const mpot: Pt[] = [[mx + 0.05, 0.28], ...s.ellipsePts(mx, 0.28, 0.05, 0.05, 0, Math.PI, 12)];
+    s.sticker(mpot, 3, 0.16, tint(BAL.pot));
+    s.stroke(mpot, { closed: true, w: 2 });
+    for (const dx of [-0.01, 0, 0.01]) s.line(mx + dx, 0.33, mx + dx * 2, 0.4, { w: 1.1 });
+    vines(
+      s,
+      [
+        [
+          [mx - 0.04, 0.3],
+          [mx - 0.07, 0.4],
+          [mx - 0.06, 0.48],
+        ],
+        [
+          [mx + 0.04, 0.3],
+          [mx + 0.06, 0.38],
+        ],
+      ],
+      0.024,
+      BAL.leaf,
+    );
+    // string lights from the corner to the front
+    const wire: Pt[] = [];
+    for (let i = 0; i <= 24; i++) {
+      const t = i / 24;
+      wire.push([0.24 + 0.76 * t, 0.05 + Math.sin(t * Math.PI * 2.5) ** 2 * 0.05 + t * 0.03]);
+    }
+    s.stroke(wire, { w: 1.5 });
+    for (let i = 2; i < 24; i += 3) {
+      const [x, y] = wire[i];
+      const b = s.ellipsePts(x, y + 0.022, 0.012, 0.016);
+      s.sticker(b, 2, 0.1, tint(BAL.bulb));
+      s.stroke(b, { closed: true, w: 1.4 });
+    }
+    for (const [a, b] of [
+      [0.35, 0.16],
+      [0.55, 0.17],
+      [0.75, 0.18],
+    ])
+      s.line(a, b, a + 0.01, b + 0.025, { w: 1.2, alpha: 0.8 });
   },
   floor(s) {
-    planks(s, "#e2b98a", 9, false);
+    if (look.color) s.washAll(tint(BAL.deck), 1);
+    for (let i = 1; i < 12; i++) {
+      const v = i / 12;
+      s.line(0, v, 1, v, { w: 1.5, alpha: 0.55 });
+      for (let j = 0; j < 2; j++) {
+        const p = s.r() * 0.8 + 0.1;
+        s.line(p, v, p, v + 1 / 12, { w: 1.2, alpha: 0.45 });
+      }
+    }
+    s.shadow(s.ellipsePts(...F(0.5, 0.52), 0.2, 0.18), 0.24, 18);
+    s.shadow(s.ellipsePts(...F(0.2, 0.15), 0.07, 0.07), 0.2, 10);
+    scallopRug(s, [F(0.28, 0.42), F(0.72, 0.42), F(0.72, 0.94), F(0.28, 0.94)], BAL.rug, 12);
   },
-  popups: [
-    {
-      size: 0.32,
-      at: [0.26, 0.6],
-      draw(s) {
-        s.box(0.24, 0.2, 0.5, 0.36, "#9db8ff", { mask: true, w: 2.8 });
-        s.box(0.2, 0.56, 0.6, 0.08, "#9db8ff", { mask: true, w: 2.8 });
-        s.line(0.26, 0.64, 0.74, 1, { w: 3.4, mask: true });
-        s.line(0.74, 0.64, 0.26, 1, { w: 3.4, mask: true });
-      },
+  popups: isoLayers([
+    // against the walls: monstera in the corner, a leafy plant by the railing
+    (iso) => {
+      iso.p([0.1, 0.05, 0.55]);
+      iso.p([0.3, 0.25, 0.55]);
+      iso.cyl(0.2, 0.15, 0, 0.075, 0.13, WHITE, { r2: 0.085, color: BAL.pot });
+      iso.at([0.2, 0.15, 0.13], (s, [x, y], u) => {
+        s.line(x, y, x - 0.05 * u, y - 0.2 * u, { w: 1.6, mask: true });
+        s.line(x, y, x + 0.06 * u, y - 0.25 * u, { w: 1.6, mask: true });
+        s.line(x, y, x + 0.01 * u, y - 0.3 * u, { w: 1.6, mask: true });
+        bigLeaf(s, x - 0.08 * u, y - 0.2 * u, 0.07 * u, -0.4, true);
+        bigLeaf(s, x + 0.09 * u, y - 0.24 * u, 0.075 * u, 0.4, true);
+        bigLeaf(s, x + 0.0 * u, y - 0.33 * u, 0.065 * u, 0, true);
+      });
+      iso.p([0.75, 0.05, 0.55]);
+      iso.p([0.92, 0.2, 0.5]);
+      iso.cyl(0.84, 0.12, 0, 0.06, 0.1, WHITE, { r2: 0.07, color: BAL.pot });
+      iso.at([0.84, 0.12, 0.1], (s, [x, y], u) => {
+        s.line(x, y, x, y - 0.34 * u, { w: 1.6, mask: true });
+        for (let i = 0; i < 7; i++) {
+          const yy = y - (0.06 + i * 0.045) * u;
+          const side = i % 2 ? 1 : -1;
+          s.line(x, yy, x + side * 0.04 * u, yy - 0.025 * u, { w: 1.2, mask: true });
+          almondLeaf(s, x + side * 0.055 * u, yy - 0.03 * u, 0.025 * u, side * 1.1, BAL.leaf, true);
+        }
+      });
     },
-    {
-      size: 0.3,
-      at: [0.6, 0.24],
-      draw(s) {
-        s.box(0.24, 0.2, 0.5, 0.36, "#f7c9a8", { mask: true, w: 2.8 });
-        s.box(0.2, 0.56, 0.6, 0.08, "#f7c9a8", { mask: true, w: 2.8 });
-        s.line(0.26, 0.64, 0.74, 1, { w: 3.4, mask: true });
-        s.line(0.74, 0.64, 0.26, 1, { w: 3.4, mask: true });
-      },
-    },
-    {
-      size: 0.36,
-      at: [0.52, 0.5],
-      draw(s) {
-        s.blob(0.5, 0.5, 0.36, 0.06, "#d6a46b", { mask: true, w: 3 });
-        s.box(0.47, 0.55, 0.06, 0.45, "#d6a46b", { mask: true, w: 2.4 });
-        // chai
-        s.box(0.38, 0.32, 0.12, 0.14, "#fffdf5", { mask: true, w: 2.4 });
-        s.stroke(s.ellipsePts(0.51, 0.39, 0.03, 0.04, -1.4, 1.4, 10), { w: 2.2 });
-        s.fill(s.rectPts(0.39, 0.34, 0.1, 0.03), "#c68d5c");
-        for (let i = 0; i < 2; i++)
-          s.stroke(
-            [
-              [0.42 + i * 0.04, 0.29],
-              [0.4 + i * 0.04, 0.22],
-              [0.43 + i * 0.04, 0.15],
-            ],
-            { w: 1.6, alpha: 0.7, mask: true },
+    // the bean bag with a pillow and a knitted throw, a mug on a book beside it
+    (iso) => {
+      iso.p([0.32, 0.32, 0]);
+      iso.p([0.68, 0.68, 0]);
+      iso.p([0.32, 0.32, 0.42]);
+      iso.p([0.68, 0.32, 0.3]);
+      iso.p([0.32, 0.68, 0.3]);
+      iso.at([0.5, 0.5, 0], (s, [x, y], u) => {
+        const bag: Pt[] = [];
+        for (let i = 0; i <= 36; i++) {
+          const a = (i / 36) * Math.PI * 2;
+          const rx = 0.2 * u * (a > Math.PI ? 1 - 0.12 * Math.sin(a - Math.PI) : 1);
+          const ry = a < Math.PI ? 0.06 * u : 0.3 * u * (1 + 0.06 * Math.sin((a - Math.PI) * 3));
+          pts(bag, x + Math.cos(a) * rx, y - 0.07 * u + Math.sin(a) * ry);
+        }
+        s.shape(bag, tint(BAL.bag), { mask: true, w: 2.4 });
+        // seams
+        for (const k of [-0.6, 0, 0.6]) s.stroke(s.ellipsePts(x + k * 0.11 * u, y - 0.12 * u, 0.05 * u, 0.2 * u, Math.PI * 1.15, Math.PI * 1.85, 10), { w: 1.1, alpha: 0.6 });
+        s.stroke(s.ellipsePts(x, y - 0.2 * u, 0.12 * u, 0.04 * u, Math.PI * 0.1, Math.PI * 0.9, 10), { w: 1.2, alpha: 0.7 });
+        // pillow
+        const pil: Pt[] = [
+          [x - 0.06 * u, y - 0.34 * u],
+          [x + 0.07 * u, y - 0.37 * u],
+          [x + 0.09 * u, y - 0.25 * u],
+          [x - 0.05 * u, y - 0.22 * u],
+        ];
+        s.shape(pil, tint(BAL.pillow), { mask: true, w: 2 });
+        s.circle(x + 0.015 * u, y - 0.295 * u, 0.006 * u, { w: 1.3 });
+        // knitted throw draped over the front
+        const th: Pt[] = [
+          [x - 0.14 * u, y - 0.2 * u],
+          [x + 0.08 * u, y - 0.24 * u],
+          [x + 0.06 * u, y - 0.04 * u],
+          [x - 0.12 * u, y - 0.02 * u],
+        ];
+        s.shape(th, tint(BAL.throw), { mask: true, w: 2 });
+        for (let i = 1; i < 6; i++) {
+          const t = i / 6;
+          s.line(
+            th[0][0] + (th[1][0] - th[0][0]) * t,
+            th[0][1] + (th[1][1] - th[0][1]) * t,
+            th[3][0] + (th[2][0] - th[3][0]) * t,
+            th[3][1] + (th[2][1] - th[3][1]) * t,
+            { w: 1.1, alpha: 0.7 },
           );
-      },
+        }
+        for (let i = 0; i <= 7; i++) {
+          const t = i / 7;
+          const fx = th[3][0] + (th[2][0] - th[3][0]) * t;
+          const fy = th[3][1] + (th[2][1] - th[3][1]) * t;
+          s.line(fx, fy, fx, fy + 0.025 * u, { w: 1.3, mask: true });
+        }
+      });
+      // book + mug on the floor beside it
+      iso.box(0.66, 0.5, 0, 0.1, 0.08, 0.02, WHITE, { color: BAL.book });
+      iso.cyl(0.71, 0.54, 0.02, 0.022, 0.04, WHITE, { color: BAL.mug });
+      iso.at([0.735, 0.54, 0.045], (s, [x, y], u) => s.stroke(s.ellipsePts(x, y, 0.012 * u, 0.015 * u, -1.4, 1.4, 8), { w: 1.6, mask: true }));
+      iso.at([0.71, 0.54, 0.07], (s, [x, y], u) => {
+        for (const dx of [-0.008, 0.006]) s.stroke([[x + dx * u, y], [x + (dx - 0.006) * u, y - 0.025 * u], [x + dx * u, y - 0.05 * u]], { w: 1.1, mask: true });
+      });
     },
-    {
-      size: 0.5,
-      at: [0.24, 0.8],
-      draw(s) {
-        plant(s, 0.5, 1, 2.3, "#e9a07c", true);
-      },
+    // front: hydrangea, watering can, a flower pot, and the front railing with a flower box
+    (iso) => {
+      // hydrangea in a pot near the door
+      iso.p([0.07, 0.86, 0.42]);
+      iso.p([0.24, 0.97, 0.42]);
+      iso.cyl(0.15, 0.9, 0, 0.06, 0.11, WHITE, { r2: 0.07, color: BAL.pot });
+      iso.at([0.15, 0.9, 0.11], (s, [x, y], u) => {
+        for (const [dx, dy, rot] of [
+          [-0.07, -0.04, -1.2],
+          [0.07, -0.04, 1.2],
+          [-0.04, -0.09, -0.6],
+          [0.05, -0.1, 0.6],
+        ] as const)
+          almondLeaf(s, x + dx * u, y + dy * u, 0.035 * u, rot, BAL.leaf, true);
+        for (const [dx, dy] of [
+          [-0.04, -0.15],
+          [0.03, -0.17],
+          [0.0, -0.22],
+          [-0.06, -0.21],
+          [0.06, -0.23],
+        ])
+          for (let k = 0; k < 4; k++) flower(s, x + (dx + Math.cos(k * 1.6) * 0.018) * u, y + (dy + Math.sin(k * 1.6) * 0.014) * u, 0.008 * u, BAL.hydrangea, true);
+      });
+      // watering can
+      iso.cyl(0.3, 0.82, 0, 0.045, 0.075, WHITE, { r2: 0.04, color: BAL.can });
+      iso.line([0.33, 0.85, 0.03], [0.4, 0.91, 0.1], { w: 2.6 });
+      iso.at([0.4, 0.91, 0.1], (s, [x, y], u) => s.blob(x, y, 0.012 * u, 0.008 * u, tint(BAL.can), { w: 1.4, mask: true }));
+      iso.path(
+        [
+          [0.27, 0.79, 0.07],
+          [0.28, 0.8, 0.12],
+          [0.32, 0.84, 0.12],
+          [0.33, 0.85, 0.07],
+        ],
+        { w: 2.2 },
+      );
+      iso.at([0.3, 0.82, 0.04], (s, [x, y], u) => {
+        s.line(x, y + 0.01 * u, x, y - 0.025 * u, { w: 1.2 });
+        almondLeaf(s, x - 0.012 * u, y - 0.012 * u, 0.012 * u, -0.8, BAL.leaf, true);
+        almondLeaf(s, x + 0.012 * u, y - 0.018 * u, 0.012 * u, 0.8, BAL.leaf, true);
+      });
+      // front railing along the open edge (the far end of the right-wall railing), with a flower box
+      const RA = 0.965;
+      const R0 = 0.4;
+      const R1 = 0.995;
+      const RZ = 0.32;
+      iso.box(RA - 0.012, R0, 0, 0.025, 0.025, RZ, WHITE, { color: BAL.wood });
+      for (let b = R0 + 0.05; b < R1 - 0.02; b += 0.045) iso.line([RA, b, 0], [RA, b, RZ], { w: 2.4 });
+      iso.box(RA - 0.012, R1 - 0.025, 0, 0.025, 0.025, RZ, WHITE, { color: BAL.wood });
+      iso.box(RA - 0.015, R0 - 0.01, RZ, 0.03, R1 - R0 + 0.02, 0.025, WHITE, { color: BAL.wood });
+      iso.line([RA, R0, 0.03], [RA, R1, 0.03], { w: 2 });
+      iso.box(RA + 0.015, 0.6, 0.2, 0.04, 0.18, 0.07, WHITE, { color: BAL.pot });
+      iso.at([RA + 0.035, 0.69, 0.27], (s, [x, y], u) => {
+        for (const [dx, dy, c] of [
+          [-0.06, -0.01, BAL.flower],
+          [-0.02, -0.03, BAL.hydrangea],
+          [0.02, -0.01, BAL.flower],
+          [0.06, -0.025, BAL.hydrangea],
+        ] as const)
+          flower(s, x + dx * u, y + dy * u, 0.011 * u, c, true);
+      });
+      // flower pot in front of the railing corner
+      iso.p([0.6, 0.85, 0.3]);
+      iso.cyl(0.68, 0.9, 0, 0.055, 0.1, WHITE, { r2: 0.065, color: BAL.pot });
+      iso.at([0.68, 0.9, 0.1], (s, [x, y], u) => {
+        for (const [dx, dy, rot] of [
+          [-0.06, -0.03, -1.2],
+          [0.06, -0.03, 1.2],
+        ] as const)
+          almondLeaf(s, x + dx * u, y + dy * u, 0.03 * u, rot, BAL.leaf, true);
+        for (const [dx, dy] of [
+          [-0.03, -0.09],
+          [0.03, -0.1],
+          [0, -0.14],
+        ])
+          flower(s, x + dx * u, y + dy * u, 0.014 * u, BAL.flower, true);
+      });
     },
-  ],
+  ]),
 };
+
+/** push helper (keeps the bean bag outline code short) */
+function pts(arr: Pt[], x: number, y: number) {
+  arr.push([x, y]);
+}
 
 export const ROOMS: Room[] = [bedroom, bathroom, kitchen, gym, lounge, balcony];
 
