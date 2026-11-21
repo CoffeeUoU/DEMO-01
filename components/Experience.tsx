@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows } from "@react-three/drei";
 import Book from "./Book";
+import JournalPanel from "./JournalPanel";
+import { SPOTS } from "@/lib/spots";
 import { HandArrow, HandUnderline } from "./Hand";
 import { N, logicalOf, physicalOf } from "@/lib/fold";
 import { ROOMS } from "@/lib/rooms";
@@ -17,6 +19,7 @@ export default function Experience() {
   const [tex, setTex] = useState<BookTextures | null>(null);
   const [room, setRoom] = useState(0); // logical index
   const [open, setOpen] = useState(false);
+  const [writing, setWriting] = useState<{ room: string; spot: string } | null>(null);
   const drag = useRef({ x: 0, startX: 0, active: false });
 
   // Draw every surface once the handwriting font is ready (loose pen, a little colour).
@@ -50,6 +53,7 @@ export default function Experience() {
 
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
+      if (writing) return; // the journal sheet handles its own keys
       if (ev.key === "ArrowRight") {
         if (!open) setBookOpen(true);
         else goTo(room + 1);
@@ -64,7 +68,7 @@ export default function Experience() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, room, goTo, setBookOpen]);
+  }, [open, room, goTo, setBookOpen, writing]);
 
   // Drag sideways to page through: content follows your finger.
   const onDown = (ev: React.PointerEvent) => {
@@ -104,7 +108,7 @@ export default function Experience() {
       <div className="canvas-wrap" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onDoubleClick={() => setBookOpen(!open)}>
         {tex && (
           <Canvas orthographic flat linear dpr={[1, 2]} camera={{ position: [0, 2, 10], zoom: 200, near: 0.1, far: 100 }} gl={{ alpha: true, antialias: true }}>
-            <Book tex={tex} />
+            <Book tex={tex} onSpot={(li, spot) => setWriting({ room: ROOMS[li].name, spot })} />
             <ContactShadows position={[0, -0.04, 0]} scale={5} resolution={512} far={1.4} blur={2.4} opacity={0.32} color="#2a2350" frames={Infinity} />
           </Canvas>
         )}
@@ -137,6 +141,9 @@ export default function Experience() {
           <div className="room-mood">tap the cover to open</div>
         )}
       </footer>
+      {writing && SPOTS[writing.room]?.[writing.spot] && (
+        <JournalPanel room={writing.room} spotKey={writing.spot} spot={SPOTS[writing.room][writing.spot]} onClose={() => setWriting(null)} />
+      )}
     </main>
   );
 }

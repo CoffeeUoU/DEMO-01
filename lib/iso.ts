@@ -160,6 +160,12 @@ export class Iso {
     this.face(this.ring(cx, cy, z, r), fill, o);
   }
 
+  /** Mark the projected area of these room points as clickable (see Sketch.mark). */
+  mark(name: string, pts: V3[]) {
+    const q = pts.map((v) => this.p(v));
+    this.s?.mark(name, q);
+  }
+
   /** Free 2D drawing anchored at a room point; fn gets the card point and a world→card scale. */
   at(v: V3, fn: (s: Sketch, p: Pt, u: number) => void) {
     const p = this.p(v);

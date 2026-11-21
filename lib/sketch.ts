@@ -31,6 +31,8 @@ export class Sketch {
   private mask: CanvasRenderingContext2D;
   private k: number;
   fontFamily = "cursive";
+  /** Named clickable areas (bounding boxes in 0..1 canvas coords), e.g. where a journal lives. */
+  readonly marks: Record<string, [number, number, number, number]> = {};
 
   constructor(ink: CanvasRenderingContext2D, wash: CanvasRenderingContext2D, mask: CanvasRenderingContext2D, size: number, seed: number) {
     this.ink = ink;
@@ -399,6 +401,13 @@ export class Sketch {
     c.restore();
   }
 
+  /** Remember the bounding box of these points under a name, so the 3D scene can make it clickable. */
+  mark(name: string, points: Pt[], pad = 0.01) {
+    const xs = points.map((p) => p[0]);
+    const ys = points.map((p) => p[1]);
+    this.marks[name] = [Math.min(...xs) - pad, Math.min(...ys) - pad, Math.max(...xs) + pad, Math.max(...ys) + pad];
+  }
+
   /** Five-point star, hand drawn. */
   star(cx: number, cy: number, r: number, o: StrokeOpts = {}) {
     const pts: Pt[] = [];
@@ -507,6 +516,7 @@ export function bake(size: number, seed: number, font: string, full: boolean, dr
     }
   }
   const tex = new THREE.DataTexture(out, size, size, THREE.RGBAFormat);
+  tex.userData.marks = s.marks;
   tex.generateMipmaps = true;
   tex.minFilter = THREE.LinearMipmapLinearFilter;
   tex.magFilter = THREE.LinearFilter;

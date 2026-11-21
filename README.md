@@ -8,6 +8,17 @@ A journal house: a hand-drawn pop-up book whose rooms fold open one at a time.
 - **Hybrid style** — everything is blue-ink line art on paper; the room in front washes with colour.
 - **Four rooms** — bedroom, bathroom, kitchen, balcony. See [ROOMS.md](./ROOMS.md).
 
+## Journal
+
+Each room has one place you write: the cork board (bedroom), the mirror (bathroom), the fridge
+door (kitchen) and the diary on the bean bag (balcony). Click it when the room is in front to open
+its page: write an entry (Cmd/Ctrl+Enter saves), read older ones, or tear one out.
+
+Entries are saved in this browser only (localStorage, `unfold.entries.v1`), through the async
+functions in `lib/journal.ts`, so moving them to a server later only means changing that file.
+Spots are marked inside the drawings with `s.mark("journal", ...)` / `iso.mark(...)`; their
+names and prompts live in `lib/spots.ts`.
+
 ## Run
 
 ```bash

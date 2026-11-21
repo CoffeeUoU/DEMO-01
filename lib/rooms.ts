@@ -330,6 +330,7 @@ const bedroom: Room = {
     const bw = 0.5;
     const bh = 0.37;
     s.sticker(s.rectPts(bx, by, bw, bh), 6, 0.22, tint(BED.cork));
+    s.mark("journal", s.rectPts(bx, by, bw, bh));
     s.box(bx, by, bw, bh, null, { w: 2.8 });
     s.rect(bx + 0.018, by + 0.018, bw - 0.036, bh - 0.036, { w: 1.2, alpha: 0.6 });
     for (let i = 0; i < 70; i++) s.circle(bx + 0.03 + s.r() * (bw - 0.06), by + 0.03 + s.r() * (bh - 0.06), 0.0022, { w: 1, alpha: 0.45 });
@@ -820,6 +821,7 @@ const bathroom: Room = {
     s.sticker(mirror, 6, 0.2, tint(BATH.vanity));
     s.stroke(mirror, { closed: true, w: 2.6 });
     const glass: Pt[] = [[0.65, 0.565], ...s.ellipsePts(mx, 0.325, 0.09, 0.082, Math.PI, Math.PI * 2, 18), [0.83, 0.565]];
+    s.mark("journal", mirror);
     s.fill(glass, tint(BATH.glass), { alpha: 1, jitter: 0.3 });
     s.stroke(glass, { closed: true, w: 1.5 });
     s.line(0.68, 0.36, 0.72, 0.3, { w: 1.2, alpha: 0.6 });
@@ -1327,6 +1329,13 @@ const kitchen: Room = {
     (iso) => {
       // --- fridge with a plant on top ---
       iso.box(0.745, 0.025, 0, 0.23, 0.25, 0.8, WHITE, { color: KIT.fridge });
+      iso.mark("journal", [
+        [0.745, 0.275, 0],
+        [0.975, 0.275, 0],
+        [0.975, 0.275, 0.8],
+        [0.745, 0.275, 0.8],
+        [0.975, 0.025, 0.8],
+      ]);
       const FF = 0.275;
       iso.line([0.745, FF, 0.5], [0.975, FF, 0.5], { w: 1.8 });
       iso.line([0.77, FF, 0.55], [0.77, FF, 0.68], { w: 3 });
@@ -1960,6 +1969,7 @@ const balcony: Room = {
         solid(pagesEdge, "#ffffff", 1.8);
         for (const k of [0.4, 0.7]) s.line(...D(0.085, -0.105 + k * 0.012), ...D(0.185, -0.15 + k * 0.012), { w: 0.9, alpha: 0.6 });
         const cover: Pt[] = [D(0.03, -0.138), D(0.13, -0.183), D(0.188, -0.153), D(0.088, -0.108)];
+        s.mark("journal", cover, 0.02);
         solid(cover, BAL.diary, 2);
         s.line(...D(0.145, -0.176), ...D(0.103, -0.115), { w: 1.6 });
         s.stroke([D(0.06, -0.125), D(0.055, -0.098), D(0.07, -0.088)], { w: 1.4, mask: true });

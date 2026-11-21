@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef } from "react";
+import type { ThreeEvent } from "@react-three/fiber";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Line } from "@react-three/drei";
 import * as THREE from "three";
@@ -57,7 +58,63 @@ function writeEdge(arr: Float32Array, offset: number, a: number[], b: number[], 
   }
 }
 
-export default function Book({ tex }: { tex: BookTextures }) {
+type Rect = [number, number, number, number];
+type Hot = { spot: string; pos: [number, number, number]; w: number; h: number };
+
+/**
+ * An invisible, clickable patch over something drawn in a room (the mirror, the diary...).
+ * It breathes faintly while its room is in front so it can be found, and tints on hover.
+ */
+function Hotspot({ hot, room, onPick }: { hot: Hot; room: number; onPick: (spot: string) => void }) {
+  const mat = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: INK,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2,
+      }),
+    [],
+  );
+  const hover = useRef(false);
+  const live = () => book.open > 0.97 && focusOf(room, book.f) > 0.97 && !book.dragging;
+  useFrame(({ clock }) => {
+    const on = live();
+    const want = !on ? 0 : hover.current ? 0.16 : 0.035 + 0.035 * Math.sin(clock.elapsedTime * 2.2);
+    mat.opacity += (want - mat.opacity) * 0.15;
+  });
+  const setHover = (v: boolean) => {
+    hover.current = v && live();
+    document.body.style.cursor = hover.current ? "pointer" : "";
+  };
+  return (
+    <mesh
+      position={hot.pos}
+      material={mat}
+      onPointerOver={(e: ThreeEvent<PointerEvent>) => {
+        e.stopPropagation();
+        setHover(true);
+      }}
+      onPointerOut={() => setHover(false)}
+      onClick={(e: ThreeEvent<MouseEvent>) => {
+        e.stopPropagation();
+        if (!live() || e.delta > 6) return;
+        setHover(false);
+        onPick(hot.spot);
+      }}
+    >
+      <planeGeometry args={[hot.w, hot.h]} />
+    </mesh>
+  );
+}
+
+const marksOf = (t: THREE.Texture): Record<string, Rect> => (t.userData.marks as Record<string, Rect>) ?? {};
+
+export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room: number, spot: string) => void }) {
   const { camera, size } = useThree();
 
   // ---- static pieces ------------------------------------------------------
@@ -103,6 +160,31 @@ export default function Book({ tex }: { tex: BookTextures }) {
       }),
     [tex],
   );
+
+  // Clickable spots: on the right wall (page p front), the left wall (page p+1 back) and pop-up cards.
+  const hots = useMemo(() => {
+    const front: { room: number; hot: Hot }[][] = Array.from({ length: N + 1 }, () => []);
+    const back: { room: number; hot: Hot }[][] = Array.from({ length: N + 1 }, () => []);
+    const cards: Hot[][][] = Array.from({ length: N }, () => []);
+    for (let p = 0; p < N; p++) {
+      const r = tex.rooms[logicalOf(p)];
+      for (const [spot, [x0, y0, x1, y1]] of Object.entries(marksOf(r.right)))
+        front[p].push({ room: p, hot: { spot, pos: [((x0 + x1) / 2) * L, H * (1 - (y0 + y1) / 2), 0.004], w: (x1 - x0) * L, h: (y1 - y0) * H } });
+      for (const [spot, [x0, y0, x1, y1]] of Object.entries(marksOf(r.left)))
+        back[p + 1].push({ room: p, hot: { spot, pos: [L * (1 - (x0 + x1) / 2), H * (1 - (y0 + y1) / 2), -0.004], w: (x1 - x0) * L, h: (y1 - y0) * H } });
+      cards[p] = r.popups.map((pt, j) => {
+        const size = ROOMS[logicalOf(p)].popups[j].size;
+        return Object.entries(marksOf(pt)).map(([spot, [x0, y0, x1, y1]]) => ({
+          spot,
+          pos: [((x0 + x1) / 2 - 0.5) * size, (1 - (y0 + y1) / 2) * size, 0.006] as [number, number, number],
+          w: (x1 - x0) * size,
+          h: (y1 - y0) * size,
+        }));
+      });
+    }
+    return { front, back, cards };
+  }, [tex]);
+  const pick = (p: number) => (spot: string) => onSpot(logicalOf(p), spot);
 
   const outlines = useMemo(() => Array.from({ length: N + 1 }, (_, k) => wobbleRect(k + 1)), []);
   const floorLinePts = useMemo(() => Array.from({ length: N }, () => Array.from({ length: (EDGE_STEPS + 1) * 3 }, () => new THREE.Vector3())), []);
@@ -219,6 +301,12 @@ export default function Book({ tex }: { tex: BookTextures }) {
         <group key={k} ref={(el) => void (pageRefs.current[k] = el)}>
           <mesh geometry={pageGeo.front} material={m.front} />
           <mesh geometry={pageGeo.back} material={m.back} />
+          {hots.front[k].map(({ room, hot }) => (
+            <Hotspot key={`f${hot.spot}`} hot={hot} room={room} onPick={pick(room)} />
+          ))}
+          {hots.back[k].map(({ room, hot }) => (
+            <Hotspot key={`b${hot.spot}`} hot={hot} room={room} onPick={pick(room)} />
+          ))}
           <Line
             ref={(el) => void (outlineRefs.current[k] = el as unknown as Line2 | null)}
             points={outlines[k]}
@@ -254,6 +342,7 @@ export default function Book({ tex }: { tex: BookTextures }) {
               }}
             >
               <mesh geometry={pu.geo} material={pu.mat} />
+              {hots.cards[p][j]?.map((hot) => <Hotspot key={hot.spot} hot={hot} room={p} onPick={pick(p)} />)}
             </group>
           </group>
         )),
