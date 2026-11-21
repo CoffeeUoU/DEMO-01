@@ -86,24 +86,25 @@ Same paper cut-out style; ink-only or soft colour.
 - **Pop-ups** — sofa with cushions, bean bag.
 - **Entries hung here** — fun, games, shows, friends, doing nothing on purpose.
 
-## 6. Balcony — redesigned (after Dakshi's reference)
+## 6. Balcony — night (after Dakshi's reference)
 
-Same paper cut-out style; ink-only or soft colour.
+Same paper cut-out style, set at night; ink-only or soft colour.
 
-- **Left wall** — sliding glass door with a peek of the room inside (lamp, armchair, picture), a
-  curtain tied beside it, a wall lantern with a glow, two little plant prints, floating shelves
-  near the corner with books and a trailing pothos.
-- **Right wall** — open to the sky: clouds, hills and a little town; a wooden railing with a
-  flower box; a macrame hanging planter near the corner; string lights running to the front.
-- **Floor** — deck boards, a scalloped rug, soft shadows.
+- **Left wall** — sliding glass door with the lit room inside (a glowing floor lamp, an armchair, a
+  picture) and a curtain; a wall lantern with a warm glow; two little plant prints; floating
+  shelves near the corner with books and a trailing pothos.
+- **Right wall** — open to the night: a crescent moon, stars, dark hills and a little town with lit
+  windows (hatched sky in ink, deep blue in colour); a railing with a flower box; a macrame
+  hanging planter near the corner; string lights with glowing bulbs.
+- **Floor** — deck boards, a soft scalloped rug, a big shadow under the bean bag.
 - **Pop-ups**
-  - monstera in the corner, a tall leafy plant by the railing
-  - bean bag with a pillow and a knitted throw; a mug of something warm on a book beside it
-  - hydrangea pot and a watering can by the door, a flower pot, and a front railing along the open
-    edge with a flower box
-- **Colour version** — warm walls, pale sky, wooden deck and railings, peach bean bag, lilac throw,
-  coral rug, terracotta pots, pink and lilac flowers.
-- **Entries hung here** — evenings, gratitude, the big picture, what you want next.
+  - monstera in the corner, a leafy plant by the railing
+  - a big squishy bean bag with a tufted pillow and a knitted throw slung over the arm (tassels and
+    all), plus a book with a mug of tea, steaming
+  - hydrangea by the door, a watering can, a flower pot, and a short front railing with a flower box
+- **Colour version** — lavender-grey walls, blue night sky, warm light from the door, lantern, bulbs
+  and moon; oat bean bag, lilac pillow, pink throw.
+- **Entries hung here** — late nights, gratitude, the big picture, what you want next.
 
 ---
 

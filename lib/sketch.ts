@@ -379,6 +379,26 @@ export class Sketch {
     c.restore();
   }
 
+  /** Soft light (lantern, bulbs, moon) painted onto the wash; only visible in the coloured version. */
+  glow(cx: number, cy: number, r: number, color: string, alpha = 0.6) {
+    const c = this.wash;
+    const [x, y] = this.px([cx, cy]);
+    const R = r * this.S;
+    const g = c.createRadialGradient(x, y, 0, x, y, R);
+    const n = parseInt(color.slice(1), 16);
+    const rgb = `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+    g.addColorStop(0, `rgba(${rgb}, ${alpha})`);
+    g.addColorStop(0.45, `rgba(${rgb}, ${alpha * 0.45})`);
+    g.addColorStop(1, `rgba(${rgb}, 0)`);
+    c.save();
+    c.globalCompositeOperation = "source-over";
+    c.fillStyle = g;
+    c.beginPath();
+    c.arc(x, y, R, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+  }
+
   /** Five-point star, hand drawn. */
   star(cx: number, cy: number, r: number, o: StrokeOpts = {}) {
     const pts: Pt[] = [];

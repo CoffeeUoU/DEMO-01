@@ -1689,27 +1689,48 @@ const lounge: Room = {
 // railings open to the sky. Ink-only or soft colour.
 
 const BAL = {
-  wall: "#f7efe6",
-  sky: "#e0ecfa",
-  hills: "#d9ecd2",
-  deck: "#ecd2ae",
-  wood: "#ead3b2",
-  glass: "#e3eefa",
-  curtain: "#f6eee2",
-  bag: "#f5d9cf",
-  pillow: "#fbe6a4",
-  throw: "#d9d0f3",
-  leaf: "#cfe8c4",
-  pot: "#f3c8b0",
+  wall: "#e9e3f1",
+  sky: "#8f98d2",
+  skyLow: "#a9a6d8",
+  hills: "#a9aad3",
+  city: "#9b9dcc",
+  window: "#ffe39a",
+  moon: "#fff3bf",
+  deck: "#dcc3a0",
+  wood: "#e2c9a6",
+  glass: "#fbe6b0",
+  curtain: "#f3e7d6",
+  bag: "#f1dccb",
+  pillow: "#ddd3f2",
+  throw: "#f4c9cf",
+  leaf: "#c6e0bd",
+  pot: "#efc2aa",
   flower: "#f7ccd6",
   hydrangea: "#d9d0f3",
   can: "#cfe0f7",
   mug: "#f7ccd6",
   book: "#dbe8fb",
-  lantern: "#fbe6a4",
-  bulb: "#fff3b5",
-  rug: "#f8d2c6",
+  lantern: "#ffe39a",
+  bulb: "#fff1b0",
+  light: "#ffd56b",
+  rug: "#ece4f6",
 };
+
+/** Corner-cutting (Chaikin) smoothing for soft, puffy outlines. */
+function soft(points: Pt[], iterations = 3): Pt[] {
+  let p = points;
+  for (let k = 0; k < iterations; k++) {
+    const out: Pt[] = [];
+    for (let i = 0; i < p.length; i++) {
+      const a = p[i];
+      const b = p[(i + 1) % p.length];
+      out.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25]);
+      out.push([a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75]);
+    }
+    p = out;
+  }
+  return p;
+}
 
 /** Five-petal flower. */
 function flower(s: Sketch, x: number, y: number, r: number, color: string, mask = false) {
@@ -1747,7 +1768,7 @@ function wallRailing(s: Sketch, x0: number, x1: number, top: number) {
 
 const balcony: Room = {
   name: "balcony",
-  mood: "evenings, the big picture, gratitude",
+  mood: "late nights, the big picture, gratitude",
   left(s) {
     if (look.color) s.washAll(tint(BAL.wall), 1);
     // sliding glass door with a peek of the room inside
@@ -1774,7 +1795,8 @@ const balcony: Room = {
       s.line(x, y + 0.08, x + 0.05, y, { w: 1.1, alpha: 0.6 });
       s.line(x + 0.02, y + 0.12, x + 0.08, y + 0.03, { w: 1.1, alpha: 0.6 });
     }
-    // inside: floor lamp, armchair, picture (faint)
+    // inside: the room is lit — floor lamp glowing, armchair, picture (faint)
+    if (look.color) s.glow(0.22, 0.47, 0.16, BAL.light, 0.55);
     s.line(0.22, 0.88, 0.22, 0.5, { w: 1.4, alpha: 0.55 });
     s.stroke(
       [
@@ -1826,6 +1848,7 @@ const balcony: Room = {
       [0.1, 0.42],
       [0.06, 0.42],
     ];
+    if (look.color) s.glow(0.08, 0.38, 0.14, BAL.light, 0.6);
     s.sticker(lan, 3, 0.18, tint(BAL.lantern));
     s.stroke(lan, { closed: true, w: 2 });
     s.stroke(
@@ -1894,9 +1917,11 @@ const balcony: Room = {
   },
   right(s) {
     if (look.color) s.washAll(tint(BAL.wall), 1);
-    // open to the sky: clouds, hills and a little town
+    // open to the night: moon, stars, dark hills and a little town with lit windows
     const sky = s.rectPts(0.05, 0.12, 0.97, 0.5);
     s.sticker(sky, 2, 0.08, tint(BAL.sky));
+    if (look.color) s.fill(s.rectPts(0.05, 0.4, 0.97, 0.22), BAL.skyLow, { alpha: 0.6, jitter: 0 });
+    else s.hatch(sky, 0.011, -1.0, 1.1, 0.42);
     s.stroke(
       [
         [0.05, 0.62],
@@ -1905,33 +1930,52 @@ const balcony: Room = {
       ],
       { w: 2.2 },
     );
-    cloud(s, 0.45, 0.32, 0.03);
-    cloud(s, 0.78, 0.26, 0.035);
+    // moon
+    if (look.color) s.glow(0.83, 0.25, 0.12, BAL.moon, 0.7);
+    const moon: Pt[] = [...s.ellipsePts(0.83, 0.25, 0.045, 0.045, 0.6, 5.7, 20), ...s.ellipsePts(0.855, 0.235, 0.035, 0.035, 5.2, 1.1, 14)];
+    s.sticker(moon, 3, 0, tint(BAL.moon));
+    s.stroke(moon, { closed: true, w: 2 });
+    // stars
+    for (const [x, y, r] of [
+      [0.42, 0.18, 0.016],
+      [0.55, 0.27, 0.011],
+      [0.66, 0.16, 0.013],
+      [0.95, 0.38, 0.012],
+      [0.5, 0.36, 0.009],
+      [0.72, 0.33, 0.01],
+      [0.36, 0.3, 0.01],
+    ] as const) {
+      s.sticker(s.ellipsePts(x, y, r * 0.7, r * 0.7), 3, 0, tint(BAL.moon));
+      s.star(x, y, r, { w: 1.5 });
+    }
+    // hills + town silhouettes
     const hills: Pt[] = [[0.05, 0.6]];
     for (let i = 0; i <= 20; i++) {
       const x = 0.05 + (0.97 * i) / 20;
-      hills.push([x, 0.5 - Math.sin(i * 0.9) * 0.02 - Math.sin(i * 0.37) * 0.025]);
+      hills.push([x, 0.52 - Math.sin(i * 0.9) * 0.02 - Math.sin(i * 0.37) * 0.025]);
     }
     hills.push([1.02, 0.6]);
     s.sticker(hills, 1, 0.05, tint(BAL.hills));
     s.stroke(hills.slice(1, -1), { w: 1.6 });
-    for (let i = 0; i < 10; i++) {
-      const x = 0.1 + i * 0.09 + s.r() * 0.02;
-      s.blob(x, 0.52 - s.r() * 0.02, 0.025, 0.02, null, { w: 1.2, alpha: 0.8 });
+    const town: [number, number, number][] = [
+      [0.58, 0.44, 0.05],
+      [0.635, 0.4, 0.04],
+      [0.68, 0.46, 0.06],
+      [0.75, 0.42, 0.045],
+      [0.8, 0.47, 0.05],
+    ];
+    for (const [x, top, w] of town) {
+      const bld = s.rectPts(x, top, w, 0.6 - top);
+      s.sticker(bld, 1, 0.05, tint(BAL.city));
+      s.stroke(bld, { closed: true, w: 1.5 });
+      for (let wy = top + 0.02; wy < 0.53; wy += 0.03)
+        for (let wx = x + 0.01; wx < x + w - 0.015; wx += 0.017)
+          if (s.r() > 0.45) {
+            const win = s.rectPts(wx, wy, 0.009, 0.013);
+            s.sticker(win, 0.5, 0, tint(BAL.window));
+            s.stroke(win, { closed: true, w: 0.9 });
+          }
     }
-    s.stroke(
-      [
-        [0.7, 0.5],
-        [0.7, 0.42],
-        [0.73, 0.42],
-        [0.73, 0.38],
-        [0.755, 0.38],
-        [0.755, 0.42],
-        [0.78, 0.42],
-        [0.78, 0.5],
-      ],
-      { w: 1.4 },
-    );
     // railing along the open side
     wallRailing(s, 0.05, 1.02, 0.6);
     // flower box hanging on the railing
@@ -1987,6 +2031,7 @@ const balcony: Room = {
     for (let i = 2; i < 24; i += 3) {
       const [x, y] = wire[i];
       const b = s.ellipsePts(x, y + 0.022, 0.012, 0.016);
+      if (look.color) s.glow(x, y + 0.022, 0.05, BAL.light, 0.5);
       s.sticker(b, 2, 0.1, tint(BAL.bulb));
       s.stroke(b, { closed: true, w: 1.4 });
     }
@@ -2007,7 +2052,7 @@ const balcony: Room = {
         s.line(p, v, p, v + 1 / 12, { w: 1.2, alpha: 0.45 });
       }
     }
-    s.shadow(s.ellipsePts(...F(0.5, 0.52), 0.2, 0.18), 0.24, 18);
+    s.shadow(s.ellipsePts(...F(0.49, 0.51), 0.24, 0.22), 0.28, 20);
     s.shadow(s.ellipsePts(...F(0.2, 0.15), 0.07, 0.07), 0.2, 10);
     scallopRug(s, [F(0.28, 0.42), F(0.72, 0.42), F(0.72, 0.94), F(0.28, 0.94)], BAL.rug, 12);
   },
@@ -2038,64 +2083,137 @@ const balcony: Room = {
         }
       });
     },
-    // the bean bag with a pillow and a knitted throw, a mug on a book beside it
+    // a big, squishy bean bag with a tufted pillow and a knitted throw; a mug of tea on a book
     (iso) => {
-      iso.p([0.32, 0.32, 0]);
-      iso.p([0.68, 0.68, 0]);
-      iso.p([0.32, 0.32, 0.42]);
-      iso.p([0.68, 0.32, 0.3]);
-      iso.p([0.32, 0.68, 0.3]);
-      iso.at([0.5, 0.5, 0], (s, [x, y], u) => {
-        const bag: Pt[] = [];
-        for (let i = 0; i <= 36; i++) {
-          const a = (i / 36) * Math.PI * 2;
-          const rx = 0.2 * u * (a > Math.PI ? 1 - 0.12 * Math.sin(a - Math.PI) : 1);
-          const ry = a < Math.PI ? 0.06 * u : 0.3 * u * (1 + 0.06 * Math.sin((a - Math.PI) * 3));
-          pts(bag, x + Math.cos(a) * rx, y - 0.07 * u + Math.sin(a) * ry);
-        }
-        s.shape(bag, tint(BAL.bag), { mask: true, w: 2.4 });
-        // seams
-        for (const k of [-0.6, 0, 0.6]) s.stroke(s.ellipsePts(x + k * 0.11 * u, y - 0.12 * u, 0.05 * u, 0.2 * u, Math.PI * 1.15, Math.PI * 1.85, 10), { w: 1.1, alpha: 0.6 });
-        s.stroke(s.ellipsePts(x, y - 0.2 * u, 0.12 * u, 0.04 * u, Math.PI * 0.1, Math.PI * 0.9, 10), { w: 1.2, alpha: 0.7 });
-        // pillow
-        const pil: Pt[] = [
-          [x - 0.06 * u, y - 0.34 * u],
-          [x + 0.07 * u, y - 0.37 * u],
-          [x + 0.09 * u, y - 0.25 * u],
-          [x - 0.05 * u, y - 0.22 * u],
-        ];
-        s.shape(pil, tint(BAL.pillow), { mask: true, w: 2 });
-        s.circle(x + 0.015 * u, y - 0.295 * u, 0.006 * u, { w: 1.3 });
-        // knitted throw draped over the front
-        const th: Pt[] = [
-          [x - 0.14 * u, y - 0.2 * u],
-          [x + 0.08 * u, y - 0.24 * u],
-          [x + 0.06 * u, y - 0.04 * u],
-          [x - 0.12 * u, y - 0.02 * u],
-        ];
-        s.shape(th, tint(BAL.throw), { mask: true, w: 2 });
-        for (let i = 1; i < 6; i++) {
-          const t = i / 6;
-          s.line(
-            th[0][0] + (th[1][0] - th[0][0]) * t,
-            th[0][1] + (th[1][1] - th[0][1]) * t,
-            th[3][0] + (th[2][0] - th[3][0]) * t,
-            th[3][1] + (th[2][1] - th[3][1]) * t,
-            { w: 1.1, alpha: 0.7 },
+      const BX = 0.47;
+      const BY = 0.49;
+      iso.p([BX + 0.2, BY - 0.2, 0]);
+      iso.p([BX - 0.2, BY + 0.2, 0]);
+      iso.p([BX, BY, 0.48]);
+      iso.p([BX + 0.07, BY + 0.07, 0]);
+      iso.at([BX, BY, 0], (s, [x, y], u) => {
+        const P = (pts: [number, number][]) => pts.map(([dx, dy]) => [x + dx * u, y + dy * u] as Pt);
+        const solid = (pts: Pt[], c: string, w = 2.4) => {
+          s.solid(pts, tint(c));
+          s.stroke(pts, { closed: true, w, mask: true, rough: 0.8 });
+        };
+        // the bag: a slumped, puffy teardrop
+        const bag = soft(
+          P([
+            [-0.24, 0.02],
+            [-0.27, -0.1],
+            [-0.23, -0.24],
+            [-0.12, -0.33],
+            [0.02, -0.36],
+            [0.15, -0.32],
+            [0.24, -0.2],
+            [0.27, -0.07],
+            [0.22, 0.03],
+            [0.06, 0.065],
+            [-0.12, 0.055],
+          ]),
+        );
+        solid(bag, BAL.bag, 2.8);
+        // soft seams and squish lines
+        for (const [x0, y0, x1, y1, bend] of [
+          [-0.05, -0.35, -0.17, 0.04, -0.08],
+          [0.1, -0.34, 0.14, 0.05, 0.04],
+          [-0.2, -0.27, -0.25, -0.04, -0.04],
+          [0.22, -0.24, 0.24, -0.02, 0.03],
+        ] as const)
+          s.stroke(
+            P([
+              [x0, y0],
+              [(x0 + x1) / 2 + bend, (y0 + y1) / 2],
+              [x1, y1],
+            ]),
+            { w: 1.2, alpha: 0.55 },
           );
+        // the seat dent where you sink in
+        s.stroke(s.ellipsePts(x, y - 0.14 * u, 0.16 * u, 0.06 * u, Math.PI * 1.05, Math.PI * 1.95, 14), { w: 1.6, alpha: 0.8 });
+        s.stroke(s.ellipsePts(x, y - 0.13 * u, 0.13 * u, 0.045 * u, Math.PI * 0.1, Math.PI * 0.9, 12), { w: 1.1, alpha: 0.5 });
+        // a few dotted stitches along the bottom
+        for (let i = 0; i < 9; i++) {
+          const a = Math.PI * (0.12 + 0.08 * i);
+          s.circle(x + Math.cos(a) * 0.22 * u, y - 0.02 * u + Math.sin(a) * 0.05 * u, 0.0025 * u, { w: 1, alpha: 0.6 });
         }
-        for (let i = 0; i <= 7; i++) {
-          const t = i / 7;
-          const fx = th[3][0] + (th[2][0] - th[3][0]) * t;
-          const fy = th[3][1] + (th[2][1] - th[3][1]) * t;
-          s.line(fx, fy, fx, fy + 0.025 * u, { w: 1.3, mask: true });
+        // tufted pillow leaning back into it
+        const pillow = soft(
+          P([
+            [-0.08, -0.4],
+            [0.0, -0.385],
+            [0.085, -0.43],
+            [0.075, -0.33],
+            [0.1, -0.235],
+            [0.01, -0.25],
+            [-0.075, -0.21],
+            [-0.06, -0.31],
+          ]),
+          2,
+        );
+        solid(pillow, BAL.pillow, 2.2);
+        const [px, py] = [x + 0.008 * u, y - 0.315 * u];
+        s.circle(px, py, 0.007 * u, { w: 1.4 });
+        for (const [dx, dy] of [
+          [-0.05, -0.05],
+          [0.05, -0.06],
+          [0.06, 0.05],
+          [-0.05, 0.06],
+        ])
+          s.line(px + dx * 0.25 * u, py + dy * 0.25 * u, px + dx * u, py + dy * u, { w: 1, alpha: 0.6 });
+        // knitted throw slung over the left arm, spilling down the front, with tassels
+        const throwPts = soft(
+          P([
+            [-0.255, -0.17],
+            [-0.17, -0.25],
+            [-0.06, -0.235],
+            [-0.03, -0.15],
+            [-0.02, -0.03],
+            [-0.03, 0.075],
+            [-0.12, 0.085],
+            [-0.2, 0.06],
+            [-0.235, -0.03],
+          ]),
+          2,
+        );
+        solid(throwPts, BAL.throw, 2.2);
+        // knit: little V stitches in columns
+        for (let c = 0; c < 4; c++)
+          for (let r = 0; r < 7; r++) {
+            const cx = x + (-0.2 + c * 0.045 + r * 0.003) * u;
+            const cy = y + (-0.17 + r * 0.035) * u;
+            s.stroke(
+              [
+                [cx - 0.009 * u, cy - 0.008 * u],
+                [cx, cy + 0.006 * u],
+                [cx + 0.009 * u, cy - 0.008 * u],
+              ],
+              { w: 1, alpha: 0.6 },
+            );
+          }
+        // the fold where it goes over the arm
+        s.stroke(
+          P([
+            [-0.245, -0.12],
+            [-0.15, -0.165],
+            [-0.04, -0.13],
+          ]),
+          { w: 1.3, alpha: 0.65 },
+        );
+        // tassels along the hem
+        for (let i = 0; i <= 6; i++) {
+          const t = i / 6;
+          const hx = x + (-0.19 + 0.15 * t) * u;
+          const hy = y + (0.07 + Math.sin(t * Math.PI) * 0.012) * u;
+          s.line(hx, hy, hx + 0.003 * u, hy + 0.035 * u, { w: 1.7, mask: true });
         }
       });
-      // book + mug on the floor beside it
-      iso.box(0.66, 0.5, 0, 0.1, 0.08, 0.02, WHITE, { color: BAL.book });
-      iso.cyl(0.71, 0.54, 0.02, 0.022, 0.04, WHITE, { color: BAL.mug });
-      iso.at([0.735, 0.54, 0.045], (s, [x, y], u) => s.stroke(s.ellipsePts(x, y, 0.012 * u, 0.015 * u, -1.4, 1.4, 8), { w: 1.6, mask: true }));
-      iso.at([0.71, 0.54, 0.07], (s, [x, y], u) => {
+      // a little stack: book + mug of tea with steam
+      iso.box(0.72, 0.56, 0, 0.11, 0.08, 0.022, WHITE, { color: BAL.book });
+      iso.box(0.73, 0.565, 0.022, 0.09, 0.07, 0.018, WHITE, { color: BAL.pillow });
+      iso.cyl(0.775, 0.6, 0.04, 0.022, 0.042, WHITE, { color: BAL.mug });
+      iso.at([0.8, 0.6, 0.065], (s, [x, y], u) => s.stroke(s.ellipsePts(x, y, 0.012 * u, 0.015 * u, -1.4, 1.4, 8), { w: 1.6, mask: true }));
+      iso.at([0.775, 0.6, 0.09], (s, [x, y], u) => {
         for (const dx of [-0.008, 0.006]) s.stroke([[x + dx * u, y], [x + (dx - 0.006) * u, y - 0.025 * u], [x + dx * u, y - 0.05 * u]], { w: 1.1, mask: true });
       });
     },
@@ -2142,7 +2260,7 @@ const balcony: Room = {
       });
       // front railing along the open edge (the far end of the right-wall railing), with a flower box
       const RA = 0.965;
-      const R0 = 0.4;
+      const R0 = 0.66;
       const R1 = 0.995;
       const RZ = 0.32;
       iso.box(RA - 0.012, R0, 0, 0.025, 0.025, RZ, WHITE, { color: BAL.wood });
@@ -2150,8 +2268,8 @@ const balcony: Room = {
       iso.box(RA - 0.012, R1 - 0.025, 0, 0.025, 0.025, RZ, WHITE, { color: BAL.wood });
       iso.box(RA - 0.015, R0 - 0.01, RZ, 0.03, R1 - R0 + 0.02, 0.025, WHITE, { color: BAL.wood });
       iso.line([RA, R0, 0.03], [RA, R1, 0.03], { w: 2 });
-      iso.box(RA + 0.015, 0.6, 0.2, 0.04, 0.18, 0.07, WHITE, { color: BAL.pot });
-      iso.at([RA + 0.035, 0.69, 0.27], (s, [x, y], u) => {
+      iso.box(RA + 0.015, 0.74, 0.2, 0.04, 0.18, 0.07, WHITE, { color: BAL.pot });
+      iso.at([RA + 0.035, 0.83, 0.27], (s, [x, y], u) => {
         for (const [dx, dy, c] of [
           [-0.06, -0.01, BAL.flower],
           [-0.02, -0.03, BAL.hydrangea],
@@ -2179,11 +2297,6 @@ const balcony: Room = {
     },
   ]),
 };
-
-/** push helper (keeps the bean bag outline code short) */
-function pts(arr: Pt[], x: number, y: number) {
-  arr.push([x, y]);
-}
 
 export const ROOMS: Room[] = [bedroom, bathroom, kitchen, gym, lounge, balcony];
 
