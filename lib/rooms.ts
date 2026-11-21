@@ -1508,6 +1508,34 @@ function wallRailing(s: Sketch, x0: number, x1: number, top: number) {
   s.line(x0, 0.96, x1, 0.96, { w: 2 });
 }
 
+
+/** Leaves and flower heads on stems growing out of a pot (card coords; x, y = top of the pot). */
+function potPlant(
+  s: Sketch,
+  x: number,
+  y: number,
+  u: number,
+  leaves: [number, number, number][],
+  heads: [number, number][],
+  head: (hx: number, hy: number) => void,
+) {
+  // stems first, from the soil to every leaf and flower
+  for (const [dx, dy] of [...leaves.map(([a, b]) => [a * 0.6, b * 0.7] as [number, number]), ...heads]) {
+    const ex = x + dx * u;
+    const ey = y + dy * u;
+    s.stroke(
+      [
+        [x + dx * 0.15 * u, y - 0.005 * u],
+        [x + dx * 0.55 * u, y + dy * 0.5 * u],
+        [ex, ey],
+      ],
+      { w: 1.7, mask: true },
+    );
+  }
+  for (const [dx, dy, rot] of leaves) almondLeaf(s, x + dx * u, y + dy * u, 0.032 * u, rot, BAL.leaf, true);
+  for (const [dx, dy] of heads) head(x + dx * u, y + dy * u);
+}
+
 const balcony: Room = {
   name: "balcony",
   mood: "late nights, the big picture, gratitude",
@@ -1794,17 +1822,18 @@ const balcony: Room = {
         s.line(p, v, p, v + 1 / 12, { w: 1.2, alpha: 0.45 });
       }
     }
-    s.shadow(s.ellipsePts(...F(0.49, 0.51), 0.24, 0.22), 0.28, 20);
-    s.shadow(s.ellipsePts(...F(0.2, 0.15), 0.07, 0.07), 0.2, 10);
-    scallopRug(s, [F(0.28, 0.42), F(0.72, 0.42), F(0.72, 0.94), F(0.28, 0.94)], BAL.rug, 12);
+    s.shadow(s.ellipsePts(...F(0.37, 0.39), 0.24, 0.22), 0.28, 20);
+    s.shadow(s.ellipsePts(...F(0.12, 0.1), 0.07, 0.07), 0.2, 10);
+    s.shadow(s.ellipsePts(...F(0.66, 0.4), 0.06, 0.06), 0.2, 10);
+    scallopRug(s, [F(0.16, 0.2), F(0.62, 0.2), F(0.62, 0.76), F(0.16, 0.76)], BAL.rug, 12);
   },
   popups: isoLayers([
     // against the walls: monstera in the corner, a leafy plant by the railing
     (iso) => {
-      iso.p([0.1, 0.05, 0.55]);
-      iso.p([0.3, 0.25, 0.55]);
-      iso.cyl(0.2, 0.15, 0, 0.075, 0.13, WHITE, { r2: 0.085, color: BAL.pot });
-      iso.at([0.2, 0.15, 0.13], (s, [x, y], u) => {
+      iso.p([0.02, 0.0, 0.6]);
+      iso.p([0.22, 0.2, 0.6]);
+      iso.cyl(0.12, 0.1, 0, 0.075, 0.13, WHITE, { r2: 0.085, color: BAL.pot });
+      iso.at([0.12, 0.1, 0.13], (s, [x, y], u) => {
         s.line(x, y, x - 0.05 * u, y - 0.2 * u, { w: 1.6, mask: true });
         s.line(x, y, x + 0.06 * u, y - 0.25 * u, { w: 1.6, mask: true });
         s.line(x, y, x + 0.01 * u, y - 0.3 * u, { w: 1.6, mask: true });
@@ -1827,8 +1856,8 @@ const balcony: Room = {
     },
     // a big, squishy bean bag with a tufted pillow and a knitted throw; a mug of tea on a book
     (iso) => {
-      const BX = 0.47;
-      const BY = 0.49;
+      const BX = 0.36;
+      const BY = 0.38;
       iso.p([BX + 0.2, BY - 0.2, 0]);
       iso.p([BX - 0.2, BY + 0.2, 0]);
       iso.p([BX, BY, 0.48]);
@@ -1951,11 +1980,11 @@ const balcony: Room = {
         }
       });
       // a little stack: book + mug of tea with steam
-      iso.box(0.72, 0.56, 0, 0.11, 0.08, 0.022, WHITE, { color: BAL.book });
-      iso.box(0.73, 0.565, 0.022, 0.09, 0.07, 0.018, WHITE, { color: BAL.pillow });
-      iso.cyl(0.775, 0.6, 0.04, 0.022, 0.042, WHITE, { color: BAL.mug });
-      iso.at([0.8, 0.6, 0.065], (s, [x, y], u) => s.stroke(s.ellipsePts(x, y, 0.012 * u, 0.015 * u, -1.4, 1.4, 8), { w: 1.6, mask: true }));
-      iso.at([0.775, 0.6, 0.09], (s, [x, y], u) => {
+      iso.box(0.58, 0.6, 0, 0.11, 0.08, 0.022, WHITE, { color: BAL.book });
+      iso.box(0.59, 0.605, 0.022, 0.09, 0.07, 0.018, WHITE, { color: BAL.pillow });
+      iso.cyl(0.635, 0.64, 0.04, 0.022, 0.042, WHITE, { color: BAL.mug });
+      iso.at([0.66, 0.64, 0.065], (s, [x, y], u) => s.stroke(s.ellipsePts(x, y, 0.012 * u, 0.015 * u, -1.4, 1.4, 8), { w: 1.6, mask: true }));
+      iso.at([0.635, 0.64, 0.09], (s, [x, y], u) => {
         for (const dx of [-0.008, 0.006]) s.stroke([[x + dx * u, y], [x + (dx - 0.006) * u, y - 0.025 * u], [x + dx * u, y - 0.05 * u]], { w: 1.1, mask: true });
       });
     },
@@ -1965,23 +1994,30 @@ const balcony: Room = {
       iso.p([0.07, 0.86, 0.42]);
       iso.p([0.24, 0.97, 0.42]);
       iso.cyl(0.15, 0.9, 0, 0.06, 0.11, WHITE, { r2: 0.07, color: BAL.pot });
-      iso.at([0.15, 0.9, 0.11], (s, [x, y], u) => {
-        for (const [dx, dy, rot] of [
-          [-0.07, -0.04, -1.2],
-          [0.07, -0.04, 1.2],
-          [-0.04, -0.09, -0.6],
-          [0.05, -0.1, 0.6],
-        ] as const)
-          almondLeaf(s, x + dx * u, y + dy * u, 0.035 * u, rot, BAL.leaf, true);
-        for (const [dx, dy] of [
-          [-0.04, -0.15],
-          [0.03, -0.17],
-          [0.0, -0.22],
-          [-0.06, -0.21],
-          [0.06, -0.23],
-        ])
-          for (let k = 0; k < 4; k++) flower(s, x + (dx + Math.cos(k * 1.6) * 0.018) * u, y + (dy + Math.sin(k * 1.6) * 0.014) * u, 0.008 * u, BAL.hydrangea, true);
-      });
+      iso.at([0.15, 0.9, 0.11], (s, [x, y], u) =>
+        potPlant(
+          s,
+          x,
+          y,
+          u,
+          [
+            [-0.07, -0.05, -1.2],
+            [0.07, -0.05, 1.2],
+            [-0.045, -0.1, -0.6],
+            [0.05, -0.11, 0.6],
+          ],
+          [
+            [-0.04, -0.15],
+            [0.035, -0.165],
+            [0.0, -0.215],
+            [-0.065, -0.2],
+            [0.065, -0.215],
+          ],
+          (hx, hy) => {
+            for (let k = 0; k < 4; k++) flower(s, hx + Math.cos(k * 1.6) * 0.018 * u, hy + Math.sin(k * 1.6) * 0.014 * u, 0.008 * u, BAL.hydrangea, true);
+          },
+        ),
+      );
       // watering can
       iso.cyl(0.3, 0.82, 0, 0.045, 0.075, WHITE, { r2: 0.04, color: BAL.can });
       iso.line([0.33, 0.85, 0.03], [0.4, 0.91, 0.1], { w: 2.6 });
@@ -2000,6 +2036,27 @@ const balcony: Room = {
         almondLeaf(s, x - 0.012 * u, y - 0.012 * u, 0.012 * u, -0.8, BAL.leaf, true);
         almondLeaf(s, x + 0.012 * u, y - 0.018 * u, 0.012 * u, 0.8, BAL.leaf, true);
       });
+      // flower pot beside the bean bag
+      iso.p([0.6, 0.42, 0.3]);
+      iso.cyl(0.66, 0.4, 0, 0.055, 0.1, WHITE, { r2: 0.065, color: BAL.pot });
+      iso.at([0.66, 0.4, 0.1], (s, [x, y], u) =>
+        potPlant(
+          s,
+          x,
+          y,
+          u,
+          [
+            [-0.06, -0.035, -1.2],
+            [0.06, -0.035, 1.2],
+          ],
+          [
+            [-0.03, -0.1],
+            [0.03, -0.11],
+            [0, -0.15],
+          ],
+          (hx, hy) => flower(s, hx, hy, 0.014 * u, BAL.flower, true),
+        ),
+      );
       // front railing along the open edge (the far end of the right-wall railing), with a flower box
       const RA = 0.965;
       const R0 = 0.66;
@@ -2010,32 +2067,20 @@ const balcony: Room = {
       iso.box(RA - 0.012, R1 - 0.025, 0, 0.025, 0.025, RZ, WHITE, { color: BAL.wood });
       iso.box(RA - 0.015, R0 - 0.01, RZ, 0.03, R1 - R0 + 0.02, 0.025, WHITE, { color: BAL.wood });
       iso.line([RA, R0, 0.03], [RA, R1, 0.03], { w: 2 });
-      iso.box(RA + 0.015, 0.74, 0.2, 0.04, 0.18, 0.07, WHITE, { color: BAL.pot });
-      iso.at([RA + 0.035, 0.83, 0.27], (s, [x, y], u) => {
-        for (const [dx, dy, c] of [
-          [-0.06, -0.01, BAL.flower],
-          [-0.02, -0.03, BAL.hydrangea],
-          [0.02, -0.01, BAL.flower],
-          [0.06, -0.025, BAL.hydrangea],
-        ] as const)
-          flower(s, x + dx * u, y + dy * u, 0.011 * u, c, true);
-      });
-      // flower pot in front of the railing corner
-      iso.p([0.6, 0.85, 0.3]);
-      iso.cyl(0.68, 0.9, 0, 0.055, 0.1, WHITE, { r2: 0.065, color: BAL.pot });
-      iso.at([0.68, 0.9, 0.1], (s, [x, y], u) => {
-        for (const [dx, dy, rot] of [
-          [-0.06, -0.03, -1.2],
-          [0.06, -0.03, 1.2],
-        ] as const)
-          almondLeaf(s, x + dx * u, y + dy * u, 0.03 * u, rot, BAL.leaf, true);
-        for (const [dx, dy] of [
-          [-0.03, -0.09],
-          [0.03, -0.1],
-          [0, -0.14],
-        ])
-          flower(s, x + dx * u, y + dy * u, 0.014 * u, BAL.flower, true);
-      });
+      // flower box hooked on the inside of the rail, flowers growing out of it
+      const FA = RA - 0.06;
+      for (let i = 0; i < 4; i++) {
+        const fb = 0.765 + i * 0.045;
+        iso.line([FA + 0.02, fb, 0.27], [FA + 0.02, fb + (i % 2 ? 0.006 : -0.006), 0.33], { w: 1.7 });
+        iso.at([FA + 0.02, fb, 0.3], (s, [x, y], u) => almondLeaf(s, x + (i % 2 ? 0.014 : -0.014) * u, y, 0.016 * u, i % 2 ? 1.1 : -1.1, BAL.leaf, true));
+      }
+      iso.box(FA, 0.74, 0.2, 0.04, 0.2, 0.07, WHITE, { color: BAL.pot });
+      for (let i = 0; i < 4; i++) {
+        const fb = 0.765 + i * 0.045;
+        iso.at([FA + 0.02, fb + (i % 2 ? 0.006 : -0.006), 0.335], (s, [x, y], u) => flower(s, x, y, 0.011 * u, i % 2 ? BAL.hydrangea : BAL.flower, true));
+      }
+      iso.line([FA + 0.04, 0.745, RZ + 0.01], [FA + 0.04, 0.745, 0.27], { w: 1.6 });
+      iso.line([FA + 0.04, 0.935, RZ + 0.01], [FA + 0.04, 0.935, 0.27], { w: 1.6 });
     },
   ]),
 };
