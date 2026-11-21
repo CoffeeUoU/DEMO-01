@@ -1,0 +1,249 @@
+"use client";
+
+import { useMemo, useRef } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { Line } from "@react-three/drei";
+import * as THREE from "three";
+import type { Line2 } from "three-stdlib";
+import { H, L, N, dirOf, floorApex, focusAngle, focusOf, logicalOf, normalOf, pageAngles, roomOpenness, smooth } from "@/lib/fold";
+import { makePaperMaterial, INK } from "@/lib/paperMaterial";
+import { ROOMS } from "@/lib/rooms";
+import { book } from "@/lib/store";
+import type { BookTextures } from "@/lib/textures";
+
+const PAGE_GAP = 0.014; // thickness between pages when the book is shut
+const INK_HEX = `#${INK.getHexString()}`;
+
+/** Hand-wobbled closed outline in a page's local XY plane. */
+function wobbleRect(seed: number): THREE.Vector3[] {
+  const corners = [
+    [0, 0],
+    [L, 0],
+    [L, H],
+    [0, H],
+    [0, 0],
+  ];
+  const out: THREE.Vector3[] = [];
+  for (let s = 0; s < 4; s++) {
+    const [x1, y1] = corners[s];
+    const [x2, y2] = corners[s + 1];
+    const nx = -(y2 - y1);
+    const ny = x2 - x1;
+    for (let j = 0; j < 16; j++) {
+      const t = j / 16;
+      const o = 0.004 * (Math.sin(seed * 3.1 + (s * 16 + j) * 0.7) * 0.6 + Math.sin(seed * 1.7 + (s * 16 + j) * 1.9) * 0.4);
+      out.push(new THREE.Vector3(x1 + (x2 - x1) * t + nx * o, y1 + (y2 - y1) * t + ny * o, 0));
+    }
+  }
+  out.push(out[0].clone());
+  return out;
+}
+
+const EDGE_STEPS = 12;
+/** Writes a wobbly segment a→b into arr at offset (EDGE_STEPS+1 points). */
+function writeEdge(arr: Float32Array, offset: number, a: number[], b: number[], seed: number) {
+  const dx = b[0] - a[0];
+  const dz = b[2] - a[2];
+  const len = Math.hypot(dx, dz) || 1;
+  const px = -dz / len;
+  const pz = dx / len;
+  for (let j = 0; j <= EDGE_STEPS; j++) {
+    const t = j / EDGE_STEPS;
+    const o = 0.005 * (Math.sin(seed + j * 0.9) * 0.6 + Math.sin(seed * 2.3 + j * 2.1) * 0.4);
+    const i = (offset + j) * 3;
+    arr[i] = a[0] + (b[0] - a[0]) * t + px * o;
+    arr[i + 1] = a[1] + (b[1] - a[1]) * t + 0.002;
+    arr[i + 2] = a[2] + (b[2] - a[2]) * t + pz * o;
+  }
+}
+
+export default function Book({ tex }: { tex: BookTextures }) {
+  const { camera, size } = useThree();
+
+  // ---- static pieces ------------------------------------------------------
+  const pageGeo = useMemo(() => {
+    const front = new THREE.PlaneGeometry(L, H).translate(L / 2, H / 2, 0);
+    // back face: rotated so the spine sits at u = 1 (no mirrored drawings)
+    const back = new THREE.PlaneGeometry(L, H).rotateY(Math.PI).translate(L / 2, H / 2, 0);
+    return { front, back };
+  }, []);
+
+  // Page k front = right wall of physical room k (or the front cover for k = N).
+  // Page k back  = left wall of physical room k-1 (or the back cover for k = 0).
+  const pageMats = useMemo(
+    () =>
+      Array.from({ length: N + 1 }, (_, k) => ({
+        front: makePaperMaterial(k === N ? tex.front : tex.rooms[logicalOf(k)].right, { seed: k * 2, flat: k === N }),
+        back: makePaperMaterial(k === 0 ? tex.back : tex.rooms[logicalOf(k - 1)].left, { seed: k * 2 + 1, flat: k === 0 }),
+      })),
+    [tex],
+  );
+
+  const floors = useMemo(
+    () =>
+      Array.from({ length: N }, (_, p) => {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(18), 3));
+        geo.setAttribute("uv", new THREE.BufferAttribute(new Float32Array([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1]), 2));
+        const mat = makePaperMaterial(tex.rooms[logicalOf(p)].floor, { side: THREE.DoubleSide, seed: 40 + p });
+        return { geo, mat };
+      }),
+    [tex],
+  );
+
+  const popups = useMemo(
+    () =>
+      Array.from({ length: N }, (_, p) => {
+        const li = logicalOf(p);
+        return ROOMS[li].popups.map((spec, j) => ({
+          spec,
+          geo: new THREE.PlaneGeometry(spec.size, spec.size).translate(0, spec.size / 2, 0),
+          mat: makePaperMaterial(tex.rooms[li].popups[j], { side: THREE.DoubleSide, blankBack: true, seed: 60 + p * 4 + j }),
+        }));
+      }),
+    [tex],
+  );
+
+  const outlines = useMemo(() => Array.from({ length: N + 1 }, (_, k) => wobbleRect(k + 1)), []);
+  const floorLinePts = useMemo(() => Array.from({ length: N }, () => Array.from({ length: (EDGE_STEPS + 1) * 3 }, () => new THREE.Vector3())), []);
+  const edgeBuf = useMemo(() => new Float32Array((EDGE_STEPS + 1) * 3 * 3), []);
+
+  // ---- refs ---------------------------------------------------------------
+  const pageRefs = useRef<(THREE.Group | null)[]>([]);
+  const floorLineRefs = useRef<(Line2 | null)[]>([]);
+  const popRefs = useRef<{ outer: THREE.Group | null; hinge: THREE.Group | null }[][]>(Array.from({ length: N }, () => []));
+  const target = useMemo(() => new THREE.Vector3(), []);
+
+  useFrame((_, dtRaw) => {
+    const dt = Math.min(dtRaw, 1 / 20);
+    if (!book.dragging) book.f += (book.target - book.f) * (1 - Math.exp(-dt * 7));
+    book.open += (book.openTarget - book.open) * (1 - Math.exp(-dt * 2.6));
+    if (Math.abs(book.openTarget - book.open) < 1e-4) book.open = book.openTarget;
+
+    const f = book.f;
+    const e = smooth(book.open);
+    const phi = pageAngles(f, book.open);
+
+    // pages
+    for (let k = 0; k <= N; k++) {
+      const g = pageRefs.current[k];
+      if (!g) continue;
+      const n = normalOf(phi[k]);
+      const off = (k - N / 2) * PAGE_GAP * (1 - e);
+      g.rotation.y = -phi[k];
+      g.position.set(n[0] * off, 0, n[2] * off);
+      const m = pageMats[k];
+      const rf = k === N ? 1 : focusOf(k, f) * e;
+      const rb = k === 0 ? 1 : focusOf(k - 1, f) * e;
+      m.front.uniforms.uReveal.value = rf;
+      m.back.uniforms.uReveal.value = rb;
+      m.front.uniforms.uInkAmt.value = k === N ? 1 : 0.55 + 0.45 * rf;
+      m.back.uniforms.uInkAmt.value = k === 0 ? 1 : 0.55 + 0.45 * rb;
+    }
+
+    // floors + pop-ups
+    for (let p = 0; p < N; p++) {
+      const a = phi[p];
+      const b = phi[p + 1];
+      const A = dirOf(a).map((v) => v * L);
+      const B = dirOf(b).map((v) => v * L);
+      const P = floorApex(a, b);
+      const O = [0, 0, 0];
+      const pos = floors[p].geo.attributes.position as THREE.BufferAttribute;
+      const arr = pos.array as Float32Array;
+      [O, A, P, O, P, B].forEach((v, i) => {
+        arr[i * 3] = v[0];
+        arr[i * 3 + 1] = v[1] + 0.0005;
+        arr[i * 3 + 2] = v[2];
+      });
+      pos.needsUpdate = true;
+      floors[p].geo.computeVertexNormals();
+      floors[p].geo.computeBoundingSphere();
+      const fr = focusOf(p, f) * e;
+      floors[p].mat.uniforms.uReveal.value = fr;
+      floors[p].mat.uniforms.uInkAmt.value = 0.5 + 0.5 * fr;
+
+      const line = floorLineRefs.current[p];
+      if (line) {
+        writeEdge(edgeBuf, 0, A, P, p * 3 + 1);
+        writeEdge(edgeBuf, EDGE_STEPS + 1, P, B, p * 3 + 2);
+        writeEdge(edgeBuf, (EDGE_STEPS + 1) * 2, O, P, p * 3 + 3);
+        line.geometry.setPositions(edgeBuf);
+      }
+
+      const open = roomOpenness(phi, p);
+      const rise = smooth((open - 0.86) / 0.14) * smooth((book.open - 0.85) / 0.15);
+      const mid = (a + b) / 2;
+      const dA = dirOf(a);
+      const dB = dirOf(b);
+      popups[p].forEach((pu, j) => {
+        const r = popRefs.current[p][j];
+        if (!r?.outer || !r.hinge) return;
+        r.outer.visible = rise > 0.01;
+        const [s, t] = pu.spec.at;
+        r.outer.position.set((dA[0] * s + dB[0] * t) * L, 0.001, (dA[2] * s + dB[2] * t) * L);
+        r.outer.rotation.y = Math.PI / 2 - mid;
+        // cards stand up one after another
+        const stagger = smooth((rise - j * 0.12) / (1 - j * 0.12 + 1e-3));
+        r.hinge.rotation.x = (1 - stagger) * (Math.PI / 2);
+        pu.mat.uniforms.uReveal.value = fr;
+      });
+    }
+
+    // camera: front view of the cover when shut, looking into the focused room when open
+    const gF = focusAngle(phi, f);
+    const yaw = Math.PI / 2 + (gF - Math.PI / 2) * e;
+    const pitch = THREE.MathUtils.degToRad(8 + 24 * e);
+    const dF = dirOf(gF);
+    target.set(L / 2 + (dF[0] * 0.45 - L / 2) * e, H / 2 + (0.36 - H / 2) * e, dF[2] * 0.45 * e);
+    camera.position.set(target.x + Math.cos(yaw) * Math.cos(pitch) * 10, target.y + Math.sin(pitch) * 10, target.z + Math.sin(yaw) * Math.cos(pitch) * 10);
+    camera.lookAt(target);
+    const viewH = 1.7 + 0.55 * e;
+    const narrow = size.width < 640;
+    const viewW = (narrow ? 1.35 : 1.9) + (narrow ? 1.0 : 1.2) * e;
+    const ortho = camera as THREE.OrthographicCamera;
+    ortho.zoom = Math.min(size.height / viewH, size.width / viewW);
+    ortho.updateProjectionMatrix();
+  });
+
+  return (
+    <group>
+      {pageMats.map((m, k) => (
+        <group key={k} ref={(el) => void (pageRefs.current[k] = el)}>
+          <mesh geometry={pageGeo.front} material={m.front} />
+          <mesh geometry={pageGeo.back} material={m.back} />
+          <Line points={outlines[k]} color={INK_HEX} lineWidth={1.7} />
+        </group>
+      ))}
+      {floors.map((fl, p) => (
+        <group key={p}>
+          <mesh geometry={fl.geo} material={fl.mat} />
+          <Line
+            ref={(el) => void (floorLineRefs.current[p] = el as unknown as Line2 | null)}
+            points={floorLinePts[p]}
+            color={INK_HEX}
+            lineWidth={1.5}
+          />
+        </group>
+      ))}
+      {popups.map((list, p) =>
+        list.map((pu, j) => (
+          <group
+            key={`${p}-${j}`}
+            ref={(el) => {
+              popRefs.current[p][j] = { ...(popRefs.current[p][j] ?? { hinge: null }), outer: el };
+            }}
+          >
+            <group
+              ref={(el) => {
+                popRefs.current[p][j] = { ...(popRefs.current[p][j] ?? { outer: null }), hinge: el };
+              }}
+            >
+              <mesh geometry={pu.geo} material={pu.mat} />
+            </group>
+          </group>
+        )),
+      )}
+    </group>
+  );
+}

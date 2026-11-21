@@ -1,0 +1,24 @@
+import type * as THREE from "three";
+import { bake } from "./sketch";
+import { ROOMS, drawBackCover, drawFrontCover } from "./rooms";
+
+export type RoomTextures = { left: THREE.Texture; right: THREE.Texture; floor: THREE.Texture; popups: THREE.Texture[] };
+export type BookTextures = { rooms: RoomTextures[]; front: THREE.Texture; back: THREE.Texture };
+
+const WALL = 768;
+const POP = 512;
+
+/** Draws every surface of the book. Indexed by logical room (0 = bedroom). */
+export function buildTextures(font: string): BookTextures {
+  const rooms = ROOMS.map((room, i) => ({
+    left: bake(WALL, 100 + i * 10, font, true, room.left),
+    right: bake(WALL, 101 + i * 10, font, true, room.right),
+    floor: bake(WALL, 102 + i * 10, font, true, room.floor),
+    popups: room.popups.map((p, j) => bake(POP, 200 + i * 10 + j, font, false, p.draw)),
+  }));
+  return {
+    rooms,
+    front: bake(WALL, 7, font, true, drawFrontCover),
+    back: bake(WALL, 8, font, true, drawBackCover),
+  };
+}
