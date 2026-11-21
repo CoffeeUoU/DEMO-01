@@ -118,7 +118,7 @@ export default function Book({ tex }: { tex: BookTextures }) {
   useFrame((_, dtRaw) => {
     const dt = Math.min(dtRaw, 1 / 20);
     if (!book.dragging) book.f += (book.target - book.f) * (1 - Math.exp(-dt * 7));
-    book.open += (book.openTarget - book.open) * (1 - Math.exp(-dt * 2.6));
+    book.open += (book.openTarget - book.open) * (1 - Math.exp(-dt * 7));
     if (Math.abs(book.openTarget - book.open) < 1e-4) book.open = book.openTarget;
 
     const f = book.f;
@@ -139,12 +139,6 @@ export default function Book({ tex }: { tex: BookTextures }) {
       m.front.uniforms.uReveal.value = rf;
       m.back.uniforms.uReveal.value = rb;
       m.front.uniforms.uInkAmt.value = k === N ? 1 : 0.55 + 0.45 * rf;
-      // the cover carries its own drawn border, so page edges stay unlined while the book is shut
-      const ol = outlineRefs.current[k];
-      if (ol) {
-        ol.material.opacity = smooth((book.open - 0.05) / 0.25);
-        ol.visible = ol.material.opacity > 0.01;
-      }
       m.back.uniforms.uInkAmt.value = k === 0 ? 1 : 0.55 + 0.45 * rb;
     }
 
