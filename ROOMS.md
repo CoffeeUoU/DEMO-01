@@ -1,4 +1,4 @@
-# The six rooms
+# The four rooms
 
 The book is read like a day: you open the cover in the bedroom and end the evening on the balcony.
 Every room is a corner diorama — two paper walls and a folding floor — plus a few pop-up cut-outs
@@ -12,9 +12,7 @@ Wall A is the left wall as you look into the room, wall B is the right wall.
 | 1 | Bedroom | slow mornings, late-night thinking | lavender walls, oak floor, rose accents |
 | 2 | Bathroom | resets, mirror talks | sea-glass mint, white tile, coral |
 | 3 | Kitchen | nourishment, home, people over | butter yellow, terracotta, sage |
-| 4 | Gym | body, discipline, anger worked out | brick red, cream, charcoal, electric blue |
-| 5 | Lounge | play, games, doing nothing | teal, peach, mustard |
-| 6 | Balcony | evenings, the big picture, gratitude | dusk blue to violet, warm deck wood, fairy-light yellow |
+| 4 | Balcony | late nights, the big picture, gratitude | night blue, warm lights, deck wood |
 
 ---
 
@@ -70,23 +68,7 @@ Same paper cut-out style; ink-only or soft colour.
   and rug, wooden floor and furniture.
 - **Entries hung here** — food, family, cooking experiments, people you fed or who fed you.
 
-## 4. Gym / boxing / body
-
-- **Wall A** — long mirror, dumbbell rack, a scribbled "one more" poster.
-- **Wall B** — window, skipping rope on a hook, wall clock, gloves hanging.
-- **Floor** — rubber mat squares, a rolled yoga mat.
-- **Pop-ups** — hanging punching bag, kettlebell, water bottle.
-- **Entries hung here** — workouts, body, energy, anger and how you worked through it.
-
-## 5. Lounge (chill sofa / games)
-
-- **Wall A** — TV on a low console with a game console and controllers, shelf of games.
-- **Wall B** — framed posters, bookshelf, string lights, a clock.
-- **Floor** — shaggy rug, snack bowl.
-- **Pop-ups** — sofa with cushions, bean bag.
-- **Entries hung here** — fun, games, shows, friends, doing nothing on purpose.
-
-## 6. Balcony — night (after Dakshi's reference)
+## 4. Balcony — night (after Dakshi's reference)
 
 Same paper cut-out style, set at night; ink-only or soft colour.
 

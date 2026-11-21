@@ -6,7 +6,7 @@ A journal house: a hand-drawn pop-up book whose rooms fold open one at a time.
   its creased floor drops flat, and its pop-up furniture stands up. The rest of the book folds
   into stacks on either side.
 - **Hybrid style** — everything is blue-ink line art on paper; the room in front washes with colour.
-- **Six rooms** — bedroom, bathroom, kitchen, gym, lounge, balcony. See [ROOMS.md](./ROOMS.md).
+- **Four rooms** — bedroom, bathroom, kitchen, balcony. See [ROOMS.md](./ROOMS.md).
 
 ## Run
 
