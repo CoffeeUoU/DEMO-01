@@ -2061,15 +2061,14 @@ export const ROOMS: Room[] = [bedroom, bathroom, kitchen, balcony];
 
 export function drawFrontCover(s: Sketch) {
   s.rect(0.07, 0.07, 0.86, 0.86, { w: 3 });
-  s.text("dakshie's", 0.5, 0.31, 0.13);
-  s.text("journal", 0.5, 0.45, 0.13);
+  s.text("dakshie's", 0.5, 0.42, 0.14);
   // a small heart, drawn in one go with the pen overlapping at the bottom
   const heart: Pt[] = [];
   for (let i = 0; i <= 40; i++) {
     const t = (i / 40) * Math.PI * 2.06;
     const x = 16 * Math.sin(t) ** 3;
     const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-    heart.push([0.5 + x * 0.0019, 0.575 - y * 0.0019]);
+    heart.push([0.5 + x * 0.0019, 0.545 - y * 0.0019]);
   }
   s.stroke(heart, { w: 2.4, overshoot: 0 });
 }

@@ -1,10 +1,10 @@
 // Global drawing style, read while the textures are being drawn.
 //   pen   – "sketchy" (loose, hand-drawn) or "clean" (steady) furniture lines
 //   color – false: blue ink on white paper; true: soft pastel washes
-// Changing either needs the textures to be rebuilt (see Experience.tsx).
+// The site uses the loose pen with a little colour; the other options remain for experiments.
 
 export type Pen = "sketchy" | "clean";
-export const look: { pen: Pen; color: boolean } = { pen: "sketchy", color: false };
+export const look: { pen: Pen; color: boolean } = { pen: "sketchy", color: true };
 
 /** How far the pastel palette is pulled towards white, so the colour stays a hint. */
 const SOFTEN = 0.25;
