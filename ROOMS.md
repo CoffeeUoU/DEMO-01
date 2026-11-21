@@ -18,12 +18,20 @@ Wall A is the left wall as you look into the room, wall B is the right wall.
 
 ---
 
-## 1. Bedroom (with table)
+## 1. Bedroom (with table) — redesigned
 
-- **Wall A** — tall window with tie-back curtains, a string of fairy lights across the top, a little moon sticker.
-- **Wall B** — study table with a lamp, open notebook and mug; shelf above with books and a plant; pinned notes on a cork square.
-- **Floor** — oak planks, round rug, pair of slippers.
-- **Pop-ups** — bed with a quilt and two pillows (left), desk chair (right).
+Blue ink on white paper, no colour: every piece is a paper cut-out with a white margin and a soft
+shadow (after Dakshi's reference sketch).
+
+- **Left wall** — big window with clouds, curtains on a rod with gathered tops and scalloped hems,
+  stars near the corner, two taped photos near the front edge.
+- **Right wall** — taped mountain poster, stars, shelf with books, a box and a trailing plant,
+  cork board with pinned notes above the desk.
+- **Floor** — boards, scalloped rug, slippers, soft shadows under the furniture.
+- **Pop-ups** (drawn isometrically so they read as solid furniture from the camera)
+  - against the walls: bed with checked quilt, pillow and a bunny; desk with drawers, lamp,
+    laptop, mug, pencil cup and books
+  - in front: round nightstand with a lamp and a book, chair tucked at the desk, woven waste bin
 - **Entries hung here** — dreams, sleep, late-night thoughts, what you're studying.
 
 ## 2. Bathroom

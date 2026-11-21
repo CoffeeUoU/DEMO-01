@@ -285,6 +285,63 @@ export class Sketch {
     c.restore();
   }
 
+  /**
+   * A paper cut-out stuck onto the surface: white shape with a small white margin and a
+   * soft drop shadow (the shadow only shows once the room is coloured in).
+   */
+  sticker(points: Pt[], halo = 7, shadow = 0.22) {
+    const c = this.wash;
+    c.save();
+    c.globalCompositeOperation = "source-over";
+    c.shadowColor = `rgba(70, 60, 110, ${shadow})`;
+    c.shadowBlur = 14 * this.k;
+    c.shadowOffsetX = 3 * this.k;
+    c.shadowOffsetY = 6 * this.k;
+    c.fillStyle = "#fff";
+    c.strokeStyle = "#fff";
+    c.lineJoin = "round";
+    c.lineWidth = halo * 2 * this.k;
+    c.beginPath();
+    points.forEach((p, i) => {
+      const [x, y] = this.px(p);
+      if (i) c.lineTo(x, y);
+      else c.moveTo(x, y);
+    });
+    c.closePath();
+    c.stroke();
+    c.fill();
+    c.restore();
+  }
+
+  /** Soft contact shadow, e.g. under furniture on the floor. */
+  shadow(points: Pt[], alpha = 0.22, blur = 18) {
+    const c = this.wash;
+    c.save();
+    c.globalCompositeOperation = "multiply";
+    c.filter = `blur(${blur * this.k}px)`;
+    c.fillStyle = `rgba(80, 70, 120, ${alpha})`;
+    c.beginPath();
+    points.forEach((p, i) => {
+      const [x, y] = this.px(p);
+      if (i) c.lineTo(x, y);
+      else c.moveTo(x, y);
+    });
+    c.closePath();
+    c.fill();
+    c.restore();
+  }
+
+  /** Five-point star, hand drawn. */
+  star(cx: number, cy: number, r: number, o: StrokeOpts = {}) {
+    const pts: Pt[] = [];
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      const rr = i % 2 ? r * 0.45 : r;
+      pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]);
+    }
+    this.stroke(pts, { w: 2, ...o, closed: true });
+  }
+
   /** Watercolour wash over the whole sheet. */
   washAll(color: string, alpha = 0.85) {
     this.fill(this.rectPts(-0.02, -0.02, 1.04, 1.04), color, { alpha, jitter: 0 });
@@ -293,7 +350,7 @@ export class Sketch {
 
 // ---------------------------------------------------------------------------
 
-type Scratch = { ink: HTMLCanvasElement; wash: HTMLCanvasElement; mask: HTMLCanvasElement };
+type Scratch = { ink: HTMLCanvasElement; wash: HTMLCanvasElement; mask: HTMLCanvasElement; tmp: HTMLCanvasElement; tmp2: HTMLCanvasElement };
 const scratch = new Map<number, Scratch>();
 
 function getScratch(size: number): Scratch {
@@ -304,17 +361,49 @@ function getScratch(size: number): Scratch {
       c.width = c.height = size;
       return c;
     };
-    s = { ink: mk(), wash: mk(), mask: mk() };
+    s = { ink: mk(), wash: mk(), mask: mk(), tmp: mk(), tmp2: mk() };
     scratch.set(size, s);
   }
   return s;
+}
+
+function dilate(src: HTMLCanvasElement, dst: HTMLCanvasElement, r: number) {
+  const c = dst.getContext("2d")!;
+  c.clearRect(0, 0, dst.width, dst.height);
+  for (const rr of [r * 0.5, r]) for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2;
+    c.drawImage(src, Math.cos(a) * rr, Math.sin(a) * rr);
+  }
+  c.drawImage(src, 0, 0);
+}
+
+/** Grow the pop-up silhouette into a white paper margin and shade its cut edge. */
+function cutOut(sc: Scratch, size: number, r: number) {
+  dilate(sc.mask, sc.tmp, r); // outer edge of the paper
+  dilate(sc.mask, sc.tmp2, Math.max(1, r - 3 * (size / 768))); // just inside it
+  const rim = sc.tmp2.getContext("2d")!;
+  // rim = outer − inner, tinted
+  rim.globalCompositeOperation = "xor";
+  rim.drawImage(sc.tmp, 0, 0);
+  rim.globalCompositeOperation = "source-in";
+  rim.fillStyle = "rgba(130, 122, 170, 0.3)";
+  rim.fillRect(0, 0, size, size);
+  rim.globalCompositeOperation = "source-over";
+  const w = sc.wash.getContext("2d")!;
+  w.save();
+  w.globalCompositeOperation = "multiply";
+  w.drawImage(sc.tmp2, 0, 0);
+  w.restore();
+  const m = sc.mask.getContext("2d")!;
+  m.clearRect(0, 0, size, size);
+  m.drawImage(sc.tmp, 0, 0);
 }
 
 /**
  * Draw a surface and pack it into a single texture.
  * full=true marks every pixel as paper (walls, floors); pop-ups leave it to their shapes.
  */
-export function bake(size: number, seed: number, font: string, full: boolean, draw: (s: Sketch) => void): THREE.DataTexture {
+export function bake(size: number, seed: number, font: string, full: boolean, draw: (s: Sketch) => void, halo = 0): THREE.DataTexture {
   const sc = getScratch(size);
   const ink = sc.ink.getContext("2d", { willReadFrequently: true })!;
   const wash = sc.wash.getContext("2d", { willReadFrequently: true })!;
@@ -330,6 +419,7 @@ export function bake(size: number, seed: number, font: string, full: boolean, dr
   s.fontFamily = font;
   if (full) s.maskAll();
   draw(s);
+  if (halo > 0) cutOut(sc, size, halo * (size / 768));
 
   const I = ink.getImageData(0, 0, size, size).data;
   const W = wash.getImageData(0, 0, size, size).data;

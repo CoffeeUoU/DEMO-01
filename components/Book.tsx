@@ -98,7 +98,7 @@ export default function Book({ tex }: { tex: BookTextures }) {
         return ROOMS[li].popups.map((spec, j) => ({
           spec,
           geo: new THREE.PlaneGeometry(spec.size, spec.size).translate(0, spec.size / 2, 0),
-          mat: makePaperMaterial(tex.rooms[li].popups[j], { side: THREE.DoubleSide, blankBack: true, seed: 60 + p * 4 + j }),
+          mat: makePaperMaterial(tex.rooms[li].popups[j], { side: THREE.DoubleSide, blankBack: true, seed: 60 + p * 4 + j, flat: 0.85 }),
         }));
       }),
     [tex],
@@ -183,9 +183,9 @@ export default function Book({ tex }: { tex: BookTextures }) {
         const [s, t] = pu.spec.at;
         r.outer.position.set((dA[0] * s + dB[0] * t) * L, 0.001, (dA[2] * s + dB[2] * t) * L);
         r.outer.rotation.y = Math.PI / 2 - mid;
-        // cards stand up one after another
+        // cards stand up one after another, swinging up from the floor behind them
         const stagger = smooth((rise - j * 0.12) / (1 - j * 0.12 + 1e-3));
-        r.hinge.rotation.x = (1 - stagger) * (Math.PI / 2);
+        r.hinge.rotation.x = -(1 - stagger) * (Math.PI / 2) * 0.96;
         pu.mat.uniforms.uReveal.value = fr;
       });
     }
