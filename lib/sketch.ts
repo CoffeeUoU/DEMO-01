@@ -189,6 +189,37 @@ export class Sketch {
     c.restore();
   }
 
+  /**
+   * Opaque paper: covers whatever ink and wash were drawn underneath (for solid objects
+   * drawn back to front), and marks the area as part of the cut-out.
+   */
+  solid(points: Pt[], color = "#ffffff") {
+    const trace = (c: CanvasRenderingContext2D) => {
+      c.beginPath();
+      points.forEach((p, i) => {
+        const [x, y] = this.px(p);
+        if (i) c.lineTo(x, y);
+        else c.moveTo(x, y);
+      });
+      c.closePath();
+    };
+    const ink = this.ink;
+    ink.save();
+    ink.globalCompositeOperation = "destination-out";
+    ink.fillStyle = "#000";
+    trace(ink);
+    ink.fill();
+    ink.restore();
+    const w = this.wash;
+    w.save();
+    w.globalCompositeOperation = "source-over";
+    w.fillStyle = color;
+    trace(w);
+    w.fill();
+    w.restore();
+    this.maskFill(points);
+  }
+
   maskAll() {
     this.mask.fillStyle = "#fff";
     this.mask.fillRect(0, 0, this.S, this.S);

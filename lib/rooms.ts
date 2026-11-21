@@ -366,7 +366,6 @@ const bedroom: Room = {
     s.shadow(quad(0.03, 0.27, 0.36, 0.62), 0.28, 16);
     s.shadow(quad(0.42, 0.02, 0.56, 0.27), 0.22, 16);
     s.shadow(quad(0.52, 0.3, 0.18, 0.16), 0.2, 12);
-    s.shadow(s.ellipsePts(0.13, 1 - 0.93, 0.08, 0.08), 0.22, 10);
     s.shadow(s.ellipsePts(0.9, 1 - 0.36, 0.05, 0.05), 0.2, 8);
     // rug with a scalloped edge
     const rx0 = 0.46;
@@ -454,8 +453,6 @@ const bedroom: Room = {
       });
       // laptop
       iso.box(0.6, 0.06, T, 0.16, 0.12, 0.01);
-      for (let i = 0; i < 3; i++)
-        iso.line([0.615, 0.09 + i * 0.025, T + 0.011], [0.745, 0.09 + i * 0.025, T + 0.011], { w: 1, alpha: 0.6 });
       iso.face(
         [
           [0.6, 0.06, T + 0.01],
@@ -476,7 +473,6 @@ const bedroom: Room = {
         null,
         { w: 1.3 },
       );
-      iso.line([0.64, 0.05, T + 0.06], [0.68, 0.045, T + 0.1], { w: 1, alpha: 0.6 });
       // mug, pencil cup, books
       iso.cyl(0.8, 0.2, T, 0.028, 0.05);
       iso.at([0.83, 0.2, T + 0.03], (s, [x, y], u) => s.stroke(s.ellipsePts(x, y, 0.018 * u, 0.022 * u, -1.3, 1.3, 8), { w: 2, mask: true }));
@@ -488,110 +484,35 @@ const bedroom: Room = {
       ])
         iso.line([0.87 + dx, 0.1 + dy, T + 0.07], [0.87 + dx * 2.5, 0.1 + dy * 2.5, T + 0.13], { w: 2 });
       iso.box(0.9, 0.18, T, 0.035, 0.08, 0.1);
-      iso.box(0.94, 0.18, T, 0.03, 0.08, 0.09);
 
-      // --- bed (against the left wall) ---
+      // --- bed (against the left wall), kept simple ---
       const B0 = 0.28;
       const B1 = 0.87;
-      iso.box(0.03, B0, 0, 0.34, B1 - B0, 0.07);
-      iso.box(0.03, B0, 0.07, 0.34, B1 - B0, 0.1);
-      // quilt draped over the front half
-      const Q0 = 0.44;
-      const QZ = 0.178;
-      iso.face(
-        [
-          [0.02, Q0, QZ],
-          [0.38, Q0, QZ],
-          [0.38, B1 + 0.01, QZ],
-          [0.02, B1 + 0.01, QZ],
-        ],
-        WHITE,
-        { w: 2.4 },
-      );
-      iso.face(
-        [
-          [0.38, Q0, QZ],
-          [0.38, B1 + 0.01, QZ],
-          [0.38, B1 + 0.01, 0.07],
-          [0.38, Q0, 0.065],
-        ],
-        SIDE_A,
-        { w: 2.4 },
-      );
-      iso.face(
-        [
-          [0.02, B1 + 0.01, QZ],
-          [0.38, B1 + 0.01, QZ],
-          [0.38, B1 + 0.01, 0.07],
-          [0.02, B1 + 0.01, 0.075],
-        ],
-        SIDE_B,
-        { w: 2.4 },
-      );
-      // quilt checks
-      for (let i = 1; i < 5; i++) {
-        const x = 0.02 + (0.36 * i) / 5;
-        iso.line([x, Q0, QZ], [x, B1 + 0.01, QZ], { w: 1.3 });
-        iso.line([x, B1 + 0.01, QZ], [x, B1 + 0.01, 0.075], { w: 1.3 });
-      }
-      for (let j = 1; j < 6; j++) {
-        const y = Q0 + ((B1 + 0.01 - Q0) * j) / 6;
-        iso.line([0.02, y, QZ], [0.38, y, QZ], { w: 1.3 });
-        iso.line([0.38, y, QZ], [0.38, y, 0.068], { w: 1.3 });
-      }
-      for (let j = 1; j < 3; j++) iso.line([0.38, Q0, QZ - j * 0.035], [0.38, B1 + 0.01, QZ - j * 0.035], { w: 1.3 });
+      iso.box(0.03, B0, 0, 0.34, B1 - B0, 0.08);
+      iso.box(0.03, B0, 0.08, 0.34, B1 - B0, 0.09);
       // pillow
-      iso.box(0.07, 0.3, 0.17, 0.26, 0.11, 0.045, WHITE);
-      iso.line([0.08, 0.36, 0.215], [0.32, 0.36, 0.215], { w: 1, alpha: 0.5 });
-      // bunny
-      iso.at([0.2, 0.46, 0.18], (s, [x, y], u) => {
-        const b = (dx: number, dy: number, rx: number, ry: number) => s.blob(x + dx * u, y - dy * u, rx * u, ry * u, WHITE, { w: 1.8, mask: true });
-        b(-0.022, 0.15, 0.012, 0.042);
-        b(0.018, 0.15, 0.012, 0.042);
-        b(0, 0.04, 0.05, 0.042);
-        b(0, 0.1, 0.042, 0.036);
-        b(-0.035, 0.012, 0.016, 0.012);
-        b(0.035, 0.012, 0.016, 0.012);
-        s.circle(x - 0.014 * u, y - 0.104 * u, 0.004 * u, { w: 2 });
-        s.circle(x + 0.014 * u, y - 0.104 * u, 0.004 * u, { w: 2 });
-        s.stroke(
-          [
-            [x - 0.006 * u, y - 0.09 * u],
-            [x, y - 0.086 * u],
-            [x + 0.006 * u, y - 0.09 * u],
-          ],
-          { w: 1.4 },
-        );
-      });
+      iso.box(0.08, 0.31, 0.17, 0.24, 0.1, 0.04);
+      // quilt over the front part with a folded-back edge
+      const Q0 = 0.46;
+      iso.box(0.025, Q0, 0.06, 0.35, B1 + 0.01 - Q0, 0.115);
+      iso.box(0.025, Q0, 0.175, 0.35, 0.06, 0.008);
     },
-    // loose pieces: nightstand, chair, bin
+    // loose pieces: chair, bin
     (iso) => {
-      // nightstand with lamp + book
-      const N0: [number, number] = [0.13, 0.93];
-      for (const a of [Math.PI * 0.25, Math.PI * 0.95, Math.PI * 1.55]) {
-        const lx = N0[0] + Math.cos(a) * 0.045;
-        const ly = N0[1] + Math.sin(a) * 0.045;
-        iso.box(lx - 0.008, ly - 0.008, 0, 0.016, 0.016, 0.2);
-      }
-      iso.cyl(N0[0], N0[1], 0.2, 0.075, 0.025);
-      iso.box(0.11, 0.91, 0.225, 0.07, 0.06, 0.022);
-      iso.cyl(0.12, 0.96, 0.225, 0.018, 0.012);
-      iso.cyl(0.12, 0.96, 0.237, 0.012, 0.04, WHITE, { r2: 0.016 });
-      iso.cyl(0.12, 0.96, 0.277, 0.045, 0.045, WHITE, { r2: 0.022 });
       // chair, back to us, tucked at the desk
       const cx = 0.53;
       const cy = 0.3;
       for (const [lx, ly] of [
-        [cx, cy + 0.01],
-        [cx + 0.13, cy + 0.01],
-        [cx, cy + 0.13],
-        [cx + 0.13, cy + 0.13],
+        [cx + 0.01, cy + 0.01],
+        [cx + 0.125, cy + 0.01],
+        [cx + 0.01, cy + 0.125],
+        [cx + 0.125, cy + 0.125],
       ])
-        iso.box(lx, ly, 0, 0.018, 0.018, 0.19);
-      iso.box(cx - 0.005, cy, 0.19, 0.16, 0.16, 0.022);
-      iso.box(cx, cy + 0.13, 0.212, 0.018, 0.018, 0.2);
-      iso.box(cx + 0.13, cy + 0.13, 0.212, 0.018, 0.018, 0.2);
-      iso.box(cx - 0.005, cy + 0.13, 0.33, 0.16, 0.025, 0.09);
+        iso.line([lx, ly, 0], [lx, ly, 0.19], { w: 2.4 });
+      iso.box(cx, cy, 0.19, 0.15, 0.15, 0.02);
+      iso.line([cx + 0.01, cy + 0.14, 0.21], [cx + 0.01, cy + 0.14, 0.33], { w: 2.4 });
+      iso.line([cx + 0.14, cy + 0.14, 0.21], [cx + 0.14, cy + 0.14, 0.33], { w: 2.4 });
+      iso.box(cx, cy + 0.13, 0.33, 0.15, 0.02, 0.08);
       // waste bin with a woven pattern
       iso.cyl(0.9, 0.36, 0, 0.045, 0.1, WHITE, { r2: 0.052 });
       iso.at([0.9, 0.36, 0.05], (s, [x, y], u) => {

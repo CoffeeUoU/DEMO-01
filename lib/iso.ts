@@ -56,32 +56,49 @@ export class Iso {
     return len / this.L.size;
   }
 
-  face(pts: V3[], fill: Fill, o: LineOpts = {}) {
+  /** Clean lines for furniture: one steady pen stroke, no doubled edges. */
+  private lo(o: LineOpts) {
+    return { mask: true, w: 2, rough: 0.35, overshoot: 0, ...o };
+  }
+
+  /** Paper fill (part of the cut-out) without an outline. */
+  fill(pts: V3[], fill: Fill = WHITE) {
     const q = pts.map((v) => this.p(v));
-    this.s?.shape(q, fill, { mask: true, w: 2.2, ...o });
+    if (!this.s) return;
+    if (fill) this.s.solid(q, fill);
+    else this.s.maskFill(q);
+  }
+
+  face(pts: V3[], fill: Fill, o: LineOpts = {}) {
+    this.fill(pts, fill);
+    this.path(pts, { ...o, closed: true });
   }
 
   line(a: V3, b: V3, o: LineOpts = {}) {
     const q = [this.p(a), this.p(b)];
-    this.s?.stroke(q, { mask: true, w: 2, ...o });
+    this.s?.stroke(q, this.lo(o));
   }
 
   path(pts: V3[], o: LineOpts & { closed?: boolean } = {}) {
     const q = pts.map((v) => this.p(v));
-    this.s?.stroke(q, { mask: true, w: 2, ...o });
+    this.s?.stroke(q, this.lo(o));
   }
 
-  /** Axis-aligned box; draws the three faces the camera can see. */
+  /** Axis-aligned box: fills the three visible faces, then draws each edge once. */
   box(x: number, y: number, z: number, dx: number, dy: number, dz: number, top: Fill = WHITE, o: LineOpts & { sideA?: Fill; sideB?: Fill } = {}) {
     const { sideA = SIDE_A, sideB = SIDE_B, ...lo } = o;
     const X = x + dx;
     const Y = y + dy;
     const Z = z + dz;
-    // face looking along +xb (towards the left of the screen)
-    this.face([[x, Y, z], [X, Y, z], [X, Y, Z], [x, Y, Z]], sideB, lo);
-    // face looking along +xa (towards the right of the screen)
-    this.face([[X, y, z], [X, Y, z], [X, Y, Z], [X, y, Z]], sideA, lo);
-    this.face([[x, y, Z], [X, y, Z], [X, Y, Z], [x, Y, Z]], top, lo);
+    this.fill([[x, Y, z], [X, Y, z], [X, Y, Z], [x, Y, Z]], sideB);
+    this.fill([[X, y, z], [X, Y, z], [X, Y, Z], [X, y, Z]], sideA);
+    this.fill([[x, y, Z], [X, y, Z], [X, Y, Z], [x, Y, Z]], top);
+    // silhouette
+    this.path([[x, y, Z], [X, y, Z], [X, y, z], [X, Y, z], [x, Y, z], [x, Y, Z]], { ...lo, closed: true });
+    // the three edges meeting at the corner nearest the camera
+    this.line([X, Y, Z], [x, Y, Z], lo);
+    this.line([X, Y, Z], [X, y, Z], lo);
+    this.line([X, Y, Z], [X, Y, z], lo);
   }
 
   ring(cx: number, cy: number, z: number, r: number, from = 0, to = Math.PI * 2, n = 28): V3[] {
@@ -101,8 +118,11 @@ export class Iso {
     const a1 = (3 * Math.PI) / 4;
     const front = this.ring(cx, cy, z, r, a0, a1, 18);
     const backTop = this.ring(cx, cy, z + h, r2, a1, a0, 18);
-    this.face([...front, ...backTop], side, lo);
-    this.face(this.ring(cx, cy, z + h, r2), fill, lo);
+    const topRing = this.ring(cx, cy, z + h, r2);
+    this.fill([...front, ...backTop], side);
+    this.fill(topRing, fill);
+    this.path([...front, ...backTop], { ...lo, closed: true });
+    this.path(this.ring(cx, cy, z + h, r2, a0, a1, 18), lo);
   }
 
   /** Flat disc lying on a horizontal plane. */

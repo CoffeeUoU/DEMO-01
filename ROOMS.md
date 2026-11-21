@@ -29,9 +29,9 @@ shadow (after Dakshi's reference sketch).
   cork board with pinned notes above the desk.
 - **Floor** — boards, scalloped rug, slippers, soft shadows under the furniture.
 - **Pop-ups** (drawn isometrically so they read as solid furniture from the camera)
-  - against the walls: bed with checked quilt, pillow and a bunny; desk with drawers, lamp,
-    laptop, mug, pencil cup and books
-  - in front: round nightstand with a lamp and a book, chair tucked at the desk, woven waste bin
+  - against the walls: a simple bed (frame, mattress, quilt with a folded edge, pillow); desk with
+    drawers, lamp, laptop, mug, pencil cup and a book
+  - in front: chair tucked at the desk, woven waste bin
 - **Entries hung here** — dreams, sleep, late-night thoughts, what you're studying.
 
 ## 2. Bathroom
