@@ -51,21 +51,23 @@ Same paper cut-out style as the bedroom, after Dakshi's reference sketch; ink-on
   and towel, wooden shelves.
 - **Entries hung here** — resets, self-talk, routines, things you wash off.
 
-## 3. Kitchen — redesigned
+## 3. Kitchen — redesigned (after Dakshi's reference)
 
 Same paper cut-out style; ink-only or soft colour.
 
-- **Left wall** — window with a half-height cafe curtain and three herb pots on the sill, two open
-  shelves (jars with lids, plates, mugs), a utensil rail with a pan, ladle and whisk near the corner.
-- **Right wall** — upper cabinets, tiled backsplash behind the counter, a clock above the fridge.
-- **Floor** — checkerboard tiles (hatched in ink, lilac in colour), a striped runner in front of
-  the counter, soft shadows.
+- **Left wall** — window with clouds and curtains on a rod, two floating shelves near the corner
+  (a leafy plant and books, two jars), tiled backsplash over the counter, a trailing plant and two
+  taped notes (heart, checklist) near the front edge.
+- **Right wall** — framed picture, upper cabinet with a plant on top, range hood over the stove,
+  tiled backsplash.
+- **Floor** — boards and a scalloped rug, soft shadows.
 - **Pop-ups**
-  - against the wall: counter run with three cabinet doors, hob with four rings and a kettle, sink
-    and tap, a cutting board with a lemon; a tall fridge with a note, magnets and handles
-  - by the window: little round table with a fruit bowl and two mugs, two stools
-- **Colour version** — butter-yellow walls, sage cabinets, mint fridge, coral curtain, kettle and
-  runner, wooden worktop details.
+  - L-shaped counter: sink with a gooseneck tap, soap, a tea towel over the front; kettle,
+    cutting board, fruit bowl, toaster and mug in the corner; oven with a hob and a pot; drawers
+    with a utensil crock; a tall fridge with notes and a plant on top
+  - round table with flowers in a vase, a fruit bowl and a mug; spindle-back chair and a stool
+- **Colour version** — butter-yellow walls, sage cabinets, pale blue fridge, coral curtains, kettle
+  and rug, wooden floor and furniture.
 - **Entries hung here** — food, family, cooking experiments, people you fed or who fed you.
 
 ## 4. Gym / boxing / body
