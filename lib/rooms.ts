@@ -10,7 +10,7 @@
 // Pop-up positions are [s, t]: s = distance along the right wall, t = along the left wall.
 
 import type { Pt, Sketch } from "./sketch";
-import { isoLayers, WHITE, SIDE_A, SIDE_B, type V3 } from "./iso";
+import { isoLayers, WHITE, SIDE_A, SIDE_B, type V3, type Iso } from "./iso";
 import { look, tint } from "./style";
 
 export type PopUp = { size: number; at: [number, number]; draw: (s: Sketch) => void; halo?: number };
@@ -213,6 +213,24 @@ function tapedPhoto(s: Sketch, x: number, y: number, w: number, h: number, rot =
   }
 }
 
+
+/** Curtain panel hanging on a plane just off the left wall (xa = cx), from rz down to hem. */
+function isoCurtain(iso: Iso, cx: number, b0: number, b1: number, rz: number, hem: number, color: string) {
+  const folds = 4;
+  const pts: V3[] = [
+    [cx, b0, rz - 0.01],
+    [cx, b1, rz - 0.01],
+  ];
+  for (let i = 0; i <= folds * 2; i++) pts.push([cx, b1 - ((b1 - b0) * i) / (folds * 2), hem + (i % 2 ? 0 : 0.014)]);
+  iso.face(pts, look.color ? color : WHITE, { w: 2.4 });
+  for (let i = 1; i < folds; i++) {
+    const b = b0 + ((b1 - b0) * i) / folds;
+    iso.line([cx, b, rz - 0.03], [cx, b + 0.004, hem + 0.03], { w: 1.4 });
+  }
+  iso.line([cx, b0 + 0.005, hem + 0.035], [cx, b1 - 0.005, hem + 0.035], { w: 1.1, alpha: 0.55 });
+  for (let i = 0; i < folds; i++) iso.at([cx, b0 + ((b1 - b0) * (i + 0.5)) / folds, rz], (s, [x, y], u) => s.circle(x, y, 0.012 * u, { w: 1.6, mask: true }));
+}
+
 const bedroom: Room = {
   name: "bedroom",
   mood: "slow mornings, late-night thinking",
@@ -238,12 +256,7 @@ const bedroom: Room = {
       s.line(x, y + 0.04, x + 0.03, y, { w: 1.2, alpha: 0.6 });
       s.line(x + 0.015, y + 0.06, x + 0.05, y + 0.015, { w: 1.2, alpha: 0.6 });
     }
-    // curtain rod + curtains
-    s.line(0.15, 0.165, 0.76, 0.165, { w: 2.6 });
-    s.blob(0.145, 0.165, 0.008, 0.01, WHITE, { w: 1.6 });
-    s.blob(0.765, 0.165, 0.008, 0.01, WHITE, { w: 1.6 });
-    curtain(s, 0.15, 0.27, 0.165, 0.66);
-    curtain(s, 0.63, 0.76, 0.165, 0.66);
+    // (the curtains and their rod are pop-ups that hang just in front of this wall)
     // stars near the corner
     s.star(0.88, 0.22, 0.026, { w: 2 });
     s.star(0.92, 0.33, 0.016, { w: 1.8 });
@@ -348,6 +361,54 @@ const bedroom: Room = {
     s.circle(0.665, 0.47, 0.018, { w: 1.3 });
     note(0.75, 0.43, 0.08, 0.08, 2, 0.03);
     note(0.85, 0.44, 0.07, 0.1, 3, -0.06);
+    // the desk, drawn flat against the wall
+    const desk = (pts: Pt[], c = BED.wood) => {
+      s.sticker(pts, 3, 0.18, tint(c));
+      s.stroke(pts, { closed: true, w: 2.2 });
+    };
+    desk(s.rectPts(0.425, 0.66, 0.025, 0.36));
+    desk(s.rectPts(0.76, 0.66, 0.19, 0.36));
+    for (let i = 0; i < 3; i++) {
+      const y = 0.68 + i * 0.1;
+      s.rect(0.775, y, 0.16, 0.08, { w: 1.5 });
+      s.line(0.835, y + 0.04, 0.875, y + 0.04, { w: 2.2 });
+    }
+    desk(s.rectPts(0.4, 0.625, 0.57, 0.035));
+    // lamp
+    desk(s.ellipsePts(0.49, 0.62, 0.035, 0.01), BED.wood);
+    s.line(0.49, 0.615, 0.49, 0.52, { w: 2.4 });
+    desk(
+      [
+        [0.455, 0.53],
+        [0.525, 0.53],
+        [0.51, 0.46],
+        [0.47, 0.46],
+      ],
+      BED.shade,
+    );
+    for (const [x, y, dx, dy] of [
+      [0.43, 0.5, -0.03, 0],
+      [0.55, 0.5, 0.03, 0],
+      [0.44, 0.55, -0.025, 0.02],
+      [0.54, 0.55, 0.025, 0.02],
+    ])
+      s.line(x, y, x + dx, y + dy, { w: 1.4 });
+    // laptop
+    desk(s.rectPts(0.58, 0.5, 0.15, 0.11), BED.laptop);
+    s.rect(0.592, 0.512, 0.126, 0.086, { w: 1.3 });
+    desk(s.rectPts(0.565, 0.61, 0.18, 0.015), BED.laptop);
+    // mug, pencil cup, book
+    desk(s.rectPts(0.77, 0.575, 0.035, 0.05), BED.mug);
+    s.stroke(s.ellipsePts(0.81, 0.6, 0.01, 0.014, -1.4, 1.4, 8), { w: 1.8 });
+    for (const [x0, x1] of [
+      [0.845, 0.835],
+      [0.86, 0.865],
+      [0.872, 0.885],
+    ])
+      s.line(x0, 0.575, x1, 0.51, { w: 2 });
+    desk(s.rectPts(0.835, 0.57, 0.045, 0.055), BED.cup);
+    desk(s.rectPts(0.9, 0.52, 0.035, 0.105), BED.book);
+    s.line(0.907, 0.54, 0.928, 0.54, { w: 1, alpha: 0.6 });
   },
   floor(s) {
     if (look.color) s.washAll(tint(BED.floor), 1);
@@ -363,7 +424,6 @@ const bedroom: Room = {
     // contact shadows under the furniture (coords: F(xa, xb))
     const quad = (x: number, y: number, dx: number, dy: number) => [F(x, y), F(x + dx, y), F(x + dx, y + dy), F(x, y + dy)];
     s.shadow(quad(0.03, 0.27, 0.36, 0.62), 0.28, 16);
-    s.shadow(quad(0.42, 0.02, 0.56, 0.27), 0.22, 16);
     s.shadow(quad(0.52, 0.3, 0.18, 0.16), 0.2, 12);
     s.shadow(s.ellipsePts(0.9, 1 - 0.36, 0.05, 0.05), 0.2, 8);
     // rug with a scalloped edge
@@ -409,75 +469,14 @@ const bedroom: Room = {
   popups: isoLayers([
     // against the walls: bed + desk
     (iso) => {
-      // --- desk (against the right wall) ---
-      const DZ = 0.36;
-      // far leg pair at the left end
-      iso.box(0.43, 0.03, 0, 0.025, 0.025, DZ - 0.02, WHITE, { color: BED.wood });
-      // drawer unit at the right end
-      iso.box(0.76, 0.03, 0, 0.19, 0.22, DZ - 0.02, WHITE, { color: BED.wood });
-      for (let i = 0; i < 3; i++) {
-        const z0 = 0.03 + i * 0.105;
-        iso.face(
-          [
-            [0.775, 0.25, z0],
-            [0.935, 0.25, z0],
-            [0.935, 0.25, z0 + 0.085],
-            [0.775, 0.25, z0 + 0.085],
-          ],
-          null,
-          { w: 1.6 },
-        );
-        iso.line([0.835, 0.25, z0 + 0.045], [0.875, 0.25, z0 + 0.045], { w: 2.2 });
-      }
-      iso.box(0.43, 0.22, 0, 0.025, 0.025, DZ - 0.02, WHITE, { color: BED.wood });
-      // desk top
-      iso.box(0.41, 0.02, DZ - 0.025, 0.56, 0.27, 0.025, WHITE, { color: BED.wood });
-      const T = DZ;
-      // lamp: weighted base, straight stem, shade centred above it
-      const LX = 0.49;
-      const LY = 0.08;
-      iso.cyl(LX, LY, T, 0.035, 0.018, WHITE, { color: BED.wood });
-      iso.line([LX, LY, T + 0.018], [LX, LY, T + 0.13], { w: 2.4 });
-      iso.cyl(LX, LY, T + 0.11, 0.06, 0.08, WHITE, { r2: 0.028, color: BED.shade });
-      iso.at([LX, LY, T + 0.11], (s, [x, y], u) => {
-        for (let i = 0; i < 4; i++) {
-          const a = 0.35 + i * 0.6;
-          s.line(x + Math.cos(a) * 0.09 * u, y + Math.sin(a) * 0.07 * u, x + Math.cos(a) * 0.13 * u, y + Math.sin(a) * 0.1 * u, { w: 1.4, mask: true });
-        }
-      });
-      // laptop
-      iso.box(0.6, 0.06, T, 0.16, 0.12, 0.01, WHITE, { color: BED.laptop });
-      iso.face(
-        [
-          [0.6, 0.06, T + 0.01],
-          [0.76, 0.06, T + 0.01],
-          [0.76, 0.035, T + 0.13],
-          [0.6, 0.035, T + 0.13],
-        ],
-        tint(BED.laptop),
-        { w: 2.2 },
-      );
-      iso.face(
-        [
-          [0.615, 0.057, T + 0.025],
-          [0.745, 0.057, T + 0.025],
-          [0.745, 0.039, T + 0.115],
-          [0.615, 0.039, T + 0.115],
-        ],
-        null,
-        { w: 1.3 },
-      );
-      // mug, pencil cup, books
-      iso.cyl(0.8, 0.2, T, 0.028, 0.05, WHITE, { color: BED.mug });
-      iso.at([0.83, 0.2, T + 0.03], (s, [x, y], u) => s.stroke(s.ellipsePts(x, y, 0.018 * u, 0.022 * u, -1.3, 1.3, 8), { w: 2, mask: true }));
-      iso.cyl(0.87, 0.1, T, 0.03, 0.07, WHITE, { color: BED.cup });
-      for (const [dx, dy] of [
-        [-0.01, 0],
-        [0.008, -0.01],
-        [0.004, 0.012],
-      ])
-        iso.line([0.87 + dx, 0.1 + dy, T + 0.07], [0.87 + dx * 2.5, 0.1 + dy * 2.5, T + 0.13], { w: 2 });
-      iso.box(0.9, 0.18, T, 0.035, 0.08, 0.1, WHITE, { color: BED.book });
+      // --- curtains on a rod, hanging just off the left wall over the bed ---
+      const CX = 0.05;
+      const RZ = 0.835;
+      iso.line([0, 0.22, RZ], [CX, 0.22, RZ], { w: 2 });
+      iso.line([0, 0.87, RZ], [CX, 0.87, RZ], { w: 2 });
+      iso.line([CX, 0.22, RZ], [CX, 0.87, RZ], { w: 2.8 });
+      isoCurtain(iso, CX, 0.24, 0.37, RZ, 0.34, BED.curtain);
+      isoCurtain(iso, CX, 0.73, 0.86, RZ, 0.34, BED.curtain);
 
       // --- bed (against the left wall), kept simple ---
       const B0 = 0.28;
@@ -766,6 +765,25 @@ const bathroom: Room = {
       0.022,
       BATH.leaf,
     );
+    // toilet, drawn flat against the wall
+    const loo = (pts: Pt[]) => {
+      s.sticker(pts, 4, 0.2);
+      s.stroke(pts, { closed: true, w: 2.4 });
+    };
+    loo(s.rectPts(0.175, 0.6, 0.15, 0.17));
+    loo(s.rectPts(0.165, 0.58, 0.17, 0.025));
+    s.box(0.235, 0.565, 0.03, 0.015, null, { w: 1.8 });
+    loo([
+      [0.21, 0.82],
+      [0.29, 0.82],
+      [0.28, 0.9],
+      [0.27, 1.0],
+      [0.23, 1.0],
+      [0.22, 0.9],
+    ]);
+    loo([[0.15, 0.79], ...s.ellipsePts(0.25, 0.79, 0.1, 0.05, 0, Math.PI, 16)]);
+    loo(s.rectPts(0.145, 0.77, 0.21, 0.025));
+    s.line(0.2, 0.69, 0.3, 0.69, { w: 1, alpha: 0.5 });
     // toilet-paper holder
     s.line(0.38, 0.64, 0.41, 0.64, { w: 2.2 });
     const roll = s.rectPts(0.395, 0.62, 0.05, 0.05);
@@ -831,7 +849,6 @@ const bathroom: Room = {
     }
     // contact shadows
     const quad = (x: number, y: number, ax: number, ay: number) => [F(x, y), F(x + ax, y), F(x + ax, y + ay), F(x, y + ay)];
-    s.shadow(quad(0.16, 0.0, 0.2, 0.3), 0.22, 14);
     s.shadow(quad(0.54, 0.0, 0.42, 0.32), 0.24, 16);
     s.shadow(s.ellipsePts(...F(0.93, 0.44), 0.06, 0.06), 0.2, 10);
     // rugs
@@ -839,7 +856,7 @@ const bathroom: Room = {
     scallopRug(s, [F(0.52, 0.42), F(0.86, 0.42), F(0.86, 0.86), F(0.52, 0.86)], BATH.rug, 11);
   },
   popups: isoLayers([
-    // against the walls: shower curtain, toilet, vanity
+    // against the walls: shower curtain, vanity
     (iso) => {
       // --- shower curtain: rod across the front of the recess, curtain pulled to the inner end ---
       const CX = 0.07; // distance out from the left wall (hangs close to it)
@@ -863,14 +880,6 @@ const bathroom: Room = {
       }
       for (let i = 0; i < 5; i++) iso.at([CX, c0 + 0.02 + i * 0.04, RZ], (s, [x, y], u) => s.circle(x, y, 0.012 * u, { w: 1.6, mask: true }));
 
-      // --- toilet (against the right wall, near the corner) ---
-      iso.box(0.215, 0.02, 0, 0.07, 0.07, 0.2); // back of the base, under the tank
-      iso.cyl(0.25, 0.15, 0, 0.045, 0.14, WHITE, { r2: 0.06 });
-      iso.cyl(0.25, 0.15, 0.13, 0.08, 0.055);
-      iso.cyl(0.25, 0.15, 0.185, 0.085, 0.02);
-      iso.box(0.17, 0.012, 0.2, 0.16, 0.075, 0.2);
-      iso.box(0.163, 0.006, 0.4, 0.174, 0.087, 0.022);
-      iso.line([0.24, 0.093, 0.422], [0.26, 0.093, 0.422], { w: 2.6 });
       // --- vanity (against the right wall) ---
       for (const [lx, ly] of [
         [0.56, 0.03],

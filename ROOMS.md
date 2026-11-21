@@ -23,15 +23,15 @@ Wall A is the left wall as you look into the room, wall B is the right wall.
 Blue ink on white paper, no colour: every piece is a paper cut-out with a white margin and a soft
 shadow (after Dakshi's reference sketch).
 
-- **Left wall** — big window with clouds, curtains on a rod with gathered tops and scalloped hems,
-  stars near the corner, two taped photos near the front edge.
-- **Right wall** — hanging plant on three cords near the corner, stars, and a big cork board with
-  pinned notes above the desk.
+- **Left wall** — big window with clouds, stars near the corner, two taped photos near the front
+  edge.
+- **Right wall** — hanging plant on three cords near the corner, stars, a big cork board with
+  pinned notes, and the desk drawn flat on the wall (drawers, lamp, laptop, mug, pencil cup, book).
 - **Floor** — boards, scalloped rug, slippers, soft shadows under the furniture.
 - **Pop-ups** (drawn isometrically so they read as solid furniture from the camera)
-  - against the walls: a simple bed (frame, mattress, quilt with a folded edge, pillow); desk with
-    drawers, lamp, laptop, mug, pencil cup and a book
-  - in front: chair tucked at the desk, woven waste bin
+  - curtains on a rod hanging just off the left wall, either side of the window
+  - a simple bed (frame, mattress, quilt with a folded edge, pillow)
+  - in front: chair at the desk, woven waste bin
 - **Entries hung here** — dreams, sleep, late-night thoughts, what you're studying.
 
 ## 2. Bathroom — redesigned
@@ -41,11 +41,10 @@ Same paper cut-out style as the bedroom, after Dakshi's reference sketch; ink-on
 - **Left wall** — tiled shower recess with a shower head and falling water and a shelf with two
   bottles; a towel on a hook near the front edge, sparkles, and a hanging plant near the corner.
 - **Right wall** — framed picture, two floating shelves (folded towels, reed diffuser, a jar and a
-  little trailing plant), toilet-paper holder, arched mirror with three sticky notes and a wall
+  little trailing plant), the toilet drawn flat on the wall, toilet-paper holder, arched mirror with three sticky notes and a wall
   lamp above it, sparkles.
 - **Floor** — square tiles, a small blue mat by the shower, a big mat in the middle, soft shadows.
-- **Pop-ups** — shower curtain on a rod just off the left wall, pulled to the inner end;
-  toilet; vanity with two doors, basin, faucet, soap pump and toothbrush cup; a
+- **Pop-ups** — shower curtain on a rod just off the left wall, pulled to the inner end; vanity with two doors, basin, faucet, soap pump and toothbrush cup; a
   woven bin with a towel over the edge.
 - **Colour version** — sea-glass walls and shower tiles, pale blue curtain and vanity, coral mats
   and towel, wooden shelves.
