@@ -1815,7 +1815,7 @@ const balcony: Room = {
     scallopRug(s, [F(0.1, 0.14), F(0.56, 0.14), F(0.56, 0.68), F(0.1, 0.68)], BAL.rug, 12);
   },
   popups: isoLayers([
-    // against the walls: monstera in the corner, a leafy plant by the railing
+    // against the walls: monstera in the corner
     (iso) => {
       iso.p([0.02, 0.0, 0.6]);
       iso.p([0.22, 0.2, 0.6]);
