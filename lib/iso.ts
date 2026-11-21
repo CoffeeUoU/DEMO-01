@@ -25,6 +25,13 @@ type Layout = { Sf: number; Xc: number; size: number };
 type Fill = string | null;
 type LineOpts = { w?: number; alpha?: number; rough?: number };
 
+/** Pen used for pop-up furniture: "sketchy" (loose, hand-drawn) or "clean" (steady). */
+export type Pen = "sketchy" | "clean";
+let PEN: Pen = "sketchy";
+export function setPen(p: Pen) {
+  PEN = p;
+}
+
 export const WHITE = "#ffffff";
 export const SIDE_A = "#f1f0f8"; // faces turned to the right
 export const SIDE_B = "#e6e4f2"; // faces turned to the left
@@ -58,7 +65,19 @@ export class Iso {
 
   /** Clean lines for furniture: one steady pen stroke, no doubled edges. */
   private lo(o: LineOpts) {
-    return { mask: true, w: 2, rough: 0.35, overshoot: 0, ...o };
+    if (PEN === "clean") return { mask: true, w: 2, rough: 0.35, overshoot: 0, ...o };
+    // a lighter, looser hand: thinner line, more wobble, ends that run past the corners
+    const s = this.s!;
+    return { mask: true, rough: 1.15, overshoot: 0.05, ...o, w: (o.w ?? 2) * 0.82, alpha: (o.alpha ?? 1) * (0.72 + s.r() * 0.28) };
+  }
+
+  /** Nudge each vertex a touch so corners don't meet perfectly (sketchy pen only). */
+  private jig(q: Pt[]): Pt[] {
+    // curves (many points) keep their shape; only straight-edged outlines get loose corners
+    if (PEN === "clean" || !this.s || q.length > 8) return q;
+    const s = this.s;
+    const a = 0.0035;
+    return q.map(([x, y]) => [x + (s.r() - 0.5) * 2 * a, y + (s.r() - 0.5) * 2 * a] as Pt);
   }
 
   /** Paper fill (part of the cut-out) without an outline. */
@@ -76,12 +95,17 @@ export class Iso {
 
   line(a: V3, b: V3, o: LineOpts = {}) {
     const q = [this.p(a), this.p(b)];
-    this.s?.stroke(q, this.lo(o));
+    if (this.s) this.s.stroke(this.jig(q), this.lo(o));
   }
 
   path(pts: V3[], o: LineOpts & { closed?: boolean } = {}) {
     const q = pts.map((v) => this.p(v));
-    this.s?.stroke(q, this.lo(o));
+    if (!this.s) return;
+    const { closed, ...rest } = o;
+    const j = this.jig(q);
+    // sketchy: close the loop by hand, letting the end run past the start
+    if (closed && PEN === "sketchy") this.s.stroke([...j, j[0]], { ...this.lo(rest), closed: false });
+    else this.s.stroke(j, { ...this.lo(rest), closed });
   }
 
   /** Axis-aligned box: fills the three visible faces, then draws each edge once. */

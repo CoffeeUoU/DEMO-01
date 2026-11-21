@@ -9,6 +9,7 @@ import { N, logicalOf, physicalOf } from "@/lib/fold";
 import { ROOMS } from "@/lib/rooms";
 import { book } from "@/lib/store";
 import { buildTextures, type BookTextures } from "@/lib/textures";
+import { setPen } from "@/lib/iso";
 
 const FONT = "Caveat";
 
@@ -27,6 +28,8 @@ export default function Experience() {
       } catch {
         /* fall back to whatever cursive font is around */
       }
+      // ?pen=clean switches the pop-up furniture back to the steady pen
+      setPen(new URLSearchParams(window.location.search).get("pen") === "clean" ? "clean" : "sketchy");
       if (alive) setTex(buildTextures(`${FONT}, cursive`));
     })();
     return () => {
