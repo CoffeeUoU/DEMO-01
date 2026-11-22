@@ -19,6 +19,7 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
   const [error, setError] = useState("");
   const [crumple, setCrumple] = useState<{ rect: DOMRect; text: string } | null>(null);
   const [saved, setSaved] = useState(false);
+  const [pressed, setPressed] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const area = useRef<HTMLTextAreaElement>(null);
   const paper = useRef<HTMLElement>(null);
@@ -146,8 +147,21 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
             <span className="journal-spacer" />
             {error && <span className="journal-error">{error}</span>}
             {saved && !error && <span className="journal-saved">saved</span>}
-            <button className="hand-btn" onClick={save}>
-              {current ? "save changes" : spot.save}
+            <button
+              className={`pin-btn ${pressed ? "pressed" : ""}`}
+              onClick={() => {
+                setPressed(true);
+                setTimeout(() => setPressed(false), 380);
+                save();
+              }}
+            >
+              <svg className="pin-icon" viewBox="0 0 48 56" width="40" height="46" aria-hidden="true">
+                <ellipse className="pin-shadow" cx="25" cy="52" rx="9" ry="2.6" />
+                <path className="pin-needle" d="M24 33 C 24.3 39, 23.8 44, 24.2 50" />
+                <path className="pin-body" d="M15 31 C 18 29, 30 29, 33 31 C 31 26, 29 24, 29.5 19 C 33 17.5, 35 15, 34.5 11.5 C 30 9, 18 9, 13.5 11.5 C 13 15, 15 17.5, 18.5 19 C 19 24, 17 26, 15 31 Z" />
+                <path className="pin-shine" d="M17.5 13.5 C 19 12.6, 21.5 12.2, 23.5 12.3" />
+              </svg>
+              <span>{current ? "save changes" : spot.save}</span>
             </button>
           </div>
         </section>

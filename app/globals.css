@@ -569,3 +569,73 @@ body {
     padding: 16px 18px 14px;
   }
 }
+
+/* save: a hand-drawn push pin that presses in */
+.pin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 2px;
+  font-family: var(--hand);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.pin-btn span {
+  background-image: linear-gradient(transparent 62%, rgba(246, 183, 170, 0.55) 62%, rgba(246, 183, 170, 0.55) 90%, transparent 90%);
+  padding: 0 2px;
+}
+
+.pin-icon {
+  overflow: visible;
+  transform-origin: 50% 90%;
+  transition: transform 0.18s ease;
+}
+
+.pin-body {
+  fill: #f6a99a;
+  stroke: var(--ink);
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+}
+
+.pin-needle,
+.pin-shine {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.pin-shine {
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.pin-shadow {
+  fill: rgba(40, 32, 90, 0.18);
+  transition: transform 0.18s ease;
+  transform-origin: 25px 52px;
+}
+
+.pin-btn:hover .pin-icon {
+  transform: rotate(-10deg) translateY(-2px);
+}
+
+.pin-btn:hover .pin-shadow {
+  transform: scale(0.8);
+}
+
+.pin-btn.pressed .pin-icon {
+  animation: pin-press 0.38s ease;
+}
+
+@keyframes pin-press {
+  0% { transform: rotate(-10deg) translateY(-4px); }
+  45% { transform: rotate(0deg) translateY(7px) scaleY(0.92); }
+  100% { transform: rotate(0deg) translateY(0); }
+}
