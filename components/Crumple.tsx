@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 type Props = { rect: DOMRect; text: string; onDone: () => void };
 
@@ -9,15 +9,12 @@ const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 
 /**
  * Tearing out a page: a copy of the sheet scrunches up (its outline pulls in to a lumpy blob,
- * creases appear, it shrinks and twists), turns into a hand-drawn paper ball, bounces once and
- * rolls away.
+ * creases appear, it shrinks and twists), then fades away.
  */
 export default function Crumple({ rect, text, onDone }: Props) {
   const ghost = useRef<HTMLDivElement>(null);
   const creases = useRef<SVGSVGElement>(null);
   const edge = useRef<SVGPolygonElement>(null);
-  const ball = useRef<HTMLDivElement>(null);
-  const [phase, setPhase] = useState<"crumple" | "ball">("crumple");
 
   // outline of the sheet, walked round its edge, and the lumpy blob each point pulls in to
   const shape = useMemo(() => {
@@ -44,32 +41,11 @@ export default function Crumple({ rect, text, onDone }: Props) {
     return { from, to, lines };
   }, []);
 
-  // a hand-drawn paper ball
-  const ballShape = useMemo(() => {
-    const pts: string[] = [];
-    const n = 15;
-    for (let i = 0; i < n; i++) {
-      const a = (i / n) * Math.PI * 2;
-      const r = 40 * (0.82 + Math.random() * 0.22);
-      pts.push(`${(50 + Math.cos(a) * r).toFixed(1)},${(50 + Math.sin(a) * r).toFixed(1)}`);
-    }
-    const folds = Array.from({ length: 9 }, () => {
-      const a = Math.random() * Math.PI * 2;
-      const r = Math.random() * 26;
-      const x = 50 + Math.cos(a) * r;
-      const y = 50 + Math.sin(a) * r;
-      const b = a + (Math.random() - 0.5) * 2.4;
-      const len = 8 + Math.random() * 14;
-      return `M${x.toFixed(1)} ${y.toFixed(1)} l${(Math.cos(b) * len).toFixed(1)} ${(Math.sin(b) * len).toFixed(1)} l${((Math.random() - 0.5) * 10).toFixed(1)} ${((Math.random() - 0.5) * 10).toFixed(1)}`;
-    });
-    return { outline: pts.join(" "), folds };
-  }, []);
-
   useEffect(() => {
     let raf = 0;
     const start = performance.now();
     const CRUMPLE = 520;
-    const BALL = 1050;
+    const FADE = 380;
     const tick = (now: number) => {
       const ms = now - start;
       if (ms < CRUMPLE) {
@@ -86,19 +62,12 @@ export default function Crumple({ rect, text, onDone }: Props) {
           ghost.current.style.transform = `scale(${1 - 0.5 * t}) rotate(${-14 * t}deg)`;
         }
         if (creases.current) creases.current.style.opacity = String(Math.min(1, t * 1.6));
-      } else if (ms < CRUMPLE + BALL) {
-        if (phase !== "ball") setPhase("ball");
-        const t = (ms - CRUMPLE) / BALL;
-        // drop, one bounce, then roll off to the left while fading
-        const drop = t < 0.35 ? ease(t / 0.35) : 1;
-        const bounce = t >= 0.35 && t < 0.6 ? Math.sin(((t - 0.35) / 0.25) * Math.PI) * 0.35 : 0;
-        const roll = t > 0.5 ? ease((t - 0.5) / 0.5) : 0;
-        const y = (drop - bounce) * rect.height * 0.34;
-        const x = -roll * Math.min(380, rect.left + rect.width / 2 + 80);
-        const size = 1 - 0.45 * clamp01(t / 0.35);
-        if (ball.current) {
-          ball.current.style.transform = `translate(${x}px, ${y}px) rotate(${-30 - roll * 540}deg) scale(${size})`;
-          ball.current.style.opacity = String(1 - clamp01((t - 0.72) / 0.28));
+      } else if (ms < CRUMPLE + FADE) {
+        // stay scrunched and fade away
+        const t = (ms - CRUMPLE) / FADE;
+        if (ghost.current) {
+          ghost.current.style.opacity = String(1 - t);
+          ghost.current.style.transform = `scale(${0.5 - 0.06 * t}) rotate(${-14 - 4 * t}deg)`;
         }
       } else {
         onDone();
@@ -111,11 +80,8 @@ export default function Crumple({ rect, text, onDone }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const ballSize = Math.min(rect.width, rect.height) * 0.36;
-
   return (
     <div className="crumple" aria-hidden="true">
-      {phase === "crumple" && (
         <div ref={ghost} className="crumple-ghost" style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}>
           <div className="crumple-text">{text}</div>
           <svg ref={creases} className="crumple-creases" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -127,29 +93,6 @@ export default function Crumple({ rect, text, onDone }: Props) {
             <polygon ref={edge} points="0,0 100,0 100,100 0,100" />
           </svg>
         </div>
-      )}
-      {phase === "ball" && (
-        <div
-          ref={ball}
-          className="crumple-ball"
-          style={{ left: rect.left + rect.width / 2 - ballSize / 2, top: rect.top + rect.height / 2 - ballSize / 2, width: ballSize, height: ballSize }}
-        >
-          <svg viewBox="0 0 100 100">
-            <defs>
-              <radialGradient id="ballshade" cx="38%" cy="34%" r="70%">
-                <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="70%" stopColor="#f1efe9" />
-                <stop offset="100%" stopColor="#dcd8ea" />
-              </radialGradient>
-            </defs>
-            <polygon points={ballShape.outline} fill="url(#ballshade)" />
-            {ballShape.folds.map((d, i) => (
-              <path key={i} d={d} className="fold" />
-            ))}
-            <polygon points={ballShape.outline} className="edge" />
-          </svg>
-        </div>
-      )}
     </div>
   );
 }

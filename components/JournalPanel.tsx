@@ -100,7 +100,7 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
       <div className="journal-body">
         <nav className="journal-notes" aria-label="Past notes">
           <button className={`journal-note journal-new ${current === null ? "on" : ""}`} onClick={() => open(null)} aria-label="New page">
-            <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+            <svg viewBox="0 0 40 40" width="26" height="26" aria-hidden="true">
               <path d="M20 8 C 20.5 16, 19.5 24, 20 32" />
               <path d="M8 20.5 C 16 19.5, 24 20.5, 32 20" />
             </svg>
