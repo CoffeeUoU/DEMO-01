@@ -149,6 +149,11 @@ body {
   transition: opacity 0.3s ease, transform 0.2s ease;
 }
 
+.arrow.is-hidden {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
 .arrow-left {
   left: max(12px, 4vw);
 }
@@ -247,145 +252,197 @@ body {
   }
 }
 
-/* ---- journal ------------------------------------------------------------ */
+/* ---- journal close-ups ------------------------------------------------- */
 
-.journal {
+.cu {
   position: fixed;
   inset: 0;
   z-index: 10;
   display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 18px;
-  padding: 26px max(28px, 5vw) 30px;
-  background-color: rgba(236, 235, 231, 0.55);
-  backdrop-filter: blur(2px);
-  animation: fade-in 0.22s ease both;
+  place-items: center;
+  padding: 70px 24px 28px;
+  background: rgba(236, 235, 231, 0.35);
+  animation: cu-in 0.34s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
 }
 
-.journal.leaving {
-  animation: fade-out 0.22s ease both;
+.cu.leaving {
+  animation: cu-out 0.24s ease both;
 }
 
-@keyframes fade-in {
-  from { opacity: 0; }
+@keyframes cu-in {
+  from { opacity: 0; transform: scale(0.86); }
 }
-@keyframes fade-out {
-  to { opacity: 0; }
-}
-@keyframes rise-in {
-  from { transform: translateY(26px); opacity: 0; }
+@keyframes cu-out {
+  to { opacity: 0; transform: scale(0.9); }
 }
 
-.journal-head {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: baseline;
-}
-
-.journal-title {
-  margin: 0;
-  font-size: 52px;
+.cu-title {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  translate: -50% 0;
+  font-size: 44px;
   font-weight: 700;
   line-height: 1;
+  pointer-events: none;
 }
 
-.journal-x {
+.cu-x {
   position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 18px;
+  right: max(20px, 4vw);
   background: transparent;
   border: 0;
   padding: 4px;
   cursor: pointer;
 }
 
-.journal-x path,
-.journal-new path {
+.cu-x path,
+.cu-add path {
   fill: none;
   stroke: var(--ink);
   stroke-width: 3;
   stroke-linecap: round;
 }
 
-.journal-body {
-  min-height: 0;
-  max-height: 600px;
-  display: grid;
-  /* notes hug the far left; the sheet stays centred on the screen */
-  grid-template-columns: 124px minmax(0, 1fr) 124px;
-  gap: 28px;
-  animation: rise-in 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+/* the object, drawn big */
+.cu-surface {
+  position: relative;
+  width: min(960px, 100%);
+  height: min(620px, 100%);
+  padding: 34px 38px;
+  border: 2.4px solid var(--ink);
+  overflow: hidden;
+  box-shadow: 0 22px 50px rgba(40, 32, 90, 0.18), 0 4px 10px rgba(40, 32, 90, 0.08);
 }
 
-/* past notes, a column of little pages down the left */
-.journal-notes {
-  min-height: 0;
+.cu-k-cork .cu-surface {
+  border-radius: 10px 16px 12px 14px;
+  background-color: #e9cfa6;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(150, 100, 50, 0.18) 0 1.2px, transparent 1.6px),
+    radial-gradient(circle at 70% 60%, rgba(150, 100, 50, 0.14) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 45% 85%, rgba(255, 255, 255, 0.35) 0 1px, transparent 1.4px);
+  background-size: 13px 13px, 17px 17px, 11px 11px;
+  outline: 16px solid #e2c49a;
+  outline-offset: 0;
+  box-shadow: 0 0 0 18.4px var(--ink), 0 26px 50px rgba(40, 32, 90, 0.2);
+}
+
+.cu-k-mirror .cu-surface {
+  width: min(760px, 100%);
+  border-radius: 48% 48% 18px 18px / 30% 30% 18px 18px;
+  padding-top: 90px;
+  background: linear-gradient(160deg, #eef6fd 0%, #dcebfa 55%, #cfe2f6 100%);
+  outline: 14px solid #d6e8ef;
+  box-shadow: 0 0 0 16.4px var(--ink), 0 26px 50px rgba(40, 32, 90, 0.18);
+}
+
+.cu-shine {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.cu-shine path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.9;
+}
+
+.cu-k-fridge .cu-surface {
+  width: min(720px, 100%);
+  border-radius: 26px;
+  padding-left: 72px;
+  background: linear-gradient(90deg, #e4f3f9 0%, #d8ecf6 40%, #cde4ef 100%);
+}
+
+.cu-handle {
+  position: absolute;
+  left: 26px;
+  top: 18%;
+  width: 14px;
+  height: 46%;
+  border: 2.4px solid var(--ink);
+  border-radius: 10px;
+  background: #f4f9fc;
+}
+
+.cu-notes {
+  position: relative;
+  height: 100%;
   overflow-y: auto;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 6px 8px 12px 4px;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: center;
+  gap: 26px 24px;
+  padding: 14px 6px 24px;
 }
 
-.journal-note {
+.cu-note {
+  position: relative;
   flex: none;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
-  width: 108px;
-  height: 108px;
-  padding: 9px 10px;
+  width: 150px;
+  height: 150px;
+  padding: 22px 14px 12px;
   text-align: left;
   font-family: var(--hand);
   color: var(--ink);
   background: #fffdf4;
-  border: 1.5px solid rgba(43, 31, 214, 0.6);
-  border-radius: 15px 225px 15px 255px / 255px 15px 225px 15px;
-  box-shadow: 0 3px 8px rgba(40, 32, 90, 0.08);
+  border: 1.8px solid var(--ink);
+  border-radius: 3px 6px 4px 5px;
+  box-shadow: 0 5px 10px rgba(40, 32, 90, 0.14);
   cursor: pointer;
-  overflow: hidden;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.2s ease;
 }
 
-.journal-note:hover {
-  transform: translateY(-2px) rotate(-1deg);
-  box-shadow: 0 6px 14px rgba(40, 32, 90, 0.12);
+.cu-note:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 10px 18px rgba(40, 32, 90, 0.18);
 }
 
-.journal-note.on {
-  border: 2.2px solid var(--ink);
-  background: #fff6c9;
+.cu-note.lifted {
+  opacity: 0;
 }
 
-.journal-new {
+.cu-note.fresh {
+  animation: stick 0.42s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes stick {
+  from { transform: scale(1.5) translateY(-30px); opacity: 0; }
+}
+
+.cu-add {
   align-items: center;
   justify-content: center;
-  background: #fbfaf6;
+  background: rgba(255, 253, 244, 0.6);
   border-style: dashed;
 }
 
-.journal-new.on {
-  background: #fbfaf6;
-  border-style: solid;
-}
-
-.journal-note-day {
-  font-size: 16px;
+.cu-note-day {
+  font-size: 19px;
   font-weight: 700;
   line-height: 1.1;
 }
 
-.journal-note-time {
-  font-size: 13px;
+.cu-note-time {
+  font-size: 15px;
   opacity: 0.6;
 }
 
-.journal-note-text {
-  margin-top: 3px;
-  font-size: 14px;
+.cu-note-text {
+  margin-top: 4px;
+  font-size: 18px;
   line-height: 1.2;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -394,29 +451,296 @@ body {
   overflow-wrap: anywhere;
 }
 
-/* the writing paper: the hand-drawn sheet from before, as tall as there is room for */
-.journal-paper {
-  grid-column: 2;
-  justify-self: center;
-  width: min(560px, 100%);
+/* what holds each note on */
+.cu-pin {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  width: 30px;
+  height: 36px;
+  translate: -50% 0;
+  overflow: visible;
+}
+
+.cu-tape {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 64px;
+  height: 22px;
+  translate: -50% 0;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1.2px solid rgba(43, 31, 214, 0.45);
+}
+
+.cu-magnet {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 26px;
+  height: 26px;
+  translate: -50% 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  box-shadow: inset -3px -3px 0 rgba(0, 0, 0, 0.08), 0 3px 4px rgba(40, 32, 90, 0.2);
+}
+
+.cu-empty {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 40px;
+  text-align: center;
+  font-size: 26px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* a note lifted off the board to write on */
+.cu-editor {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(236, 235, 231, 0.25);
+  animation: fade-in 0.2s ease both;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+
+.cu-note.cu-big {
+  width: min(440px, 90vw);
+  height: min(440px, 70vh);
+  padding: 34px 30px 20px;
+  cursor: default;
+  rotate: -1.2deg;
+  box-shadow: 0 24px 50px rgba(40, 32, 90, 0.24), 0 4px 10px rgba(40, 32, 90, 0.1);
+  animation: lift 0.32s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+
+.cu-note.cu-big:hover {
+  transform: none;
+}
+
+@keyframes lift {
+  from { transform: scale(0.45) translateY(40px); opacity: 0; }
+}
+
+.cu-big .cu-pin {
+  width: 42px;
+  height: 50px;
+  top: -28px;
+}
+
+.cu-big .cu-tape {
+  width: 110px;
+  height: 30px;
+  top: -16px;
+}
+
+.cu-big .cu-magnet {
+  width: 36px;
+  height: 36px;
+  top: -18px;
+}
+
+.cu-big-when {
+  font-size: 18px;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}
+
+.cu-big textarea,
+.cu-right textarea {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  font-family: var(--hand);
+  font-size: 24px;
+  line-height: 32px;
+  color: var(--ink);
+  background: transparent;
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 31px, rgba(43, 31, 214, 0.16) 31px, rgba(43, 31, 214, 0.16) 32px);
+  background-attachment: local;
+  border: 0;
+  outline: none;
+  resize: none;
+  padding: 0 2px;
+}
+
+.cu-big textarea::placeholder,
+.cu-right textarea::placeholder {
+  color: rgba(43, 31, 214, 0.38);
+}
+
+.cu-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.cu-spacer {
+  flex: 1;
+}
+
+.cu-link,
+.cu-save {
+  font-family: var(--hand);
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.cu-link {
+  font-size: 19px;
+  opacity: 0.75;
+  text-decoration: underline dotted;
+}
+
+.cu-save {
+  font-size: 24px;
+  font-weight: 700;
+  background-image: linear-gradient(transparent 60%, rgba(246, 183, 170, 0.6) 60%, rgba(246, 183, 170, 0.6) 92%, transparent 92%);
+  transition: transform 0.15s ease;
+}
+
+.cu-save:hover {
+  transform: rotate(-2deg) scale(1.05);
+}
+
+.cu-error {
+  font-size: 19px;
+  color: #c2412d;
+}
+
+.cu-saved {
+  font-size: 19px;
+  opacity: 0.6;
+}
+
+/* the diary, open */
+.cu-diary {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 14px 1fr;
+  width: min(940px, 100%);
+  height: min(600px, 100%);
+  padding: 14px;
+  background: #c9d8f3;
+  border: 2.4px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 0 26px 50px rgba(40, 32, 90, 0.2), 0 4px 10px rgba(40, 32, 90, 0.08);
+}
+
+.cu-page {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 24px 30px 22px;
-  background-color: #fbfaf6;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.3  0 0 0 0 0.22  0 0 0 0.07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  border: 2px solid var(--ink);
-  border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
-  box-shadow: 0 18px 40px rgba(40, 32, 90, 0.16), 0 3px 8px rgba(40, 32, 90, 0.08);
-  rotate: -0.6deg;
+  padding: 24px 28px 20px;
+  background-color: #fffdf6;
+  border: 1.8px solid var(--ink);
 }
 
-.journal-paper.refilling {
-  animation: refill 0.5s ease 0.45s both;
+.cu-left {
+  border-radius: 10px 2px 2px 10px;
+  overflow-y: auto;
+  gap: 2px;
+  box-shadow: inset -14px 0 18px -14px rgba(40, 32, 90, 0.25);
 }
 
-@keyframes refill {
-  from { opacity: 0; transform: translateY(12px); }
+.cu-right {
+  border-radius: 2px 10px 10px 2px;
+  box-shadow: inset 14px 0 18px -14px rgba(40, 32, 90, 0.25);
+}
+
+.cu-spine {
+  background: repeating-linear-gradient(to bottom, transparent 0 18px, var(--ink) 18px 20px);
+  background-size: 2px 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.cu-page-head {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.cu-index {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 6px 8px;
+  text-align: left;
+  font-family: var(--hand);
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1.2px dashed rgba(43, 31, 214, 0.25);
+  cursor: pointer;
+}
+
+.cu-index:hover,
+.cu-index.on {
+  background-image: linear-gradient(transparent 8%, rgba(246, 183, 170, 0.35) 8%, rgba(246, 183, 170, 0.35) 92%, transparent 92%);
+}
+
+.cu-index-day {
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.cu-index-day em {
+  font-style: normal;
+  font-weight: 500;
+  opacity: 0.6;
+  font-size: 16px;
+}
+
+.cu-index-text {
+  font-size: 18px;
+  opacity: 0.8;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cu-empty-small {
+  font-size: 20px;
+  opacity: 0.55;
+}
+
+@media (max-width: 640px) {
+  .cu {
+    padding: 64px 12px 16px;
+  }
+  .cu-title {
+    font-size: 34px;
+  }
+  .cu-surface {
+    padding: 22px 16px;
+  }
+  .cu-k-fridge .cu-surface {
+    padding-left: 48px;
+  }
+  .cu-handle {
+    left: 14px;
+  }
+  .cu-note {
+    width: 120px;
+    height: 120px;
+  }
+  .cu-diary {
+    grid-template-columns: 1fr;
+    grid-template-rows: 34% 0 1fr;
+  }
 }
 
 /* tear-out: the page crumples up and fades away */

@@ -11,8 +11,13 @@ A journal house: a hand-drawn pop-up book whose rooms fold open one at a time.
 ## Journal
 
 Each room has one place you write: the cork board (bedroom), the mirror (bathroom), the fridge
-door (kitchen) and the diary on the bean bag (balcony). Click it when the room is in front to open
-its page: write an entry (Cmd/Ctrl+Enter saves), read older ones, or tear one out.
+door (kitchen) and the diary on the bean bag (balcony). Click it when the room is in front and the
+camera moves in on it, then opens a close-up (`components/Closeup.tsx`):
+
+- the cork board, mirror and fridge show your notes stuck on them (pins, tape, magnets); click +
+  or a note to lift it off and write; Cmd/Ctrl+Enter or "pin it" sticks it back on
+- the diary opens as a two-page spread: past pages listed on the left, today's page on the right
+- "tear out" crumples a note away; Esc puts a note back, then closes the close-up
 
 Entries are saved in this browser only (localStorage, `unfold.entries.v1`), through the async
 functions in `lib/journal.ts`, so moving them to a server later only means changing that file.

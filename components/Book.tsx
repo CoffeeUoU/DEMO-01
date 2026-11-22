@@ -104,6 +104,9 @@ function Hotspot({ hot, room, onPick }: { hot: Hot; room: number; onPick: (spot:
         e.stopPropagation();
         if (!live() || e.delta > 6) return;
         setHover(false);
+        const w = new THREE.Vector3();
+        e.object.getWorldPosition(w);
+        book.zoomAt = [w.x, w.y, w.z];
         onPick(hot.spot);
       }}
     >
@@ -284,6 +287,12 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
     const pitch = THREE.MathUtils.degToRad(8 + 24 * e);
     const dF = dirOf(gF);
     target.set(L / 2 + (dF[0] * 0.45 - L / 2) * e, H / 2 + (0.5 - H / 2) * e, dF[2] * 0.45 * e);
+    // moving in on a journal spot
+    book.zoom += (book.zoomTarget - book.zoom) * (1 - Math.exp(-dt * 6));
+    const zm = smooth(book.zoom);
+    target.x += (book.zoomAt[0] - target.x) * zm;
+    target.y += (book.zoomAt[1] - target.y) * zm;
+    target.z += (book.zoomAt[2] - target.z) * zm;
     camera.position.set(target.x + Math.cos(yaw) * Math.cos(pitch) * 10, target.y + Math.sin(pitch) * 10, target.z + Math.sin(yaw) * Math.cos(pitch) * 10);
     camera.lookAt(target);
     // tall enough for the folded page stacks, which rise well above the open room
@@ -291,7 +300,7 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
     const narrow = size.width < 640;
     const viewW = (narrow ? 1.35 : 1.9) + (narrow ? 1.0 : 1.2) * e;
     const ortho = camera as THREE.OrthographicCamera;
-    ortho.zoom = Math.min(size.height / viewH, size.width / viewW);
+    ortho.zoom = Math.min(size.height / viewH, size.width / viewW) * (1 + 2.6 * zm);
     ortho.updateProjectionMatrix();
   });
 

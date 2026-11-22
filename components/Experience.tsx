@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows } from "@react-three/drei";
 import Book from "./Book";
-import JournalPanel from "./JournalPanel";
+import Closeup from "./Closeup";
 import { SPOTS } from "@/lib/spots";
 import { HandArrow, HandUnderline } from "./Hand";
 import { N, logicalOf, physicalOf } from "@/lib/fold";
@@ -108,7 +108,14 @@ export default function Experience() {
       <div className="canvas-wrap" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onDoubleClick={() => setBookOpen(!open)}>
         {tex && (
           <Canvas orthographic flat linear dpr={[1, 2]} camera={{ position: [0, 2, 10], zoom: 200, near: 0.1, far: 100 }} gl={{ alpha: true, antialias: true }}>
-            <Book tex={tex} onSpot={(li, spot) => setWriting({ room: ROOMS[li].name, spot })} />
+            <Book
+              tex={tex}
+              onSpot={(li, spot) => {
+                // move in on the spot, then open its close-up
+                book.zoomTarget = 1;
+                setTimeout(() => setWriting({ room: ROOMS[li].name, spot }), 380);
+              }}
+            />
             <ContactShadows position={[0, -0.04, 0]} scale={5} resolution={512} far={1.4} blur={2.4} opacity={0.32} color="#2a2350" frames={Infinity} />
           </Canvas>
         )}
@@ -116,7 +123,7 @@ export default function Experience() {
       </div>
 
       <button
-        className={`arrow arrow-left ${open ? "" : "is-off"}`}
+        className={`arrow arrow-left ${open ? "" : "is-off"} ${writing ? "is-hidden" : ""}`}
         aria-label={room === 0 ? "Close the book" : "Previous room"}
         onClick={() => (room === 0 ? setBookOpen(false) : goTo(room - 1))}
         disabled={!open}
@@ -142,7 +149,15 @@ export default function Experience() {
         )}
       </footer>
       {writing && SPOTS[writing.room]?.[writing.spot] && (
-        <JournalPanel room={writing.room} spotKey={writing.spot} spot={SPOTS[writing.room][writing.spot]} onClose={() => setWriting(null)} />
+        <Closeup
+          room={writing.room}
+          spotKey={writing.spot}
+          spot={SPOTS[writing.room][writing.spot]}
+          onClose={() => {
+            setWriting(null);
+            book.zoomTarget = 0;
+          }}
+        />
       )}
     </main>
   );

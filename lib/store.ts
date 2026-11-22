@@ -11,4 +11,9 @@ export const book = {
   open: 0,
   openTarget: 0,
   dragging: false,
+  /** 0..1, how far the camera has moved in on a journal spot */
+  zoom: 0,
+  zoomTarget: 0,
+  /** world position of the spot being zoomed into */
+  zoomAt: [0, 0.5, 0] as [number, number, number],
 };
