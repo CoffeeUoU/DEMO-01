@@ -1964,7 +1964,8 @@ const balcony: Room = {
           s.line(hx, hy, hx + 0.003 * u, hy + 0.035 * u, { w: 1.7, mask: true });
         }
         // a small diary left lying on the seat: cover, page edges, elastic band, ribbon, a heart
-        const D = (dx: number, dy: number): Pt => [x + dx * u, y + dy * u];
+        // drawn 1.5x around its middle so it's an easy thing to tap
+        const D = (dx: number, dy: number): Pt => [x + (0.11 + (dx - 0.11) * 1.5) * u, y + (-0.14 + (dy + 0.14) * 1.5) * u];
         const pagesEdge: Pt[] = [D(0.035, -0.135), D(0.135, -0.18), D(0.185, -0.15), D(0.185, -0.137), D(0.085, -0.092), D(0.035, -0.122)];
         solid(pagesEdge, "#ffffff", 1.8);
         for (const k of [0.4, 0.7]) s.line(...D(0.085, -0.105 + k * 0.012), ...D(0.185, -0.15 + k * 0.012), { w: 0.9, alpha: 0.6 });
@@ -1976,7 +1977,7 @@ const balcony: Room = {
         const hp: Pt[] = [];
         for (let i = 0; i <= 20; i++) {
           const a = (i / 20) * Math.PI * 2;
-          hp.push(D(0.085 + 16 * Math.sin(a) ** 3 * 0.0009, -0.147 - (13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a)) * 0.0006));
+          hp.push(D(0.085 + 16 * Math.sin(a) ** 3 * 0.0011, -0.147 - (13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a)) * 0.00075));
         }
         s.stroke(hp, { w: 1.2 });
       });

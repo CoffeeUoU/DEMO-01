@@ -80,35 +80,73 @@ function Hotspot({ hot, room, onPick }: { hot: Hot; room: number; onPick: (spot:
       }),
     [],
   );
+  // a hand-drawn dashed ring around the spot that breathes, so you know you can tap it
+  const ring = useMemo(() => {
+    const pts: THREE.Vector3[] = [];
+    const rx = hot.w / 2 + 0.018;
+    const ry = hot.h / 2 + 0.018;
+    for (let i = 0; i <= 48; i++) {
+      const a = (i / 48) * Math.PI * 2.04;
+      const wob = 1 + 0.03 * Math.sin(a * 3 + hot.w * 40);
+      pts.push(new THREE.Vector3(Math.cos(a) * rx * wob, Math.sin(a) * ry * wob, 0.002));
+    }
+    return pts;
+  }, [hot.w, hot.h]);
+  const ringRef = useRef<Line2 | null>(null);
+  const group = useRef<THREE.Group>(null);
   const hover = useRef(false);
   const live = () => book.open > 0.97 && focusOf(room, book.f) > 0.97 && !book.dragging;
   useFrame(({ clock }) => {
     const on = live();
-    const want = !on ? 0 : hover.current ? 0.16 : 0.035 + 0.035 * Math.sin(clock.elapsedTime * 2.2);
-    mat.opacity += (want - mat.opacity) * 0.15;
+    const t = clock.elapsedTime;
+    const breathe = 0.5 + 0.5 * Math.sin(t * 2.4);
+    mat.opacity += ((!on ? 0 : hover.current ? 0.14 : 0.03 + 0.04 * breathe) - mat.opacity) * 0.15;
+    const r = ringRef.current;
+    if (r) {
+      const want = !on ? 0 : hover.current ? 1 : 0.35 + 0.45 * breathe;
+      r.material.opacity += (want - r.material.opacity) * 0.15;
+      r.visible = r.material.opacity > 0.01;
+      r.material.dashOffset = -t * 0.04;
+    }
+    if (group.current) {
+      const s = hover.current ? 1.04 : 1 + 0.025 * breathe * (on ? 1 : 0);
+      group.current.scale.setScalar(s);
+    }
   });
   const setHover = (v: boolean) => {
     hover.current = v && live();
     document.body.style.cursor = hover.current ? "pointer" : "";
   };
   return (
-    <mesh
-      position={hot.pos}
-      material={mat}
-      onPointerOver={(e: ThreeEvent<PointerEvent>) => {
-        e.stopPropagation();
-        setHover(true);
-      }}
-      onPointerOut={() => setHover(false)}
-      onClick={(e: ThreeEvent<MouseEvent>) => {
-        e.stopPropagation();
-        if (!live() || e.delta > 6) return;
-        setHover(false);
-        onPick(hot.spot);
-      }}
-    >
-      <planeGeometry args={[hot.w, hot.h]} />
-    </mesh>
+    <group ref={group} position={hot.pos}>
+      <mesh
+        material={mat}
+        onPointerOver={(e: ThreeEvent<PointerEvent>) => {
+          e.stopPropagation();
+          setHover(true);
+        }}
+        onPointerOut={() => setHover(false)}
+        onClick={(e: ThreeEvent<MouseEvent>) => {
+          e.stopPropagation();
+          if (!live() || e.delta > 6) return;
+          setHover(false);
+          onPick(hot.spot);
+        }}
+      >
+        <planeGeometry args={[hot.w + 0.03, hot.h + 0.03]} />
+      </mesh>
+      <Line
+        ref={(el) => void (ringRef.current = el as unknown as Line2 | null)}
+        points={ring}
+        color={INK_HEX}
+        lineWidth={1.8}
+        dashed
+        dashSize={0.022}
+        gapSize={0.014}
+        transparent
+        opacity={0}
+      />
+    </group>
   );
 }
 
