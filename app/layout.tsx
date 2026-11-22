@@ -5,7 +5,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "unfold — a journal house",
-  description: "A pop-up book of rooms, drawn in blue ink.",
+  description: "A hand-drawn pop-up journal: a book of rooms that fold open.",
 };
 
 export const viewport: Viewport = {

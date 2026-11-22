@@ -67,56 +67,6 @@ body {
   stroke-linejoin: round;
 }
 
-.topright {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.style-toggles {
-  display: flex;
-  gap: 8px;
-}
-
-.chip {
-  font-family: var(--hand);
-  font-size: 19px;
-  color: var(--ink);
-  background: transparent;
-  border: 1.4px dashed var(--ink-soft);
-  border-radius: 14px 255px 15px 225px / 225px 15px 255px 15px;
-  padding: 1px 12px 3px;
-  cursor: pointer;
-}
-
-.chip.on,
-.chip:hover {
-  border-style: solid;
-  border-color: var(--ink);
-}
-
-.counter {
-  font-size: 22px;
-  opacity: 0.7;
-}
-
-.hand-btn {
-  font-family: var(--hand);
-  font-size: 22px;
-  color: var(--ink);
-  background: transparent;
-  border: 1.8px solid var(--ink);
-  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-  padding: 3px 18px 5px;
-  cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease;
-}
-
-.hand-btn:hover {
-  background: rgba(43, 31, 214, 0.06);
-  transform: rotate(-1.2deg);
-}
-
 .canvas-wrap {
   position: relative;
   min-height: 0;
@@ -203,31 +153,6 @@ body {
   .wordmark {
     font-size: 32px;
   }
-  .style-toggles {
-  display: flex;
-  gap: 8px;
-}
-
-.chip {
-  font-family: var(--hand);
-  font-size: 19px;
-  color: var(--ink);
-  background: transparent;
-  border: 1.4px dashed var(--ink-soft);
-  border-radius: 14px 255px 15px 225px / 225px 15px 255px 15px;
-  padding: 1px 12px 3px;
-  cursor: pointer;
-}
-
-.chip.on,
-.chip:hover {
-  border-style: solid;
-  border-color: var(--ink);
-}
-
-.counter {
-    display: none;
-  }
   .caption {
     padding: 0 84px 24px;
   }
@@ -250,6 +175,7 @@ body {
     width: 58px;
     height: 42px;
   }
+
 }
 
 /* ---- journal close-ups ------------------------------------------------- */
@@ -741,6 +667,7 @@ body {
     grid-template-columns: 1fr;
     grid-template-rows: 34% 0 1fr;
   }
+
 }
 
 /* tear-out: the page crumples up and fades away */
@@ -798,128 +725,6 @@ body {
   vector-effect: non-scaling-stroke;
 }
 
-.journal-paper-when {
-  font-size: 19px;
-  opacity: 0.6;
-  margin-bottom: 4px;
-}
-
-.journal-paper textarea {
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  font-family: var(--hand);
-  font-size: 24px;
-  line-height: 32px;
-  color: var(--ink);
-  background: transparent;
-  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 31px, rgba(43, 31, 214, 0.18) 31px, rgba(43, 31, 214, 0.18) 32px);
-  background-attachment: local;
-  border: 0;
-  outline: none;
-  resize: none;
-  padding: 0 2px;
-}
-
-.journal-paper textarea::placeholder {
-  color: rgba(43, 31, 214, 0.38);
-}
-
-.journal-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: 12px;
-}
-
-.journal-spacer {
-  flex: 1;
-}
-
-.journal-error {
-  font-size: 20px;
-  color: #c2412d;
-}
-
-.journal-saved {
-  font-size: 20px;
-  opacity: 0.6;
-}
-
-.journal-confirm,
-.journal-tear,
-.journal-confirm button {
-  font-family: var(--hand);
-  font-size: 20px;
-  color: var(--ink);
-}
-
-.journal-tear,
-.journal-confirm button {
-  background: transparent;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  text-decoration: underline dotted;
-}
-
-@media (max-width: 640px) {
-  .journal {
-    padding: 18px 14px 16px;
-    gap: 12px;
-  }
-  .journal-title {
-    font-size: 40px;
-  }
-  .journal-body {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-    gap: 14px;
-  }
-  .journal-paper {
-    grid-column: 1;
-    width: 100%;
-  }
-  .journal-notes {
-    flex-direction: row;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-  .journal-note {
-    width: 112px;
-    height: 112px;
-  }
-  .journal-paper {
-    padding: 16px 18px 14px;
-  }
-}
-
-/* save: a hand-drawn push pin that presses in */
-.pin-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 6px 2px 2px;
-  font-family: var(--hand);
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--ink);
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-
-.pin-btn span {
-  background-image: linear-gradient(transparent 62%, rgba(246, 183, 170, 0.55) 62%, rgba(246, 183, 170, 0.55) 90%, transparent 90%);
-  padding: 0 2px;
-}
-
-.pin-icon {
-  overflow: visible;
-  transform-origin: 50% 90%;
-  transition: transform 0.18s ease;
-}
-
 .pin-body {
   fill: #f6a99a;
   stroke: var(--ink);
@@ -938,28 +743,4 @@ body {
 .pin-shine {
   stroke: #fff;
   stroke-width: 2;
-}
-
-.pin-shadow {
-  fill: rgba(40, 32, 90, 0.18);
-  transition: transform 0.18s ease;
-  transform-origin: 25px 52px;
-}
-
-.pin-btn:hover .pin-icon {
-  transform: rotate(-10deg) translateY(-2px);
-}
-
-.pin-btn:hover .pin-shadow {
-  transform: scale(0.8);
-}
-
-.pin-btn.pressed .pin-icon {
-  animation: pin-press 0.38s ease;
-}
-
-@keyframes pin-press {
-  0% { transform: rotate(-10deg) translateY(-4px); }
-  45% { transform: rotate(0deg) translateY(7px) scaleY(0.92); }
-  100% { transform: rotate(0deg) translateY(0); }
 }

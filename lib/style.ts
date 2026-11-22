@@ -1,10 +1,4 @@
-// Global drawing style, read while the textures are being drawn.
-//   pen   – "sketchy" (loose, hand-drawn) or "clean" (steady) furniture lines
-//   color – false: blue ink on white paper; true: soft pastel washes
-// The site uses the loose pen with a little colour; the other options remain for experiments.
-
-export type Pen = "sketchy" | "clean";
-export const look: { pen: Pen; color: boolean } = { pen: "sketchy", color: true };
+// Colour helpers for the drawings: everything is ink line art with a soft pastel wash.
 
 /** How far the pastel palette is pulled towards white, so the colour stays a hint. */
 const SOFTEN = 0.25;
@@ -16,8 +10,8 @@ export function soften(hex: string, amt = SOFTEN) {
   return `#${((ch((n >> 16) & 255) << 16) | (ch((n >> 8) & 255) << 8) | ch(n & 255)).toString(16).padStart(6, "0")}`;
 }
 
-/** A colour in the coloured version, plain paper (or `mono`) in the ink-only one. */
-export const tint = (c: string, mono = "#ffffff") => (look.color ? soften(c) : mono);
+/** A wash colour, softened so the colour stays a hint. */
+export const tint = (c: string) => soften(c);
 
 /** Darken a hex colour (k < 1), for the shaded sides of coloured furniture. */
 export function shade(hex: string, k: number) {

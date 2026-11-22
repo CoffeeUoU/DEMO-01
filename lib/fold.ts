@@ -8,7 +8,7 @@
 export const N = 4; // rooms (must match ROOMS in rooms.ts)
 export const L = 1; // page width (spine to outer edge)
 export const H = 1; // page height
-export const RIGHT_ANGLE = Math.PI / 2;
+const RIGHT_ANGLE = Math.PI / 2;
 
 export const smooth = (x: number) => {
   const t = Math.min(1, Math.max(0, x));

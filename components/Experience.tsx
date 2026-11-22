@@ -11,7 +11,6 @@ import { N, logicalOf, physicalOf } from "@/lib/fold";
 import { ROOMS } from "@/lib/rooms";
 import { book } from "@/lib/store";
 import { buildTextures, type BookTextures } from "@/lib/textures";
-import { look } from "@/lib/style";
 
 const FONT = "Caveat";
 
@@ -22,7 +21,7 @@ export default function Experience() {
   const [writing, setWriting] = useState<{ room: string; spot: string } | null>(null);
   const drag = useRef({ x: 0, startX: 0, active: false });
 
-  // Draw every surface once the handwriting font is ready (loose pen, a little colour).
+  // Draw every surface once the handwriting font is ready.
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -31,8 +30,6 @@ export default function Experience() {
       } catch {
         /* fall back to whatever cursive font is around */
       }
-      look.pen = "sketchy";
-      look.color = true;
       if (alive) setTex(buildTextures(`${FONT}, cursive`));
     })();
     return () => {

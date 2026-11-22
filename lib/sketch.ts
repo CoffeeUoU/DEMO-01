@@ -1,7 +1,7 @@
 // A tiny hand-drawn renderer for 2D canvases.
 //
 // Every surface is drawn on three canvases:
-//   ink  – blue-pen line art (only alpha is used)
+//   ink  – pen line art (only alpha is used)
 //   wash – watercolour fills on white, multiplied in as the room "colours in"
 //   mask – which pixels are paper at all (used for pop-up cut-outs)
 // bake() packs them into one RGBA texture: rgb = wash, a = mask ? 0.5 + ink/2 : 0.
@@ -9,9 +9,9 @@
 import * as THREE from "three";
 
 export type Pt = [number, number];
-export type RNG = () => number;
+type RNG = () => number;
 
-export function rng(seed: number): RNG {
+function rng(seed: number): RNG {
   let a = seed >>> 0 || 1;
   return () => {
     a = (a + 0x6d2b79f5) | 0;
