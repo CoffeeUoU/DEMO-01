@@ -1,30 +1,35 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { addEntry, deleteEntry, listEntries, type Entry } from "@/lib/journal";
+import { addEntry, deleteEntry, listEntries, updateEntry, type Entry } from "@/lib/journal";
 import type { Spot } from "@/lib/spots";
 
-function when(ms: number) {
-  const d = new Date(ms);
-  const day = d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).toLowerCase().replace(",", "");
-  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }).toLowerCase();
-  return `${day} · ${time}`;
-}
+const day = (ms: number) => new Date(ms).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).toLowerCase().replace(",", "");
+const time = (ms: number) => new Date(ms).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }).toLowerCase();
 
-/** The paper sheet that opens when you click a room's journal spot. */
+/**
+ * The journal for one spot: its name as a heading, past notes down the left (a blank page with a
+ * + on top), and a tall lined page to write on or to re-read and edit a note.
+ */
 export default function JournalPanel({ room, spotKey, spot, onClose }: { room: string; spotKey: string; spot: Spot; onClose: () => void }) {
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [current, setCurrent] = useState<string | null>(null); // null = a new, blank page
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
-  const [tearing, setTearing] = useState<string | null>(null);
+  const [tearing, setTearing] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const area = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     listEntries(room, spotKey).then(setEntries);
-    const t = setTimeout(() => area.current?.focus(), 250);
-    return () => clearTimeout(t);
   }, [room, spotKey]);
+
+  const focusSoon = () => setTimeout(() => area.current?.focus(), 60);
+  useEffect(() => {
+    const t = setTimeout(() => area.current?.focus(), 280);
+    return () => clearTimeout(t);
+  }, []);
 
   const close = () => {
     setLeaving(true);
@@ -40,6 +45,15 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const open = (e: Entry | null) => {
+    setCurrent(e?.id ?? null);
+    setDraft(e?.text ?? "");
+    setError("");
+    setTearing(false);
+    setSaved(false);
+    focusSoon();
+  };
+
   const save = async () => {
     const text = draft.trim();
     if (!text) {
@@ -47,42 +61,72 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
       area.current?.focus();
       return;
     }
-    const e = await addEntry(room, spotKey, text);
-    setEntries((list) => [e, ...list]);
-    setDraft("");
+    if (current) {
+      await updateEntry(current, text);
+      setEntries((list) => list.map((e) => (e.id === current ? { ...e, text } : e)));
+      setSaved(true);
+    } else {
+      const e = await addEntry(room, spotKey, text);
+      setEntries((list) => [e, ...list]);
+      setDraft("");
+      focusSoon();
+    }
   };
 
-  const tear = async (id: string) => {
-    await deleteEntry(id);
-    setEntries((list) => list.filter((e) => e.id !== id));
-    setTearing(null);
+  const tear = async () => {
+    if (!current) return;
+    await deleteEntry(current);
+    setEntries((list) => list.filter((e) => e.id !== current));
+    open(null);
   };
+
+  const editing = entries.find((e) => e.id === current);
 
   return (
-    <div className={`journal-backdrop ${leaving ? "leaving" : ""}`} onPointerDown={(e) => e.target === e.currentTarget && close()}>
-      <section className="journal-sheet" role="dialog" aria-label={spot.title}>
-        <header className="journal-head">
-          <div>
-            <div className="journal-room">{room}</div>
-            <h2 className="journal-title">{spot.title}</h2>
-          </div>
-          <button className="journal-x" aria-label="Close" onClick={close}>
-            <svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true">
-              <path d="M10 10 C 18 17, 24 24, 31 30" />
-              <path d="M30 9 C 23 17, 17 23, 9 31" />
+    <div className={`journal ${leaving ? "leaving" : ""}`}>
+      <header className="journal-head">
+        <h2 className="journal-title">{spot.title}</h2>
+        <span className="journal-room">in the {room}</span>
+        <button className="journal-x" aria-label="Close" onClick={close}>
+          <svg viewBox="0 0 40 40" width="32" height="32" aria-hidden="true">
+            <path d="M10 10 C 18 17, 24 24, 31 30" />
+            <path d="M30 9 C 23 17, 17 23, 9 31" />
+          </svg>
+        </button>
+      </header>
+
+      <div className="journal-body">
+        <nav className="journal-notes" aria-label="Past notes">
+          <button className={`journal-note journal-new ${current === null ? "on" : ""}`} onClick={() => open(null)} aria-label="New page">
+            <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+              <path d="M20 8 C 20.5 16, 19.5 24, 20 32" />
+              <path d="M8 20.5 C 16 19.5, 24 20.5, 32 20" />
             </svg>
           </button>
-        </header>
+          {entries.map((e, i) => (
+            <button
+              key={e.id}
+              className={`journal-note ${current === e.id ? "on" : ""}`}
+              style={{ rotate: `${((i * 37) % 5) * 0.6 - 1.2}deg` }}
+              onClick={() => open(e)}
+            >
+              <span className="journal-note-day">{day(e.createdAt)}</span>
+              <span className="journal-note-time">{time(e.createdAt)}</span>
+              <span className="journal-note-text">{e.text}</span>
+            </button>
+          ))}
+        </nav>
 
-        <div className="journal-compose">
+        <section className="journal-paper">
+          <div className="journal-paper-when">{editing ? `${day(editing.createdAt)} · ${time(editing.createdAt)}` : "a new page"}</div>
           <textarea
             ref={area}
             value={draft}
-            rows={4}
             placeholder={spot.prompt}
             onChange={(e) => {
               setDraft(e.target.value);
               if (error) setError("");
+              if (saved) setSaved(false);
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -92,35 +136,25 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
             }}
           />
           <div className="journal-actions">
+            {current &&
+              (tearing ? (
+                <span className="journal-confirm">
+                  tear it out? <button onClick={tear}>yes</button> <button onClick={() => setTearing(false)}>keep</button>
+                </span>
+              ) : (
+                <button className="journal-tear" onClick={() => setTearing(true)}>
+                  tear out
+                </button>
+              ))}
+            <span className="journal-spacer" />
             {error && <span className="journal-error">{error}</span>}
+            {saved && !error && <span className="journal-saved">saved</span>}
             <button className="hand-btn" onClick={save}>
-              {spot.save}
+              {current ? "save changes" : spot.save}
             </button>
           </div>
-        </div>
-
-        <div className="journal-list">
-          {entries.length === 0 && <p className="journal-empty">{spot.empty}</p>}
-          {entries.map((e, i) => (
-            <article key={e.id} className="journal-entry" style={{ rotate: `${((i * 37) % 5) * 0.35 - 0.7}deg` }}>
-              <div className="journal-when">
-                {when(e.createdAt)}
-                {tearing === e.id ? (
-                  <span className="journal-confirm">
-                    tear it out?{" "}
-                    <button onClick={() => tear(e.id)}>yes</button> <button onClick={() => setTearing(null)}>keep</button>
-                  </span>
-                ) : (
-                  <button className="journal-tear" onClick={() => setTearing(e.id)}>
-                    tear out
-                  </button>
-                )}
-              </div>
-              <p className="journal-text">{e.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
