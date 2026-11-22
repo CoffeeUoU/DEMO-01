@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { addEntry, deleteEntry, listEntries, updateEntry, type Entry } from "@/lib/journal";
 import type { Spot } from "@/lib/spots";
+import Crumple from "./Crumple";
 
 const day = (ms: number) => new Date(ms).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).toLowerCase().replace(",", "");
 const time = (ms: number) => new Date(ms).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }).toLowerCase();
@@ -16,10 +17,11 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
   const [current, setCurrent] = useState<string | null>(null); // null = a new, blank page
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
-  const [tearing, setTearing] = useState(false);
+  const [crumple, setCrumple] = useState<{ rect: DOMRect; text: string } | null>(null);
   const [saved, setSaved] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const area = useRef<HTMLTextAreaElement>(null);
+  const paper = useRef<HTMLElement>(null);
 
   useEffect(() => {
     listEntries(room, spotKey).then(setEntries);
@@ -49,7 +51,6 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
     setCurrent(e?.id ?? null);
     setDraft(e?.text ?? "");
     setError("");
-    setTearing(false);
     setSaved(false);
     focusSoon();
   };
@@ -73,8 +74,10 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
     }
   };
 
+  // tear the page out: it crumples into a ball and rolls away, and a fresh page takes its place
   const tear = async () => {
-    if (!current) return;
+    if (!current || !paper.current) return;
+    setCrumple({ rect: paper.current.getBoundingClientRect(), text: draft });
     await deleteEntry(current);
     setEntries((list) => list.filter((e) => e.id !== current));
     open(null);
@@ -86,7 +89,6 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
     <div className={`journal ${leaving ? "leaving" : ""}`}>
       <header className="journal-head">
         <h2 className="journal-title">{spot.title}</h2>
-        <span className="journal-room">in the {room}</span>
         <button className="journal-x" aria-label="Close" onClick={close}>
           <svg viewBox="0 0 40 40" width="32" height="32" aria-hidden="true">
             <path d="M10 10 C 18 17, 24 24, 31 30" />
@@ -117,8 +119,8 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
           ))}
         </nav>
 
-        <section className="journal-paper">
-          <div className="journal-paper-when">{editing ? `${day(editing.createdAt)} · ${time(editing.createdAt)}` : "a new page"}</div>
+        <section ref={paper} className={`journal-paper ${crumple ? "refilling" : ""}`}>
+          <div className="journal-paper-when">{editing ? `${day(editing.createdAt)} · ${time(editing.createdAt)}` : "\u00a0"}</div>
           <textarea
             ref={area}
             value={draft}
@@ -136,16 +138,11 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
             }}
           />
           <div className="journal-actions">
-            {current &&
-              (tearing ? (
-                <span className="journal-confirm">
-                  tear it out? <button onClick={tear}>yes</button> <button onClick={() => setTearing(false)}>keep</button>
-                </span>
-              ) : (
-                <button className="journal-tear" onClick={() => setTearing(true)}>
-                  tear out
-                </button>
-              ))}
+            {current && (
+              <button className="journal-tear" onClick={tear}>
+                tear out
+              </button>
+            )}
             <span className="journal-spacer" />
             {error && <span className="journal-error">{error}</span>}
             {saved && !error && <span className="journal-saved">saved</span>}
@@ -155,6 +152,7 @@ export default function JournalPanel({ room, spotKey, spot, onClose }: { room: s
           </div>
         </section>
       </div>
+      {crumple && <Crumple rect={crumple.rect} text={crumple.text} onDone={() => setCrumple(null)} />}
     </div>
   );
 }
