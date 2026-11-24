@@ -230,6 +230,73 @@ function MiniPine3D({ pos, scale = 1 }: { pos: [number, number, number]; scale?:
   );
 }
 
+/** Cute plump 3D winter robin perched on a snowy branch. */
+function WinterRobin3D({ pos, rotY }: { pos: [number, number, number]; rotY: number }) {
+  return (
+    <group position={pos} rotation={[0, rotY, 0]}>
+      {/* Plump body */}
+      <mesh position={[0, 0.022, 0]} scale={[1.0, 0.92, 1.25]}>
+        <sphereGeometry args={[0.022, 10, 10]} />
+        <BrightMat color="#7d6e68" boost={0.30} />
+      </mesh>
+      {/* Warm red-orange breast */}
+      <mesh position={[0, 0.020, 0.014]} scale={[0.82, 0.78, 0.72]}>
+        <sphereGeometry args={[0.018, 10, 10]} />
+        <BrightMat color="#f26b4e" boost={0.42} />
+      </mesh>
+      {/* Little head & beak */}
+      <mesh position={[0, 0.044, 0.014]}>
+        <sphereGeometry args={[0.014, 10, 10]} />
+        <BrightMat color="#746660" boost={0.30} />
+      </mesh>
+      <mesh position={[0, 0.044, 0.029]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.004, 0.012, 6]} />
+        <BrightMat color="#ffd266" boost={0.45} />
+      </mesh>
+      {/* Tail feather */}
+      <mesh position={[0, 0.024, -0.028]} rotation={[-0.35, 0, 0]}>
+        <boxGeometry args={[0.012, 0.005, 0.028]} />
+        <BrightMat color="#5c514d" boost={0.28} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Cozy snow-topped wooden birdhouse hanging from a winter bough. */
+function Birdhouse3D({ pos, rotY }: { pos: [number, number, number]; rotY: number }) {
+  return (
+    <group position={pos} rotation={[0, rotY, 0]}>
+      {/* Hanging string */}
+      <mesh position={[0, 0.055, 0]}>
+        <cylinderGeometry args={[0.0025, 0.0025, 0.06, 5]} />
+        <meshBasicMaterial color={INK_COLOR} />
+      </mesh>
+      {/* House body */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[0.052, 0.058, 0.048]} />
+        <BrightMat color="#e2b98f" boost={0.32} />
+      </mesh>
+      <mesh position={[0, 0, 0]} scale={1.06} material={OUTLINE_MAT}>
+        <boxGeometry args={[0.052, 0.058, 0.048]} />
+      </mesh>
+      {/* Snow-covered roof */}
+      <mesh position={[0, 0.044, 0]} rotation={[0, Math.PI / 4, 0]}>
+        <coneGeometry args={[0.050, 0.036, 4]} />
+        <BrightMat color="#f6fbff" boost={0.46} />
+      </mesh>
+      {/* Dark round entrance & little perch */}
+      <mesh position={[0, 0.004, 0.025]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.011, 0.011, 0.004, 10]} />
+        <meshBasicMaterial color={INK_COLOR} />
+      </mesh>
+      <mesh position={[0, -0.014, 0.032]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.003, 0.003, 0.018, 6]} />
+        <BrightMat color="#c89b6e" boost={0.30} />
+      </mesh>
+    </group>
+  );
+}
+
 export default function SeasonTree3D({ season }: { season: Season }) {
   const canopyRef = useRef<THREE.Group | null>(null);
   const swingRef = useRef<THREE.Group | null>(null);
@@ -239,6 +306,7 @@ export default function SeasonTree3D({ season }: { season: Season }) {
   const lanternRRef = useRef<THREE.Group | null>(null);
   const smokeRefs = useRef<(THREE.Mesh | null)[]>([]);
   const particleRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const fairyRefs = useRef<(THREE.Mesh | null)[]>([]);
 
   const branchGeos = useMemo(() => BRANCH_DEFS.map((b) => createTaperedBranch(b.pts, b.r0, b.r1, 12, 8)), []);
 
@@ -298,25 +366,28 @@ export default function SeasonTree3D({ season }: { season: Season }) {
     const out: ClusterSpec[] = [];
 
     if (season === "spring") {
+      // Full, lush sakura blossom canopy matching summer's richness
       const cols = ["#ffd6e5", "#ffc2d9", "#ffe8f1", "#ffb3cf", "#daf4c4"];
       const anchors: [number, number, number, number][] = [
-        [-0.23, 0.56, 0.10, 0.135],
-        [0.24, 0.55, 0.10, 0.135],
-        [-0.19, 0.62, -0.14, 0.13],
-        [0.20, 0.63, -0.13, 0.13],
-        [-0.08, 0.74, 0.06, 0.145],
-        [0.10, 0.75, -0.05, 0.145],
-        [0.01, 0.80, 0.01, 0.15],
-        [-0.14, 0.64, 0.14, 0.115],
-        [0.15, 0.64, 0.14, 0.115],
-        [0.0, 0.66, -0.13, 0.12],
+        [-0.25, 0.55, 0.11, 0.16],
+        [0.26, 0.54, 0.11, 0.16],
+        [-0.21, 0.63, -0.15, 0.155],
+        [0.22, 0.64, -0.14, 0.155],
+        [-0.09, 0.76, 0.07, 0.17],
+        [0.11, 0.77, -0.06, 0.17],
+        [0.01, 0.83, 0.01, 0.18],
+        [-0.15, 0.65, 0.15, 0.14],
+        [0.17, 0.65, 0.15, 0.14],
+        [0.0, 0.66, -0.16, 0.15],
+        [0.0, 0.56, 0.13, 0.138],
+        [0.0, 0.70, 0.0, 0.155],
       ];
       for (const [ax, ay, az, rad] of anchors) {
         for (let k = 0; k < 3; k++) {
-          const sc = rad * (0.72 + r() * 0.42);
+          const sc = rad * (0.74 + r() * 0.42);
           out.push({
-            pos: [ax + (r() - 0.5) * 0.12, ay + (r() - 0.5) * 0.08, az + (r() - 0.5) * 0.12],
-            scale: [sc * 1.15, sc * 0.88, sc * 1.12],
+            pos: [ax + (r() - 0.5) * 0.14, ay + (r() - 0.5) * 0.09, az + (r() - 0.5) * 0.14],
+            scale: [sc * 1.18, sc * 0.92, sc * 1.14],
             rot: [r() * 3, r() * 3, r() * 3],
             color: cols[Math.floor(r() * cols.length)],
             phase: r() * 6.28,
@@ -352,24 +423,28 @@ export default function SeasonTree3D({ season }: { season: Season }) {
         }
       }
     } else if (season === "autumn") {
+      // Lush, full autumn maple & ginkgo canopy matching summer's fullness
       const cols = ["#ff9a5a", "#ffc45c", "#f57656", "#ffda75", "#fba95c"];
       const anchors: [number, number, number, number][] = [
-        [-0.24, 0.55, 0.11, 0.115],
-        [0.25, 0.54, 0.10, 0.11],
-        [-0.20, 0.62, -0.14, 0.11],
-        [0.21, 0.64, -0.13, 0.115],
-        [-0.08, 0.74, 0.06, 0.12],
-        [0.10, 0.75, -0.05, 0.12],
-        [0.01, 0.80, 0.01, 0.125],
-        [-0.14, 0.63, 0.13, 0.095],
-        [0.16, 0.63, 0.13, 0.095],
+        [-0.25, 0.55, 0.11, 0.158],
+        [0.26, 0.54, 0.11, 0.158],
+        [-0.21, 0.63, -0.15, 0.154],
+        [0.22, 0.64, -0.14, 0.154],
+        [-0.09, 0.76, 0.07, 0.168],
+        [0.11, 0.77, -0.06, 0.168],
+        [0.01, 0.83, 0.01, 0.178],
+        [-0.15, 0.65, 0.15, 0.14],
+        [0.17, 0.65, 0.15, 0.14],
+        [0.0, 0.66, -0.16, 0.148],
+        [0.0, 0.56, 0.13, 0.136],
+        [0.0, 0.70, 0.0, 0.152],
       ];
       for (const [ax, ay, az, rad] of anchors) {
-        for (let k = 0; k < 2; k++) {
-          const sc = rad * (0.72 + r() * 0.4);
+        for (let k = 0; k < 3; k++) {
+          const sc = rad * (0.74 + r() * 0.42);
           out.push({
-            pos: [ax + (r() - 0.5) * 0.10, ay + (r() - 0.5) * 0.07, az + (r() - 0.5) * 0.10],
-            scale: [sc * 1.15, sc * 0.82, sc * 1.1],
+            pos: [ax + (r() - 0.5) * 0.14, ay + (r() - 0.5) * 0.09, az + (r() - 0.5) * 0.14],
+            scale: [sc * 1.18, sc * 0.90, sc * 1.14],
             rot: [r() * 3, r() * 3, r() * 3],
             color: cols[Math.floor(r() * cols.length)],
             phase: r() * 6.28,
@@ -377,20 +452,98 @@ export default function SeasonTree3D({ season }: { season: Season }) {
         }
       }
     } else {
+      // Winter: layered rime-frost & sculpted fluffy snow pillows resting along the bare 3D boughs
       for (const b of BRANCH_DEFS.slice(5)) {
         const [sx, sy, sz] = b.snowPos;
-        const sc = 0.055 + r() * 0.032;
+        const sc = 0.055 + r() * 0.034;
         out.push({
-          pos: [sx, sy + 0.018, sz],
-          scale: [sc * 1.55, sc * 0.55, sc * 1.15],
+          pos: [sx, sy + 0.02, sz],
+          scale: [sc * 1.65, sc * 0.58, sc * 1.2],
           rot: [0, r() * 3, 0],
           color: "#ffffff",
+          phase: r() * 6.28,
+        });
+        // Subtle ice-blue rime frost puff beside the snow
+        out.push({
+          pos: [sx + (r() - 0.5) * 0.07, sy + 0.012, sz + (r() - 0.5) * 0.07],
+          scale: [sc * 0.95, sc * 0.45, sc * 0.9],
+          rot: [0, r() * 3, 0],
+          color: "#dff0ff",
           phase: r() * 6.28,
         });
       }
     }
     return out;
   }, [season]);
+
+  // Winter fairy string lights draped gracefully between the 3D boughs
+  const winterFairyLights = useMemo(() => {
+    const garlands: [[number, number, number], [number, number, number], number][] = [
+      [[-0.28, 0.52, 0.12], [-0.08, 0.68, 0.06], 6],
+      [[-0.08, 0.68, 0.06], [0.10, 0.69, -0.04], 5],
+      [[0.10, 0.69, -0.04], [0.29, 0.52, 0.11], 6],
+      [[-0.24, 0.58, -0.15], [0.01, 0.76, 0.02], 5],
+      [[0.01, 0.76, 0.02], [0.25, 0.59, -0.14], 5],
+      [[-0.22, 0.50, 0.10], [0.23, 0.50, 0.10], 7],
+    ];
+    const bulbs: { pos: [number, number, number]; color: string; phase: number }[] = [];
+    const wireGeos: THREE.BufferGeometry[] = [];
+    const cols = ["#ffe896", "#fff4c2", "#ffd278", "#ffe0a8"];
+    garlands.forEach(([a, b, count], gIdx) => {
+      const pts: THREE.Vector3[] = [];
+      for (let i = 0; i <= 10; i++) {
+        const u = i / 10;
+        const sag = Math.sin(u * Math.PI) * 0.055;
+        pts.push(
+          new THREE.Vector3(
+            a[0] + (b[0] - a[0]) * u,
+            a[1] + (b[1] - a[1]) * u - sag,
+            a[2] + (b[2] - a[2]) * u,
+          ),
+        );
+      }
+      const curve = new THREE.CatmullRomCurve3(pts);
+      wireGeos.push(new THREE.TubeGeometry(curve, 12, 0.0022, 5, false));
+      for (let k = 1; k < count; k++) {
+        const p = curve.getPointAt(k / count);
+        bulbs.push({
+          pos: [p.x, p.y - 0.006, p.z],
+          color: cols[(gIdx + k) % cols.length],
+          phase: gIdx * 1.3 + k * 0.9,
+        });
+      }
+    });
+    return { bulbs, wireGeos };
+  }, []);
+
+  // Winter red holly berry clusters & crystal icicles hanging from the boughs
+  const winterOrnaments = useMemo(() => {
+    const berries: [number, number, number][] = [
+      [-0.22, 0.53, 0.11],
+      [-0.12, 0.48, 0.07],
+      [0.16, 0.50, 0.09],
+      [0.26, 0.54, 0.11],
+      [-0.16, 0.60, -0.12],
+      [0.18, 0.62, -0.12],
+      [-0.06, 0.72, 0.05],
+      [0.08, 0.73, -0.04],
+      [0.02, 0.79, 0.02],
+      [-0.17, 0.63, 0.15],
+    ];
+    const icicles: [number, number, number, number][] = [
+      [-0.27, 0.49, 0.12, 0.065],
+      [-0.19, 0.46, 0.09, 0.052],
+      [-0.10, 0.42, 0.05, 0.045],
+      [0.13, 0.43, 0.06, 0.048],
+      [0.24, 0.48, 0.10, 0.068],
+      [0.30, 0.49, 0.12, 0.050],
+      [-0.23, 0.55, -0.16, 0.058],
+      [0.23, 0.56, -0.15, 0.060],
+      [-0.15, 0.60, 0.14, 0.045],
+      [0.18, 0.60, 0.15, 0.048],
+    ];
+    return { berries, icicles };
+  }, []);
 
   // Spring 3D flower field
   const springFlowers = useMemo(() => {
@@ -452,6 +605,14 @@ export default function SeasonTree3D({ season }: { season: Season }) {
     if (cloudGroupRef.current) cloudGroupRef.current.position.x = Math.sin(t * 0.35) * 0.04;
     if (lanternLRef.current) lanternLRef.current.rotation.z = Math.sin(t * 1.5) * 0.08;
     if (lanternRRef.current) lanternRRef.current.rotation.z = Math.sin(t * 1.5 + 1.2) * 0.08;
+
+    // Gentle twinkle on the winter fairy light bulbs
+    for (let i = 0; i < winterFairyLights.bulbs.length; i++) {
+      const m = fairyRefs.current[i];
+      if (!m) continue;
+      const pulse = 0.82 + 0.32 * Math.sin(t * 2.8 + winterFairyLights.bulbs[i].phase);
+      m.scale.setScalar(pulse);
+    }
 
     // Gentle rising chimney smoke puffs in autumn & winter
     for (let i = 0; i < 3; i++) {
@@ -859,6 +1020,71 @@ export default function SeasonTree3D({ season }: { season: Season }) {
               <pointLight position={[0, -0.12, 0]} color="#ffd578" intensity={0.8} distance={1.4} decay={2} />
             </group>
           ))}
+
+          {/* Draped 3D fairy string lights across the winter branches */}
+          <group>
+            {winterFairyLights.wireGeos.map((geo, i) => (
+              <mesh key={`w-${i}`} geometry={geo}>
+                <meshBasicMaterial color={INK_COLOR} />
+              </mesh>
+            ))}
+            {winterFairyLights.bulbs.map((b, i) => (
+              <group key={`b-${i}`} position={b.pos}>
+                <mesh
+                  ref={(el) => {
+                    fairyRefs.current[i] = el;
+                  }}
+                >
+                  <sphereGeometry args={[0.011, 8, 8]} />
+                  <meshBasicMaterial color={b.color} />
+                </mesh>
+                <mesh>
+                  <sphereGeometry args={[0.028, 8, 8]} />
+                  <meshBasicMaterial color={b.color} transparent opacity={0.28} depthWrite={false} />
+                </mesh>
+              </group>
+            ))}
+          </group>
+
+          {/* Crimson winter holly berry clusters & evergreen leaves */}
+          {winterOrnaments.berries.map(([bx, by, bz], i) => (
+            <group key={`berry-${i}`} position={[bx, by, bz]}>
+              <mesh position={[0, 0.008, 0]}>
+                <sphereGeometry args={[0.012, 8, 8]} />
+                <BrightMat color="#f05a5a" boost={0.44} />
+              </mesh>
+              <mesh position={[0.012, 0.002, 0.008]}>
+                <sphereGeometry args={[0.011, 8, 8]} />
+                <BrightMat color="#ff7266" boost={0.44} />
+              </mesh>
+              <mesh position={[-0.011, 0.003, 0.006]}>
+                <sphereGeometry args={[0.010, 8, 8]} />
+                <BrightMat color="#e84c52" boost={0.44} />
+              </mesh>
+              {/* Two tiny evergreen holly leaves */}
+              <mesh position={[-0.016, 0.014, -0.005]} rotation={[0.3, 0.4, 0.5]} scale={[1.4, 0.35, 0.7]}>
+                <sphereGeometry args={[0.015, 6, 6]} />
+                <BrightMat color="#5da37a" boost={0.34} />
+              </mesh>
+              <mesh position={[0.016, 0.014, -0.004]} rotation={[0.3, -0.4, -0.5]} scale={[1.4, 0.35, 0.7]}>
+                <sphereGeometry args={[0.015, 6, 6]} />
+                <BrightMat color="#6bb586" boost={0.34} />
+              </mesh>
+            </group>
+          ))}
+
+          {/* Glistening crystal 3D icicles hanging under the branches */}
+          {winterOrnaments.icicles.map(([ix, iy, iz, len], i) => (
+            <mesh key={`ice-${i}`} position={[ix, iy - len * 0.5, iz]} rotation={[Math.PI, 0, 0]}>
+              <coneGeometry args={[0.009, len, 6]} />
+              <BrightMat color="#d9f0ff" boost={0.55} opacity={0.86} />
+            </mesh>
+          ))}
+
+          {/* Cozy snow-topped wooden birdhouse + two perched winter robins */}
+          <Birdhouse3D pos={[0.13, 0.40, 0.06]} rotY={-0.35} />
+          <WinterRobin3D pos={[-0.16, 0.62, 0.14]} rotY={0.7} />
+          <WinterRobin3D pos={[0.08, 0.73, -0.04]} rotY={-0.5} />
         </>
       )}
 
