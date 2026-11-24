@@ -3,6 +3,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { DistantRidgeTrees3D, SeasonAirProps3D, SeasonGroundProps3D } from "./SeasonProps3D";
 
 export type Season = "spring" | "summer" | "autumn" | "winter";
 
@@ -327,6 +328,7 @@ export default function SeasonTree3D({
   const particlesGroupRef = useRef<THREE.Group | null>(null);
   const swingRef = useRef<THREE.Group | null>(null);
   const windmillRef = useRef<THREE.Group | null>(null);
+  const windmillBoostRef = useRef<number>(0);
   const cloudGroupRef = useRef<THREE.Group | null>(null);
   const lanternLRef = useRef<THREE.Group | null>(null);
   const lanternRRef = useRef<THREE.Group | null>(null);
@@ -671,8 +673,9 @@ export default function SeasonTree3D({
     });
   }, []);
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
     const t = clock.elapsedTime;
+    const dt = Math.min(0.05, delta);
     const prog = progressRef ? progressRef.current : 1;
 
     // Layer 1 (Hero): Central 3D trunk & canopy ride the folding crease from the start so the transition is never empty!
@@ -738,7 +741,10 @@ export default function SeasonTree3D({
       canopyRef.current.rotation.x = Math.cos(t * 0.85) * 0.016;
     }
     if (swingRef.current) swingRef.current.rotation.x = Math.sin(t * 1.65) * 0.14;
-    if (windmillRef.current) windmillRef.current.rotation.z = -t * 2.2;
+    if (windmillBoostRef.current > 0) windmillBoostRef.current = Math.max(0, windmillBoostRef.current - dt);
+    if (windmillRef.current) {
+      windmillRef.current.rotation.z -= dt * (2.2 + windmillBoostRef.current * 4.5);
+    }
     if (lanternLRef.current) lanternLRef.current.rotation.z = Math.sin(t * 1.5) * 0.08;
     if (lanternRRef.current) lanternRRef.current.rotation.z = Math.sin(t * 1.5 + 1.2) * 0.08;
 
@@ -828,6 +834,9 @@ export default function SeasonTree3D({
             <BrightMat color={season === "winter" ? "#dbe8f6" : "#f5efe4"} boost={0.32} />
           </mesh>
         ))}
+
+        {/* Distant miniature trees/shrubs along back ridge for deeper spatial perspective */}
+        <DistantRidgeTrees3D season={season} />
       </group>
 
       {/* ==================== LAYER 5A: FLOATING 3D CLOUDS & SUN / MOON ==================== */}
@@ -872,6 +881,9 @@ export default function SeasonTree3D({
             ))}
           </group>
         )}
+
+        {/* Season-specific mid-air living elements (butterflies / dragonflies / migrating geese / sky lanterns) */}
+        <SeasonAirProps3D season={season} />
       </group>
 
       {/* ==================== 2. LAYER 2 & 3: CENTRAL 3D TREE & SPRING-BLOOM CANOPY ==================== */}
@@ -957,8 +969,15 @@ export default function SeasonTree3D({
       {/* SPRING PROPS: Spinning 3D Pinwheel Windmill + Colorful 3D Flower Field + Cute Mailbox */}
       {season === "spring" && (
         <>
-          {/* Spinning 3D Windmill on the right slope */}
-          <group position={[0.26, 0, 0.14]} rotation={[0, -0.5, 0]}>
+          {/* Spinning 3D Windmill on the right slope (clickable speed boost!) */}
+          <group
+            position={[0.26, 0, 0.14]}
+            rotation={[0, -0.5, 0]}
+            onClick={(e) => {
+              e.stopPropagation();
+              windmillBoostRef.current = 2.0;
+            }}
+          >
             <mesh position={[0, 0.10, 0]}>
               <cylinderGeometry args={[0.008, 0.011, 0.20, 8]} />
               <BrightMat color="#e4c29a" boost={0.3} />
@@ -1237,6 +1256,9 @@ export default function SeasonTree3D({
           <Birdhouse3D pos={[0.13, 0.39, 0.08]} rotY={-0.35} />
         </>
       )}
+
+      {/* Season-specific expanded outer-quadrant 3D storybook props & interactive easter eggs */}
+      <SeasonGroundProps3D season={season} />
       </group>
 
       {/* ==================== 4. LAYER 5B: REAL-TIME 3D SEASONAL PARTICLES ==================== */}
