@@ -283,20 +283,33 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
         pu.mat.uniforms.uReveal.value = fr;
       });
 
-      // Position the 3D seasonal diorama and drive its staggered pop-up choreography
-      // Unfold slowly and gracefully so all 5 bloom layers are clearly visible; fold back slightly brisker.
+      // True pop-up book choreography:
+      // Anchor the 3D diorama directly onto the rising diagonal floor crease (0.48 * P)
+      // so it rides cleanly on TOP of the folding paper ridge (never sliced by the floor),
+      // while flattening sideways (scale.x) like a real pop-up paper craft as the walls close!
       const tree = treeRefs.current[p];
       if (tree) {
-        const focusGate = smooth((focusOf(p, f) - 0.12) / 0.88);
-        const wantProg = smooth((open - 0.50) / 0.50) * focusGate * smooth((book.open - 0.55) / 0.45);
+        const focus = focusOf(p, f);
+        const foldVis = smooth((open - 0.32) / 0.68) * smooth((book.open - 0.35) / 0.65);
+        const wantProg = foldVis * smooth((focus - 0.05) / 0.95);
         const cur = treeProgressRefs.current[p].current;
-        const rate = wantProg > cur ? 2.6 : 5.2;
+        // Slow graceful bloom when opening; smooth fold-down when closing
+        const rate = wantProg > cur ? 2.8 : 4.6;
         const prog = cur + (wantProg - cur) * (1 - Math.exp(-dt * rate));
         treeProgressRefs.current[p].current = prog;
-        tree.visible = prog > 0.005;
-        tree.position.set((dA[0] * 0.48 + dB[0] * 0.48) * L, 0.002, (dA[2] * 0.48 + dB[2] * 0.48) * L);
+
+        // Visible whenever this page is actively unfolding or folding (keeps transitions lush & alive)
+        const active = prog > 0.015 && open > 0.34 && focus > 0.04;
+        tree.visible = active;
+
+        // Ride right on the floor's diagonal crease apex (matches (dA*0.48 + dB*0.48)*L when flat!)
+        tree.position.set(P[0] * 0.48, P[1] * 0.48 + 0.002, P[2] * 0.48);
         tree.rotation.y = Math.PI / 2 - mid;
-        tree.scale.set(1, 1, 1);
+
+        // Squeeze sideways along the closing wall angle so the 3D tree flattens cleanly between the pages
+        const squeezeX = Math.max(0.06, Math.pow(open, 2.4));
+        const liftScale = 0.55 + 0.45 * smooth((open - 0.40) / 0.60);
+        tree.scale.set(squeezeX * liftScale, liftScale, liftScale);
       }
     }
 

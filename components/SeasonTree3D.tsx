@@ -14,7 +14,7 @@ type ClusterSpec = {
   phase: number;
 };
 
-const INK_COLOR = "#342d52";
+const INK_COLOR = "#463d66";
 
 function makeRng(seed: number) {
   let a = seed >>> 0 || 1;
@@ -675,59 +675,57 @@ export default function SeasonTree3D({
     const t = clock.elapsedTime;
     const prog = progressRef ? progressRef.current : 1;
 
-    // Layer 1: Background hills, wooden fence & stepping stones rise first (0.02 -> 0.42)
-    if (bgStageRef.current) {
-      const k = easeOutCubic(subRange(prog, 0.02, 0.42));
-      bgStageRef.current.visible = k > 0.005;
-      bgStageRef.current.scale.set(0.65 + 0.35 * k, Math.max(0.001, k), 0.65 + 0.35 * k);
-    }
-
-    // Layer 2: Central 3D trunk & boughs unfold upward from the page with a pop-up hinge tilt (0.14 -> 0.56)
+    // Layer 1 (Hero): Central 3D trunk & canopy ride the folding crease from the start so the transition is never empty!
     if (trunkRef.current) {
-      const k = easeOutCubic(subRange(prog, 0.14, 0.56));
-      trunkRef.current.visible = k > 0.005;
+      const k = easeOutCubic(subRange(prog, 0.02, 0.48));
+      trunkRef.current.visible = k > 0.01;
       trunkRef.current.scale.set(
-        palette.scaleXZ * (0.45 + 0.55 * k),
-        palette.scaleY * Math.max(0.001, k),
-        palette.scaleXZ * (0.45 + 0.55 * k),
+        palette.scaleXZ * (0.35 + 0.65 * k),
+        palette.scaleY * Math.max(0.02, k),
+        palette.scaleXZ * (0.35 + 0.65 * k),
       );
-      trunkRef.current.rotation.x = (1 - k) * -0.45;
+      trunkRef.current.rotation.x = (1 - k) * -0.14;
     }
 
-    // Layer 3: Individual 3D canopy clusters bloom in a staggered wave with soft spring overshoot (0.34 -> 0.90)
+    // Layer 2 (Hero Bloom): Individual 3D canopy clusters bloom in a staggered wave with soft spring overshoot
     for (let i = 0; i < clusters.length; i++) {
       const g = clusterRefs.current[i];
       if (!g) continue;
-      const delay = (i / Math.max(1, clusters.length)) * 0.28;
-      const raw = subRange(prog, 0.34 + delay, 0.62 + delay);
+      const delay = (i / Math.max(1, clusters.length)) * 0.24;
+      const raw = subRange(prog, 0.16 + delay, 0.56 + delay);
       g.visible = raw > 0.005;
       if (raw > 0.005) {
-        const b = Math.max(0.001, easeOutBack(raw, 1.45));
+        const b = Math.max(0.001, easeOutBack(raw, 1.4));
         const c = clusters[i];
         g.scale.set(c.scale[0] * b, c.scale[1] * b, c.scale[2] * b);
       }
     }
     if (bloomExtrasRef.current) {
-      const raw = subRange(prog, 0.55, 0.92);
+      const raw = subRange(prog, 0.48, 0.86);
       bloomExtrasRef.current.visible = raw > 0.005;
-      const b = Math.max(0.001, easeOutBack(raw, 1.6));
+      const b = Math.max(0.001, easeOutBack(raw, 1.55));
       bloomExtrasRef.current.scale.setScalar(b);
     }
 
-    // Layer 4: Foreground seasonal props pop up with gentle spring bounce (0.44 -> 0.88)
+    // Layer 3 & 4: Grounded background hills & foreground props pop up once the floor settles flat (zero floor clipping!)
+    if (bgStageRef.current) {
+      const k = easeOutCubic(subRange(prog, 0.62, 0.92));
+      bgStageRef.current.visible = k > 0.01;
+      bgStageRef.current.scale.set(0.6 + 0.4 * k, Math.max(0.001, k), 0.6 + 0.4 * k);
+    }
     if (propsRef.current) {
-      const raw = subRange(prog, 0.44, 0.88);
-      propsRef.current.visible = raw > 0.005;
+      const raw = subRange(prog, 0.66, 0.96);
+      propsRef.current.visible = raw > 0.01;
       const b = Math.max(0.001, easeOutBack(raw, 1.15));
       propsRef.current.scale.set(0.55 + 0.45 * b, b, 0.55 + 0.45 * b);
     }
 
-    // Layer 5: Floating 3D clouds/sun/moon settle gracefully + seasonal particles fade in (0.52 -> 1.0)
+    // Layer 5: Floating 3D clouds/sun/moon settle gracefully + seasonal particles fade in
     if (cloudGroupRef.current) {
-      const k = easeOutCubic(subRange(prog, 0.52, 0.94));
+      const k = easeOutCubic(subRange(prog, 0.42, 0.88));
       cloudGroupRef.current.visible = k > 0.005;
       cloudGroupRef.current.scale.setScalar(Math.max(0.001, k));
-      cloudGroupRef.current.position.set(Math.sin(t * 0.35) * 0.04, (1 - k) * 0.18, 0);
+      cloudGroupRef.current.position.set(Math.sin(t * 0.35) * 0.04, (1 - k) * 0.16, 0);
     }
     if (particlesGroupRef.current) {
       const k = easeOutCubic(subRange(prog, 0.68, 1.0));
@@ -785,18 +783,18 @@ export default function SeasonTree3D({
     <group>
       {/* ==================== 1. LAYER 1: 3D BACKGROUND HILLS, FENCE & STONES ==================== */}
       <group ref={bgStageRef}>
-        {/* Sculpted 3D rolling hills tucked into the spine corner */}
-        <mesh geometry={SHARED_BLOB_GEO} position={[-0.14, 0.05, -0.34]} scale={[0.25, 0.16, 0.18]}>
+        {/* Sculpted 3D rolling hills strictly inside the |x|+|z| <= 0.64 page boundary */}
+        <mesh geometry={SHARED_BLOB_GEO} position={[-0.12, 0.045, -0.26]} scale={[0.16, 0.13, 0.13]}>
           <BrightMat color={palette.hillBack} boost={0.34} />
         </mesh>
-        <mesh geometry={SHARED_BLOB_GEO} position={[0.15, 0.04, -0.32]} scale={[0.24, 0.14, 0.17]}>
+        <mesh geometry={SHARED_BLOB_GEO} position={[0.12, 0.04, -0.25]} scale={[0.15, 0.12, 0.13]}>
           <BrightMat color={palette.hillMid} boost={0.34} />
         </mesh>
-        <mesh geometry={SHARED_BLOB_GEO} position={[0.0, 0.07, -0.44]} scale={[0.22, 0.21, 0.15]}>
+        <mesh geometry={SHARED_BLOB_GEO} position={[0.0, 0.06, -0.36]} scale={[0.17, 0.18, 0.12]}>
           <BrightMat color={palette.hillSide} boost={0.32} />
         </mesh>
         {season === "winter" && (
-          <mesh geometry={SHARED_BLOB_GEO} position={[0.0, 0.21, -0.44]} scale={[0.11, 0.07, 0.08]}>
+          <mesh geometry={SHARED_BLOB_GEO} position={[0.0, 0.18, -0.36]} scale={[0.085, 0.055, 0.065]}>
             <BrightMat color="#ffffff" boost={0.48} />
           </mesh>
         )}
@@ -1065,9 +1063,9 @@ export default function SeasonTree3D({
       {/* AUTUMN PROPS: Cozy 3D Cottage with Rising Chimney Smoke + Pumpkin Patch + Leaf Carpet */}
       {season === "autumn" && (
         <>
-          <Cottage3D pos={[0.22, 0.04, -0.22]} rotY={-0.65} snowy={false} />
+          <Cottage3D pos={[0.20, 0.03, -0.18]} rotY={-0.65} snowy={false} />
           {/* Rising chimney smoke */}
-          <group position={[0.25, 0.25, -0.21]}>
+          <group position={[0.23, 0.24, -0.17]}>
             {[0, 1, 2].map((i) => (
               <mesh
                 key={i}
@@ -1112,9 +1110,9 @@ export default function SeasonTree3D({
       {/* WINTER PROPS: Snowy Cottage + Glowing Tree Lanterns + 3D Snowman + Mini Snow Pines */}
       {season === "winter" && (
         <>
-          <Cottage3D pos={[0.22, 0.04, -0.22]} rotY={-0.65} snowy={true} />
-          <MiniPine3D pos={[-0.26, 0.02, -0.20]} scale={1.05} />
-          <MiniPine3D pos={[0.32, 0.01, -0.02]} scale={0.82} />
+          <Cottage3D pos={[0.20, 0.03, -0.18]} rotY={-0.65} snowy={true} />
+          <MiniPine3D pos={[-0.22, 0.02, -0.16]} scale={0.98} />
+          <MiniPine3D pos={[0.28, 0.01, -0.02]} scale={0.80} />
 
           {/* 3D Cute Snowman with Red Scarf & Top Hat */}
           <group position={[-0.23, 0, 0.19]} rotation={[0, 0.55, 0]}>
