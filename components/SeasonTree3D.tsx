@@ -297,8 +297,34 @@ function PlumBlossom3D({
   );
 }
 
-export default function SeasonTree3D({ season }: { season: Season }) {
+function subRange(p: number, a: number, b: number) {
+  return Math.max(0, Math.min(1, (p - a) / (b - a)));
+}
+
+function easeOutCubic(t: number) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+/** Gentle pop-up spring overshoot for blooming canopy & storybook props. */
+function easeOutBack(t: number, overshoot = 1.55) {
+  const u = t - 1;
+  return 1 + (overshoot + 1) * u * u * u + overshoot * u * u;
+}
+
+export default function SeasonTree3D({
+  season,
+  progressRef,
+}: {
+  season: Season;
+  progressRef?: { current: number };
+}) {
+  const bgStageRef = useRef<THREE.Group | null>(null);
+  const trunkRef = useRef<THREE.Group | null>(null);
   const canopyRef = useRef<THREE.Group | null>(null);
+  const clusterRefs = useRef<(THREE.Group | null)[]>([]);
+  const bloomExtrasRef = useRef<THREE.Group | null>(null);
+  const propsRef = useRef<THREE.Group | null>(null);
+  const particlesGroupRef = useRef<THREE.Group | null>(null);
   const swingRef = useRef<THREE.Group | null>(null);
   const windmillRef = useRef<THREE.Group | null>(null);
   const cloudGroupRef = useRef<THREE.Group | null>(null);
@@ -647,13 +673,74 @@ export default function SeasonTree3D({ season }: { season: Season }) {
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
+    const prog = progressRef ? progressRef.current : 1;
+
+    // Layer 1: Background hills, wooden fence & stepping stones rise first (0.02 -> 0.42)
+    if (bgStageRef.current) {
+      const k = easeOutCubic(subRange(prog, 0.02, 0.42));
+      bgStageRef.current.visible = k > 0.005;
+      bgStageRef.current.scale.set(0.65 + 0.35 * k, Math.max(0.001, k), 0.65 + 0.35 * k);
+    }
+
+    // Layer 2: Central 3D trunk & boughs unfold upward from the page with a pop-up hinge tilt (0.14 -> 0.56)
+    if (trunkRef.current) {
+      const k = easeOutCubic(subRange(prog, 0.14, 0.56));
+      trunkRef.current.visible = k > 0.005;
+      trunkRef.current.scale.set(
+        palette.scaleXZ * (0.45 + 0.55 * k),
+        palette.scaleY * Math.max(0.001, k),
+        palette.scaleXZ * (0.45 + 0.55 * k),
+      );
+      trunkRef.current.rotation.x = (1 - k) * -0.45;
+    }
+
+    // Layer 3: Individual 3D canopy clusters bloom in a staggered wave with soft spring overshoot (0.34 -> 0.90)
+    for (let i = 0; i < clusters.length; i++) {
+      const g = clusterRefs.current[i];
+      if (!g) continue;
+      const delay = (i / Math.max(1, clusters.length)) * 0.28;
+      const raw = subRange(prog, 0.34 + delay, 0.62 + delay);
+      g.visible = raw > 0.005;
+      if (raw > 0.005) {
+        const b = Math.max(0.001, easeOutBack(raw, 1.45));
+        const c = clusters[i];
+        g.scale.set(c.scale[0] * b, c.scale[1] * b, c.scale[2] * b);
+      }
+    }
+    if (bloomExtrasRef.current) {
+      const raw = subRange(prog, 0.55, 0.92);
+      bloomExtrasRef.current.visible = raw > 0.005;
+      const b = Math.max(0.001, easeOutBack(raw, 1.6));
+      bloomExtrasRef.current.scale.setScalar(b);
+    }
+
+    // Layer 4: Foreground seasonal props pop up with gentle spring bounce (0.44 -> 0.88)
+    if (propsRef.current) {
+      const raw = subRange(prog, 0.44, 0.88);
+      propsRef.current.visible = raw > 0.005;
+      const b = Math.max(0.001, easeOutBack(raw, 1.15));
+      propsRef.current.scale.set(0.55 + 0.45 * b, b, 0.55 + 0.45 * b);
+    }
+
+    // Layer 5: Floating 3D clouds/sun/moon settle gracefully + seasonal particles fade in (0.52 -> 1.0)
+    if (cloudGroupRef.current) {
+      const k = easeOutCubic(subRange(prog, 0.52, 0.94));
+      cloudGroupRef.current.visible = k > 0.005;
+      cloudGroupRef.current.scale.setScalar(Math.max(0.001, k));
+      cloudGroupRef.current.position.set(Math.sin(t * 0.35) * 0.04, (1 - k) * 0.18, 0);
+    }
+    if (particlesGroupRef.current) {
+      const k = easeOutCubic(subRange(prog, 0.68, 1.0));
+      particlesGroupRef.current.visible = k > 0.01;
+      particlesGroupRef.current.scale.setScalar(Math.max(0.001, k));
+    }
+
     if (canopyRef.current) {
       canopyRef.current.rotation.z = Math.sin(t * 1.1) * 0.022;
       canopyRef.current.rotation.x = Math.cos(t * 0.85) * 0.016;
     }
     if (swingRef.current) swingRef.current.rotation.x = Math.sin(t * 1.65) * 0.14;
     if (windmillRef.current) windmillRef.current.rotation.z = -t * 2.2;
-    if (cloudGroupRef.current) cloudGroupRef.current.position.x = Math.sin(t * 0.35) * 0.04;
     if (lanternLRef.current) lanternLRef.current.rotation.z = Math.sin(t * 1.5) * 0.08;
     if (lanternRRef.current) lanternRRef.current.rotation.z = Math.sin(t * 1.5 + 1.2) * 0.08;
 
@@ -696,9 +783,9 @@ export default function SeasonTree3D({ season }: { season: Season }) {
 
   return (
     <group>
-      {/* ==================== 1. 3D BACKGROUND HILLS & SKY PROPS ==================== */}
-      {/* Sculpted 3D rolling hills tucked into the spine corner (stays strictly inside pages) */}
-      <group>
+      {/* ==================== 1. LAYER 1: 3D BACKGROUND HILLS, FENCE & STONES ==================== */}
+      <group ref={bgStageRef}>
+        {/* Sculpted 3D rolling hills tucked into the spine corner */}
         <mesh geometry={SHARED_BLOB_GEO} position={[-0.14, 0.05, -0.34]} scale={[0.25, 0.16, 0.18]}>
           <BrightMat color={palette.hillBack} boost={0.34} />
         </mesh>
@@ -708,15 +795,44 @@ export default function SeasonTree3D({ season }: { season: Season }) {
         <mesh geometry={SHARED_BLOB_GEO} position={[0.0, 0.07, -0.44]} scale={[0.22, 0.21, 0.15]}>
           <BrightMat color={palette.hillSide} boost={0.32} />
         </mesh>
-        {/* Snow caps on winter 3D peaks */}
         {season === "winter" && (
           <mesh geometry={SHARED_BLOB_GEO} position={[0.0, 0.21, -0.44]} scale={[0.11, 0.07, 0.08]}>
             <BrightMat color="#ffffff" boost={0.48} />
           </mesh>
         )}
+
+        {/* Cute 3D Wooden Fence along the back-left hillside */}
+        <group position={[-0.24, 0, -0.14]} rotation={[0, 0.78, 0]}>
+          {[-0.10, -0.03, 0.04, 0.11].map((fx, i) => (
+            <mesh key={i} position={[fx, 0.045, 0]}>
+              <boxGeometry args={[0.016, 0.09, 0.016]} />
+              <BrightMat color={palette.fence} boost={0.30} />
+            </mesh>
+          ))}
+          <mesh position={[0.005, 0.068, 0]}>
+            <boxGeometry args={[0.25, 0.014, 0.012]} />
+            <BrightMat color={palette.fence} boost={0.30} />
+          </mesh>
+          <mesh position={[0.005, 0.032, 0]}>
+            <boxGeometry args={[0.25, 0.014, 0.012]} />
+            <BrightMat color={palette.fence} boost={0.30} />
+          </mesh>
+        </group>
+
+        {/* 3D Stepping Stones leading from front corner to the tree */}
+        {[
+          [0.02, 0.36, 0.042],
+          [-0.03, 0.27, 0.038],
+          [0.01, 0.19, 0.036],
+        ].map(([sx, sz, sr], i) => (
+          <mesh key={i} position={[sx, 0.008, sz]} scale={[1.15, 0.25, 0.9]}>
+            <cylinderGeometry args={[sr, sr * 1.1, 0.04, 10]} />
+            <BrightMat color={season === "winter" ? "#dbe8f6" : "#f5efe4"} boost={0.32} />
+          </mesh>
+        ))}
       </group>
 
-      {/* Floating 3D Clouds & 3D Sun / Moon */}
+      {/* ==================== LAYER 5A: FLOATING 3D CLOUDS & SUN / MOON ==================== */}
       <group ref={cloudGroupRef}>
         {season !== "winter" ? (
           <>
@@ -760,38 +876,8 @@ export default function SeasonTree3D({ season }: { season: Season }) {
         )}
       </group>
 
-      {/* Cute 3D Wooden Fence along the back-left hillside */}
-      <group position={[-0.24, 0, -0.14]} rotation={[0, 0.78, 0]}>
-        {[-0.10, -0.03, 0.04, 0.11].map((fx, i) => (
-          <mesh key={i} position={[fx, 0.045, 0]}>
-            <boxGeometry args={[0.016, 0.09, 0.016]} />
-            <BrightMat color={palette.fence} boost={0.30} />
-          </mesh>
-        ))}
-        <mesh position={[0.005, 0.068, 0]}>
-          <boxGeometry args={[0.25, 0.014, 0.012]} />
-          <BrightMat color={palette.fence} boost={0.30} />
-        </mesh>
-        <mesh position={[0.005, 0.032, 0]}>
-          <boxGeometry args={[0.25, 0.014, 0.012]} />
-          <BrightMat color={palette.fence} boost={0.30} />
-        </mesh>
-      </group>
-
-      {/* 3D Stepping Stones leading from front corner to the tree */}
-      {[
-        [0.02, 0.36, 0.042],
-        [-0.03, 0.27, 0.038],
-        [0.01, 0.19, 0.036],
-      ].map(([sx, sz, sr], i) => (
-        <mesh key={i} position={[sx, 0.008, sz]} scale={[1.15, 0.25, 0.9]}>
-          <cylinderGeometry args={[sr, sr * 1.1, 0.04, 10]} />
-          <BrightMat color={season === "winter" ? "#dbe8f6" : "#f5efe4"} boost={0.32} />
-        </mesh>
-      ))}
-
-      {/* ==================== 2. CENTRAL 3D VOLUMETRIC SEASON TREE ==================== */}
-      <group scale={[palette.scaleXZ, palette.scaleY, palette.scaleXZ]}>
+      {/* ==================== 2. LAYER 2 & 3: CENTRAL 3D TREE & SPRING-BLOOM CANOPY ==================== */}
+      <group ref={trunkRef} scale={[palette.scaleXZ, palette.scaleY, palette.scaleXZ]}>
         <mesh geometry={SHARED_BLOB_GEO} position={[0, 0.018, 0]} scale={[0.24, 0.05, 0.24]}>
           <BrightMat color={palette.mound} boost={0.32} />
         </mesh>
@@ -809,7 +895,15 @@ export default function SeasonTree3D({ season }: { season: Season }) {
 
         <group ref={canopyRef}>
           {clusters.map((c, idx) => (
-            <group key={idx} position={c.pos} rotation={c.rot} scale={c.scale}>
+            <group
+              key={idx}
+              ref={(el) => {
+                clusterRefs.current[idx] = el;
+              }}
+              position={c.pos}
+              rotation={c.rot}
+              scale={c.scale}
+            >
               <mesh geometry={SHARED_BLOB_GEO}>
                 <BrightMat color={c.color} boost={0.34} />
               </mesh>
@@ -817,25 +911,27 @@ export default function SeasonTree3D({ season }: { season: Season }) {
             </group>
           ))}
 
-          {/* Summer golden fruits */}
-          {season === "summer" &&
-            [
-              [-0.22, 0.49, 0.19],
-              [0.24, 0.48, 0.18],
-              [-0.08, 0.65, 0.17],
-              [0.12, 0.67, 0.13],
-            ].map((pos, i) => (
-              <mesh key={i} position={pos as [number, number, number]}>
-                <sphereGeometry args={[0.022, 10, 10]} />
-                <BrightMat color="#ffe270" boost={0.42} />
-              </mesh>
-            ))}
+          <group ref={bloomExtrasRef}>
+            {/* Summer golden fruits */}
+            {season === "summer" &&
+              [
+                [-0.22, 0.49, 0.19],
+                [0.24, 0.48, 0.18],
+                [-0.08, 0.65, 0.17],
+                [0.12, 0.67, 0.13],
+              ].map((pos, i) => (
+                <mesh key={i} position={pos as [number, number, number]}>
+                  <sphereGeometry args={[0.022, 10, 10]} />
+                  <BrightMat color="#ffe270" boost={0.42} />
+                </mesh>
+              ))}
 
-          {/* Winter blooming 3D red plum blossoms nestled across the snowy canopy */}
-          {season === "winter" &&
-            winterPlumBlossoms.map((pb, i) => (
-              <PlumBlossom3D key={`plum-${i}`} pos={pb.pos} rot={pb.rot} scale={pb.scale} color={pb.color} />
-            ))}
+            {/* Winter blooming 3D red plum blossoms nestled across the snowy canopy */}
+            {season === "winter" &&
+              winterPlumBlossoms.map((pb, i) => (
+                <PlumBlossom3D key={`plum-${i}`} pos={pb.pos} rot={pb.rot} scale={pb.scale} color={pb.color} />
+              ))}
+          </group>
         </group>
 
         {/* Spring 3D rope swing */}
@@ -857,7 +953,8 @@ export default function SeasonTree3D({ season }: { season: Season }) {
         )}
       </group>
 
-      {/* ==================== 3. SEASON-SPECIFIC 3D STORYBOOK PROPS ==================== */}
+      {/* ==================== 3. LAYER 4: SEASON-SPECIFIC 3D STORYBOOK PROPS ==================== */}
+      <group ref={propsRef}>
 
       {/* SPRING PROPS: Spinning 3D Pinwheel Windmill + Colorful 3D Flower Field + Cute Mailbox */}
       {season === "spring" && (
@@ -1142,8 +1239,10 @@ export default function SeasonTree3D({ season }: { season: Season }) {
           <Birdhouse3D pos={[0.13, 0.39, 0.08]} rotY={-0.35} />
         </>
       )}
+      </group>
 
-      {/* ==================== 4. REAL-TIME 3D SEASONAL PARTICLES ==================== */}
+      {/* ==================== 4. LAYER 5B: REAL-TIME 3D SEASONAL PARTICLES ==================== */}
+      <group ref={particlesGroupRef}>
       {particles.map((p, i) => (
         <mesh
           key={i}
@@ -1163,6 +1262,7 @@ export default function SeasonTree3D({ season }: { season: Season }) {
           <meshBasicMaterial color={season === "winter" && i % 6 === 0 ? "#f25c6e" : p.color} transparent opacity={0.95} />
         </mesh>
       ))}
+      </group>
     </group>
   );
 }

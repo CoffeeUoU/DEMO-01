@@ -200,6 +200,7 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
   const outlineRefs = useRef<(Line2 | null)[]>([]);
   const popRefs = useRef<{ outer: THREE.Group | null; hinge: THREE.Group | null }[][]>(Array.from({ length: N }, () => []));
   const treeRefs = useRef<(THREE.Group | null)[]>([]);
+  const treeProgressRefs = useRef<{ current: number }[]>(Array.from({ length: N }, () => ({ current: 0 })));
   const target = useMemo(() => new THREE.Vector3(), []);
 
   useFrame((_, dtRaw) => {
@@ -282,17 +283,17 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
         pu.mat.uniforms.uReveal.value = fr;
       });
 
-      // Position & smoothly bloom the true 3D volumetric seasonal tree at the center of each room
+      // Position the 3D seasonal diorama and drive its staggered pop-up choreography
+      // Multiply by focusOf so neighbouring folded pages stay completely tucked away with zero peek-through
       const tree = treeRefs.current[p];
       if (tree) {
-        const tVis = smooth((open - 0.88) / 0.12) * smooth((book.open - 0.90) / 0.10);
-        tree.visible = tVis > 0.01;
+        const focusGate = smooth((focusOf(p, f) - 0.12) / 0.88);
+        const prog = smooth((open - 0.50) / 0.50) * focusGate * smooth((book.open - 0.55) / 0.45);
+        treeProgressRefs.current[p].current = prog;
+        tree.visible = prog > 0.005;
         tree.position.set((dA[0] * 0.48 + dB[0] * 0.48) * L, 0.002, (dA[2] * 0.48 + dB[2] * 0.48) * L);
         tree.rotation.y = Math.PI / 2 - mid;
-        // Pop up organically from the book page as the room unfolds
-        const sY = 0.05 + 0.95 * tVis;
-        const sXZ = 0.35 + 0.65 * tVis;
-        tree.scale.set(sXZ, sY, sXZ);
+        tree.scale.set(1, 1, 1);
       }
     }
 
@@ -367,7 +368,7 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
               treeRefs.current[p] = el;
             }}
           >
-            <SeasonTree3D season={season} />
+            <SeasonTree3D season={season} progressRef={treeProgressRefs.current[p]} />
           </group>
         );
       })}
