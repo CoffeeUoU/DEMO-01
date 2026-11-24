@@ -1,44 +1,43 @@
-// The place in each room where you write, and how that journal talks to you.
+// The place in each season where you write, and how that journal talks to you.
 
-/** How the close-up looks: a board with notes stuck on it, or an open diary. */
 export type Kind = "cork" | "mirror" | "fridge" | "diary";
 export type Spot = { title: string; kind: Kind; prompt: string; save: string; empty: string };
 
 export const SPOTS: Record<string, Record<string, Spot>> = {
-  bedroom: {
+  spring: {
     journal: {
-      title: "the cork board",
+      title: "spring notes",
       kind: "cork",
-      prompt: "pin a thought before sleep…",
+      prompt: "what is beginning to bloom in your life…",
       save: "pin it",
-      empty: "nothing pinned yet. the board is waiting.",
+      empty: "petals are falling. leave a spring thought.",
     },
   },
-  bathroom: {
+  summer: {
     journal: {
-      title: "the mirror",
-      kind: "mirror",
-      prompt: "what did you tell yourself today?",
-      save: "stick it on",
-      empty: "the mirror is clear. say something kind.",
-    },
-  },
-  kitchen: {
-    journal: {
-      title: "the fridge door",
+      title: "summer shade",
       kind: "fridge",
-      prompt: "what fed you today?",
-      save: "stick it on",
-      empty: "an empty fridge door. leave a note.",
+      prompt: "a bright moment worth keeping…",
+      save: "keep it",
+      empty: "quiet under the canopy. write a summer memory.",
     },
   },
-  balcony: {
+  autumn: {
     journal: {
-      title: "the diary",
+      title: "autumn leaves",
+      kind: "mirror",
+      prompt: "what are you ready to let go of…",
+      save: "tuck it in",
+      empty: "golden leaves drift past. leave a note for autumn.",
+    },
+  },
+  winter: {
+    journal: {
+      title: "winter lantern",
       kind: "diary",
-      prompt: "tonight, i'm thinking about…",
+      prompt: "in the quiet snow, i am grateful for…",
       save: "write it down",
-      empty: "a fresh page. the night is quiet.",
+      empty: "a fresh snowy page. the night is still.",
     },
   },
 };

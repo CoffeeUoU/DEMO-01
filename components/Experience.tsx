@@ -140,6 +140,7 @@ export default function Experience() {
         {open ? (
           <>
             <div className="room-name">{current.name}</div>
+            <div className="room-mood">{current.mood}</div>
           </>
         ) : (
           <div className="room-mood">tap the cover to open</div>

@@ -11,6 +11,7 @@ import { makePaperMaterial, INK } from "@/lib/paperMaterial";
 import { ROOMS } from "@/lib/rooms";
 import { book } from "@/lib/store";
 import type { BookTextures } from "@/lib/textures";
+import SeasonTree3D, { type Season } from "./SeasonTree3D";
 
 const PAGE_GAP = 0.014; // thickness between pages when the book is shut
 const INK_HEX = `#${INK.getHexString()}`;
@@ -198,6 +199,7 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
   const floorLineRefs = useRef<(Line2 | null)[]>([]);
   const outlineRefs = useRef<(Line2 | null)[]>([]);
   const popRefs = useRef<{ outer: THREE.Group | null; hinge: THREE.Group | null }[][]>(Array.from({ length: N }, () => []));
+  const treeRefs = useRef<(THREE.Group | null)[]>([]);
   const target = useMemo(() => new THREE.Vector3(), []);
 
   useFrame((_, dtRaw) => {
@@ -279,6 +281,19 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
         pu.mat.uniforms.uOpacity.value = vis;
         pu.mat.uniforms.uReveal.value = fr;
       });
+
+      // Position & smoothly bloom the true 3D volumetric seasonal tree at the center of each room
+      const tree = treeRefs.current[p];
+      if (tree) {
+        const tVis = smooth((open - 0.88) / 0.12) * smooth((book.open - 0.90) / 0.10);
+        tree.visible = tVis > 0.01;
+        tree.position.set((dA[0] * 0.48 + dB[0] * 0.48) * L, 0.002, (dA[2] * 0.48 + dB[2] * 0.48) * L);
+        tree.rotation.y = Math.PI / 2 - mid;
+        // Pop up organically from the book page as the room unfolds
+        const sY = 0.05 + 0.95 * tVis;
+        const sXZ = 0.35 + 0.65 * tVis;
+        tree.scale.set(sXZ, sY, sXZ);
+      }
     }
 
     // camera: front view of the cover when shut, looking into the focused room when open
@@ -306,6 +321,12 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
 
   return (
     <group>
+      {/* Bright, airy storybook lighting so 3D diorama colors stay luminous and soft */}
+      <ambientLight intensity={0.72} color="#ffffff" />
+      <hemisphereLight args={["#ffffff", "#e2dcd2", 1.1]} />
+      <directionalLight position={[4, 8, 6]} intensity={1.15} color="#fffaf0" />
+      <directionalLight position={[-4, 4, -4]} intensity={0.55} color="#dbeafe" />
+
       {pageMats.map((m, k) => (
         <group key={k} ref={(el) => void (pageRefs.current[k] = el)}>
           <mesh geometry={pageGeo.front} material={m.front} />
@@ -337,6 +358,19 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
           />
         </group>
       ))}
+      {Array.from({ length: N }, (_, p) => {
+        const season = ROOMS[logicalOf(p)].name as Season;
+        return (
+          <group
+            key={`tree3d-${p}`}
+            ref={(el) => {
+              treeRefs.current[p] = el;
+            }}
+          >
+            <SeasonTree3D season={season} />
+          </group>
+        );
+      })}
       {popups.map((list, p) =>
         list.map((pu, j) => (
           <group

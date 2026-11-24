@@ -4,8 +4,8 @@ import "@fontsource/caveat/700.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "unfold — a journal house",
-  description: "A hand-drawn pop-up journal: a book of rooms that fold open.",
+  title: "unfold — four seasons of a tree",
+  description: "A hand-drawn pop-up book following one tree across spring, summer, autumn, and winter.",
 };
 
 export const viewport: Viewport = {
