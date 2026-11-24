@@ -205,8 +205,8 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
 
   useFrame((_, dtRaw) => {
     const dt = Math.min(dtRaw, 1 / 20);
-    if (!book.dragging) book.f += (book.target - book.f) * (1 - Math.exp(-dt * 7));
-    book.open += (book.openTarget - book.open) * (1 - Math.exp(-dt * 7));
+    if (!book.dragging) book.f += (book.target - book.f) * (1 - Math.exp(-dt * 3.2));
+    book.open += (book.openTarget - book.open) * (1 - Math.exp(-dt * 3.4));
     if (Math.abs(book.openTarget - book.open) < 1e-4) book.open = book.openTarget;
 
     const f = book.f;
@@ -284,11 +284,14 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
       });
 
       // Position the 3D seasonal diorama and drive its staggered pop-up choreography
-      // Multiply by focusOf so neighbouring folded pages stay completely tucked away with zero peek-through
+      // Unfold slowly and gracefully so all 5 bloom layers are clearly visible; fold back slightly brisker.
       const tree = treeRefs.current[p];
       if (tree) {
         const focusGate = smooth((focusOf(p, f) - 0.12) / 0.88);
-        const prog = smooth((open - 0.50) / 0.50) * focusGate * smooth((book.open - 0.55) / 0.45);
+        const wantProg = smooth((open - 0.50) / 0.50) * focusGate * smooth((book.open - 0.55) / 0.45);
+        const cur = treeProgressRefs.current[p].current;
+        const rate = wantProg > cur ? 2.6 : 5.2;
+        const prog = cur + (wantProg - cur) * (1 - Math.exp(-dt * rate));
         treeProgressRefs.current[p].current = prog;
         tree.visible = prog > 0.005;
         tree.position.set((dA[0] * 0.48 + dB[0] * 0.48) * L, 0.002, (dA[2] * 0.48 + dB[2] * 0.48) * L);
