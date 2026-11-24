@@ -146,47 +146,60 @@ export default function SeasonGroundCover3D({
     </group>
   );
 
-  // 1. SPRING: Tender grass tufts + dandelion puffs + fallen cherry blossom petals & clover pads
+  // 1. SPRING: Dense lush meadow of ~125 swaying grass tufts + dandelions + tiny buds + cherry petals
   const springData = useMemo(() => {
     const r = makeRng(1101);
     const zones = SEASON_ZONES.spring;
-    const grassCols = ["#8fd97c", "#a8e685", "#7bc972", "#bce88c", "#95de7e"];
+    const grassCols = ["#8fd97c", "#a8e685", "#7bc972", "#bce88c", "#95de7e", "#c9f094"];
     const tufts: { x: number; z: number; s: number; ry: number; col: string; phase: number }[] = [];
-    for (let tries = 0; tries < 260 && tufts.length < 46; tries++) {
-      const x = (r() - 0.5) * 1.12;
-      const z = (r() - 0.5) * 1.06;
-      if (!isClear(x, z, zones, 0.59)) continue;
-      tufts.push({
-        x,
-        z,
-        s: 0.72 + r() * 0.52,
-        ry: r() * Math.PI * 2,
-        col: grassCols[Math.floor(r() * grassCols.length)],
-        phase: x * 6 + z * 5 + r() * 1.2,
-      });
+    // Stratified jittered grid covers EVERY open corner evenly with zero bald spots!
+    for (let gx = -0.60; gx <= 0.60; gx += 0.072) {
+      for (let gz = -0.58; gz <= 0.58; gz += 0.072) {
+        const x = gx + (r() - 0.5) * 0.056;
+        const z = gz + (r() - 0.5) * 0.056;
+        if (!isClear(x, z, zones, 0.625)) continue;
+        if (r() < 0.16) continue; // organic breathing variation
+        tufts.push({
+          x,
+          z,
+          s: 0.65 + r() * 0.62,
+          ry: r() * Math.PI * 2,
+          col: grassCols[Math.floor(r() * grassCols.length)],
+          phase: x * 6 + z * 5 + r() * 1.2,
+        });
+      }
     }
 
     const dandelions: { x: number; z: number; h: number }[] = [];
-    for (let tries = 0; tries < 90 && dandelions.length < 9; tries++) {
-      const x = (r() - 0.5) * 0.96;
-      const z = -0.05 + r() * 0.52;
-      if (!isClear(x, z, zones, 0.56)) continue;
-      dandelions.push({ x, z, h: 0.048 + r() * 0.024 });
+    for (let tries = 0; tries < 160 && dandelions.length < 16; tries++) {
+      const x = (r() - 0.5) * 1.08;
+      const z = -0.18 + r() * 0.72;
+      if (!isClear(x, z, zones, 0.60)) continue;
+      dandelions.push({ x, z, h: 0.045 + r() * 0.026 });
+    }
+
+    const buds: { x: number; z: number; col: string; h: number }[] = [];
+    const bCols = ["#ffb3cf", "#ffe680", "#b8dcff", "#ffd0b0"];
+    for (let tries = 0; tries < 180 && buds.length < 20; tries++) {
+      const x = (r() - 0.5) * 1.10;
+      const z = (r() - 0.5) * 1.05;
+      if (!isClear(x, z, zones, 0.60)) continue;
+      buds.push({ x, z, col: bCols[Math.floor(r() * bCols.length)], h: 0.026 + r() * 0.018 });
     }
 
     const petals: { x: number; z: number; ry: number; s: number; col: string }[] = [];
     const pCols = ["#ffc2da", "#ffd9e8", "#ffa8ca", "#ffeaf2"];
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 38; i++) {
       const ang = r() * Math.PI * 2;
-      const dist = 0.09 + r() * 0.34;
+      const dist = 0.09 + r() * 0.42;
       const x = Math.cos(ang) * dist;
       const z = Math.sin(ang) * dist;
-      if (Math.abs(x) + Math.abs(z) > 0.56) continue;
+      if (Math.abs(x) + Math.abs(z) > 0.60) continue;
       petals.push({
         x,
         z,
         ry: r() * 6.28,
-        s: 0.7 + r() * 0.65,
+        s: 0.68 + r() * 0.65,
         col: pCols[Math.floor(r() * pCols.length)],
       });
     }
@@ -194,52 +207,62 @@ export default function SeasonGroundCover3D({
     return {
       tufts: tufts.filter((it) => keepX(it.x)),
       dandelions: dandelions.filter((it) => keepX(it.x)),
+      buds: buds.filter((it) => keepX(it.x)),
       petals: petals.filter((it) => keepX(it.x)),
     };
   }, [side]);
 
-  // 2. SUMMER: Lush taller grass/fern tufts + wild daisies & bluebells + river pebbles & moss pads
+  // 2. SUMMER: Dense lush emerald grass & ferns (~120 clusters) + wild daisies + moss pads & pebbles
   const summerData = useMemo(() => {
     const r = makeRng(2202);
     const zones = SEASON_ZONES.summer;
-    const grassCols = ["#58b864", "#6ec96e", "#4ca85a", "#82d478", "#62bf68"];
+    const grassCols = ["#58b864", "#6ec96e", "#4ca85a", "#82d478", "#62bf68", "#94de7e"];
     const tufts: { x: number; z: number; s: number; ry: number; col: string; phase: number; fern: boolean }[] = [];
-    for (let tries = 0; tries < 260 && tufts.length < 42; tries++) {
-      const x = (r() - 0.5) * 1.12;
-      const z = (r() - 0.5) * 1.06;
-      if (!isClear(x, z, zones, 0.59)) continue;
-      tufts.push({
-        x,
-        z,
-        s: 0.92 + r() * 0.58,
-        ry: r() * Math.PI * 2,
-        col: grassCols[Math.floor(r() * grassCols.length)],
-        phase: x * 5.5 + z * 4.5 + r(),
-        fern: r() < 0.38,
-      });
+    for (let gx = -0.60; gx <= 0.60; gx += 0.074) {
+      for (let gz = -0.58; gz <= 0.58; gz += 0.074) {
+        const x = gx + (r() - 0.5) * 0.056;
+        const z = gz + (r() - 0.5) * 0.056;
+        if (!isClear(x, z, zones, 0.625)) continue;
+        if (r() < 0.14) continue;
+        tufts.push({
+          x,
+          z,
+          s: 0.85 + r() * 0.62,
+          ry: r() * Math.PI * 2,
+          col: grassCols[Math.floor(r() * grassCols.length)],
+          phase: x * 5.5 + z * 4.5 + r(),
+          fern: r() < 0.42,
+        });
+      }
     }
 
     const flowers: { x: number; z: number; col: string; h: number }[] = [];
-    const fCols = ["#ffffff", "#fff3a6", "#a8dcff", "#ffffff"];
-    for (let tries = 0; tries < 120 && flowers.length < 15; tries++) {
-      const x = (r() - 0.5) * 1.02;
-      const z = (r() - 0.5) * 0.96;
-      if (!isClear(x, z, zones, 0.56)) continue;
+    const fCols = ["#ffffff", "#fff3a6", "#a8dcff", "#ffffff", "#ffe0f0"];
+    for (let tries = 0; tries < 220 && flowers.length < 26; tries++) {
+      const x = (r() - 0.5) * 1.12;
+      const z = (r() - 0.5) * 1.06;
+      if (!isClear(x, z, zones, 0.60)) continue;
       flowers.push({
         x,
         z,
         col: fCols[Math.floor(r() * fCols.length)],
-        h: 0.036 + r() * 0.022,
+        h: 0.034 + r() * 0.024,
       });
     }
 
     const mossPads: { x: number; z: number; sx: number; sz: number }[] = [
-      { x: 0.08, z: 0.14, sx: 0.065, sz: 0.048 },
-      { x: -0.14, z: 0.26, sx: 0.058, sz: 0.045 },
-      { x: 0.16, z: -0.06, sx: 0.062, sz: 0.052 },
-      { x: -0.22, z: -0.06, sx: 0.068, sz: 0.048 },
-      { x: 0.06, z: 0.32, sx: 0.052, sz: 0.04 },
-      { x: -0.08, z: -0.20, sx: 0.065, sz: 0.05 },
+      { x: 0.08, z: 0.14, sx: 0.068, sz: 0.05 },
+      { x: -0.14, z: 0.26, sx: 0.062, sz: 0.048 },
+      { x: 0.16, z: -0.06, sx: 0.065, sz: 0.052 },
+      { x: -0.22, z: -0.06, sx: 0.072, sz: 0.05 },
+      { x: 0.06, z: 0.32, sx: 0.056, sz: 0.042 },
+      { x: -0.08, z: -0.20, sx: 0.068, sz: 0.052 },
+      { x: -0.34, z: -0.16, sx: 0.065, sz: 0.048 },
+      { x: 0.34, z: -0.16, sx: 0.062, sz: 0.046 },
+      { x: -0.12, z: 0.44, sx: 0.058, sz: 0.042 },
+      { x: 0.06, z: 0.48, sx: 0.055, sz: 0.042 },
+      { x: -0.44, z: 0.06, sx: 0.058, sz: 0.044 },
+      { x: 0.44, z: 0.04, sx: 0.056, sz: 0.044 },
     ];
 
     const pebbles: { x: number; z: number; s: number; col: string }[] = [
@@ -248,8 +271,11 @@ export default function SeasonGroundCover3D({
       { x: -0.09, z: 0.29, s: 0.014, col: "#d5d0c5" },
       { x: -0.06, z: 0.34, s: 0.012, col: "#e4dfd5" },
       { x: 0.05, z: 0.12, s: 0.013, col: "#dbd6cb" },
-      { x: 0.35, z: 0.09, s: 0.016, col: "#d6d2c8" },
-      { x: 0.38, z: 0.12, s: 0.011, col: "#e5e0d6" },
+      { x: 0.35, z: 0.14, s: 0.016, col: "#d6d2c8" },
+      { x: 0.38, z: 0.17, s: 0.011, col: "#e5e0d6" },
+      { x: -0.14, z: 0.38, s: 0.013, col: "#dfd9ce" },
+      { x: 0.04, z: 0.42, s: 0.012, col: "#d6d2c8" },
+      { x: -0.20, z: 0.04, s: 0.013, col: "#e2ddd2" },
     ];
 
     return {
@@ -260,55 +286,51 @@ export default function SeasonGroundCover3D({
     };
   }, [side]);
 
-  // 3. AUTUMN: Golden wheat/rice field patches (swaying waves!) + autumn shrubs + pinecones/acorns
+  // 3. AUTUMN: Expansive swaying golden wheat/rice waves (~125 stalks) + warm autumn grass + shrubs + acorns
   const autumnData = useMemo(() => {
     const r = makeRng(3303);
     const zones = SEASON_ZONES.autumn;
-    const stalkCols = ["#f5c851", "#ffd866", "#e8b343", "#ffcb57", "#f0ba48"];
+    const stalkCols = ["#f5c851", "#ffd866", "#e8b343", "#ffcb57", "#f0ba48", "#f7b249"];
+    const wheat: { x: number; z: number; h: number; ry: number; col: string; phase: number; isGrass: boolean }[] = [];
 
-    // Clustered wheat patches near scarecrow, wheelbarrow, hay bales, and open slopes
-    const patchCenters: [number, number, number][] = [
-      [-0.26, -0.04, 0.13],
-      [-0.14, 0.06, 0.12],
-      [0.14, 0.10, 0.13],
-      [0.32, 0.08, 0.12],
-      [0.10, 0.32, 0.12],
-      [-0.14, 0.34, 0.11],
-      [0.08, -0.18, 0.11],
-    ];
-    const wheat: { x: number; z: number; h: number; ry: number; col: string; phase: number }[] = [];
-    for (let tries = 0; tries < 360 && wheat.length < 56; tries++) {
-      const [px, pz, pr] = patchCenters[tries % patchCenters.length];
-      const ang = r() * Math.PI * 2;
-      const d = Math.sqrt(r()) * pr;
-      const x = px + Math.cos(ang) * d;
-      const z = pz + Math.sin(ang) * d;
-      if (!isClear(x, z, zones, 0.59)) continue;
-      wheat.push({
-        x,
-        z,
-        h: 0.068 + r() * 0.036,
-        ry: r() * Math.PI * 2,
-        col: stalkCols[Math.floor(r() * stalkCols.length)],
-        phase: x * 7.5 + z * 5.0, // coherent spatial wave for wheat-wave effect!
-      });
+    // Stratified grid fills EVERY open autumn area with lush golden wheat waves & warm amber autumn grass!
+    for (let gx = -0.60; gx <= 0.60; gx += 0.072) {
+      for (let gz = -0.58; gz <= 0.58; gz += 0.072) {
+        const x = gx + (r() - 0.5) * 0.054;
+        const z = gz + (r() - 0.5) * 0.054;
+        if (!isClear(x, z, zones, 0.625)) continue;
+        if (r() < 0.15) continue;
+        const isGrass = r() < 0.28; // mix of plump golden wheat stalks (72%) & warm autumn grass tufts (28%)
+        wheat.push({
+          x,
+          z,
+          h: isGrass ? 0.048 + r() * 0.024 : 0.066 + r() * 0.036,
+          ry: r() * Math.PI * 2,
+          col: stalkCols[Math.floor(r() * stalkCols.length)],
+          phase: x * 7.5 + z * 5.0,
+          isGrass,
+        });
+      }
     }
 
     const shrubs: { x: number; z: number; s: number; col: string }[] = [
       { x: -0.34, z: -0.18, s: 0.042, col: "#f2784b" },
       { x: -0.14, z: -0.24, s: 0.038, col: "#ffaa4c" },
-      { x: 0.34, z: -0.14, s: 0.040, col: "#f06848" },
-      { x: 0.38, z: -0.04, s: 0.034, col: "#ffc254" },
-      { x: -0.40, z: 0.12, s: 0.035, col: "#f58a4c" },
-      { x: 0.36, z: 0.14, s: 0.036, col: "#ff9e52" },
-      { x: -0.08, z: 0.44, s: 0.032, col: "#f0724c" },
+      { x: 0.18, z: -0.24, s: 0.038, col: "#f06848" },
+      { x: 0.42, z: -0.02, s: 0.034, col: "#ffc254" },
+      { x: -0.44, z: 0.12, s: 0.036, col: "#f58a4c" },
+      { x: 0.38, z: 0.14, s: 0.036, col: "#ff9e52" },
+      { x: -0.08, z: 0.46, s: 0.032, col: "#f0724c" },
+      { x: 0.10, z: 0.46, s: 0.032, col: "#ffae4c" },
+      { x: -0.30, z: 0.28, s: 0.034, col: "#f27c4e" },
+      { x: 0.42, z: 0.08, s: 0.030, col: "#f58f48" },
     ];
 
     const acorns: { x: number; z: number; ry: number }[] = [];
-    for (let tries = 0; tries < 80 && acorns.length < 12; tries++) {
-      const x = (r() - 0.5) * 0.72;
-      const z = -0.10 + r() * 0.52;
-      if (!isClear(x, z, zones, 0.56)) continue;
+    for (let tries = 0; tries < 120 && acorns.length < 18; tries++) {
+      const x = (r() - 0.5) * 0.96;
+      const z = -0.16 + r() * 0.66;
+      if (!isClear(x, z, zones, 0.59)) continue;
       acorns.push({ x, z, ry: r() * 6.28 });
     }
 
@@ -319,7 +341,7 @@ export default function SeasonGroundCover3D({
     };
   }, [side]);
 
-  // 4. WINTER: Billowing snowdrifts + frost-tipped dry grass + snow-capped holly shrubs + footprints + ice crystals
+  // 4. WINTER: Rich rolling moonlit snowdrifts (20 mounds) + ~48 frost-tipped grass tufts + snow holly shrubs + footprints + ice crystals
   const winterData = useMemo(() => {
     const r = makeRng(4404);
     const zones = SEASON_ZONES.winter;
@@ -333,31 +355,46 @@ export default function SeasonGroundCover3D({
       { x: 0.04, z: -0.22, sx: 0.10, sy: 0.028, sz: 0.075, col: "#cfdff4" },
       { x: -0.34, z: -0.10, sx: 0.085, sy: 0.024, sz: 0.068, col: "#c8daf0" },
       { x: 0.24, z: 0.30, sx: 0.075, sy: 0.020, sz: 0.06, col: "#d6e5f6" },
-      { x: -0.06, z: 0.45, sx: 0.07, sy: 0.018, sz: 0.055, col: "#ccddf2" },
-      { x: 0.38, z: 0.16, sx: 0.072, sy: 0.022, sz: 0.058, col: "#d8e6f7" },
+      { x: -0.06, z: 0.45, sx: 0.075, sy: 0.020, sz: 0.058, col: "#ccddf2" },
+      { x: 0.38, z: 0.18, sx: 0.075, sy: 0.022, sz: 0.06, col: "#d8e6f7" },
+      { x: -0.46, z: 0.04, sx: 0.08, sy: 0.022, sz: 0.062, col: "#d1e1f5" },
+      { x: 0.45, z: 0.04, sx: 0.078, sy: 0.022, sz: 0.06, col: "#ccddf2" },
+      { x: -0.26, z: 0.28, sx: 0.078, sy: 0.020, sz: 0.062, col: "#d6e5f6" },
+      { x: 0.08, z: 0.46, sx: 0.072, sy: 0.019, sz: 0.056, col: "#d0e0f4" },
+      { x: -0.20, z: -0.24, sx: 0.088, sy: 0.024, sz: 0.068, col: "#c9dbf1" },
+      { x: 0.24, z: -0.24, sx: 0.085, sy: 0.024, sz: 0.066, col: "#d4e3f6" },
+      { x: -0.40, z: -0.14, sx: 0.075, sy: 0.022, sz: 0.06, col: "#d0e0f4" },
+      { x: 0.40, z: -0.14, sx: 0.075, sy: 0.022, sz: 0.06, col: "#ccddf2" },
     ];
 
     const frostGrass: { x: number; z: number; s: number; ry: number; phase: number }[] = [];
-    for (let tries = 0; tries < 140 && frostGrass.length < 18; tries++) {
-      const x = (r() - 0.5) * 1.04;
-      const z = (r() - 0.5) * 0.96;
-      if (!isClear(x, z, zones, 0.58)) continue;
-      frostGrass.push({
-        x,
-        z,
-        s: 0.65 + r() * 0.45,
-        ry: r() * 6.28,
-        phase: x * 5 + z * 5,
-      });
+    for (let gx = -0.58; gx <= 0.58; gx += 0.115) {
+      for (let gz = -0.56; gz <= 0.56; gz += 0.115) {
+        const x = gx + (r() - 0.5) * 0.08;
+        const z = gz + (r() - 0.5) * 0.08;
+        if (!isClear(x, z, zones, 0.61)) continue;
+        if (r() < 0.22) continue;
+        frostGrass.push({
+          x,
+          z,
+          s: 0.68 + r() * 0.48,
+          ry: r() * 6.28,
+          phase: x * 5 + z * 5,
+        });
+      }
     }
 
     const snowShrubs: { x: number; z: number; s: number }[] = [
       { x: -0.36, z: -0.08, s: 0.036 },
       { x: -0.14, z: 0.28, s: 0.032 },
-      { x: 0.36, z: -0.09, s: 0.034 },
+      { x: 0.42, z: -0.04, s: 0.034 },
       { x: 0.16, z: -0.02, s: 0.030 },
       { x: -0.38, z: 0.15, s: 0.030 },
       { x: 0.22, z: 0.32, s: 0.028 },
+      { x: -0.44, z: 0.08, s: 0.028 },
+      { x: -0.10, z: 0.46, s: 0.028 },
+      { x: 0.08, z: 0.46, s: 0.028 },
+      { x: -0.28, z: -0.22, s: 0.032 },
     ];
 
     // Winding trail of snow footprints from front stepping stones toward snowman & cottage
@@ -377,10 +414,14 @@ export default function SeasonGroundCover3D({
     const iceCrystals: { x: number; z: number; s: number; ry: number }[] = [
       { x: 0.11, z: 0.20, s: 0.016, ry: 0.4 },
       { x: 0.13, z: 0.14, s: 0.013, ry: 1.1 },
-      { x: 0.35, z: 0.19, s: 0.015, ry: 2.0 },
+      { x: 0.36, z: 0.20, s: 0.015, ry: 2.0 },
       { x: 0.31, z: 0.26, s: 0.012, ry: 0.8 },
       { x: 0.18, z: 0.28, s: 0.014, ry: 1.7 },
       { x: 0.32, z: 0.12, s: 0.012, ry: 2.6 },
+      { x: -0.04, z: 0.42, s: 0.013, ry: 0.9 },
+      { x: 0.26, z: 0.36, s: 0.012, ry: 1.9 },
+      { x: -0.30, z: 0.26, s: 0.013, ry: 2.3 },
+      { x: 0.42, z: 0.12, s: 0.013, ry: 0.5 },
     ];
 
     return {
@@ -449,7 +490,7 @@ export default function SeasonGroundCover3D({
           </group>
         ))}
 
-        {/* 9 fluffy white dandelion puffs */}
+        {/* 16 fluffy white dandelion puffs */}
         {springData.dandelions.map((d, i) => (
           <group key={`dan-${i}`} position={[d.x, 0.002, d.z]}>
             <mesh position={[0, d.h / 2, 0]}>
@@ -459,6 +500,20 @@ export default function SeasonGroundCover3D({
             <mesh position={[0, d.h, 0]}>
               <sphereGeometry args={[0.011, 8, 8]} />
               <BrightMat color="#ffffff" boost={0.52} opacity={0.92} />
+            </mesh>
+          </group>
+        ))}
+
+        {/* 20 tiny pastel spring meadow flower buds tucked among the grass */}
+        {springData.buds.map((b, i) => (
+          <group key={`bud-${i}`} position={[b.x, 0.002, b.z]}>
+            <mesh position={[0, b.h / 2, 0]}>
+              <cylinderGeometry args={[0.0018, 0.0024, b.h, 5]} />
+              <BrightMat color="#7bc972" boost={0.34} />
+            </mesh>
+            <mesh position={[0, b.h, 0]}>
+              <sphereGeometry args={[0.0085, 7, 7]} />
+              <BrightMat color={b.col} boost={0.46} />
             </mesh>
           </group>
         ))}
@@ -548,7 +603,7 @@ export default function SeasonGroundCover3D({
     return (
       <group>
         {splitMoundEl}
-        {/* 56 swaying golden wheat / rice stalks with drooping grain heads (麦浪!) */}
+        {/* Expansive swaying golden wheat / rice waves + warm autumn grass tufts */}
         {autumnData.wheat.map((w, i) => (
           <group
             key={`wh-${i}`}
@@ -558,20 +613,36 @@ export default function SeasonGroundCover3D({
             position={[w.x, 0.002, w.z]}
             rotation={[0, w.ry, 0]}
           >
-            {/* Slender golden stalk */}
-            <mesh position={[0, w.h * 0.5, 0]}>
-              <cylinderGeometry args={[0.0018, 0.0026, w.h, 5]} />
-              <BrightMat color="#e0b24c" boost={0.38} />
-            </mesh>
-            {/* Drooping plump golden wheat ear at top */}
-            <mesh position={[0.006, w.h * 0.96, 0]} rotation={[0, 0, -0.52]} scale={[0.0055, 0.016, 0.0055]}>
-              <sphereGeometry args={[1, 7, 7]} />
-              <BrightMat color={w.col} boost={0.44} />
-            </mesh>
-            {/* Tiny companion leaf blade */}
-            <mesh geometry={GRASS_BLADE_GEO} position={[0, 0.008, 0]} rotation={[0.15, 1.2, 0.35]} scale={[0.7, 0.72, 0.7]}>
-              <BrightMat color="#e8b856" boost={0.36} />
-            </mesh>
+            {w.isGrass ? (
+              <>
+                <mesh geometry={GRASS_BLADE_GEO} rotation={[0.18, 0, -0.24]} scale={[0.9, 0.88, 0.9]}>
+                  <BrightMat color="#e0b052" boost={0.36} />
+                </mesh>
+                <mesh geometry={GRASS_BLADE_GEO} rotation={[-0.16, 2.2, 0.22]} scale={[0.85, 0.78, 0.85]}>
+                  <BrightMat color="#d49a48" boost={0.34} />
+                </mesh>
+                <mesh geometry={GRASS_BLADE_GEO} rotation={[0.12, 4.3, 0.2]} scale={[0.78, 0.68, 0.78]}>
+                  <BrightMat color="#f0c45e" boost={0.38} />
+                </mesh>
+              </>
+            ) : (
+              <>
+                {/* Slender golden stalk */}
+                <mesh position={[0, w.h * 0.5, 0]}>
+                  <cylinderGeometry args={[0.0018, 0.0026, w.h, 5]} />
+                  <BrightMat color="#e0b24c" boost={0.38} />
+                </mesh>
+                {/* Drooping plump golden wheat ear at top */}
+                <mesh position={[0.006, w.h * 0.96, 0]} rotation={[0, 0, -0.52]} scale={[0.0055, 0.016, 0.0055]}>
+                  <sphereGeometry args={[1, 7, 7]} />
+                  <BrightMat color={w.col} boost={0.44} />
+                </mesh>
+                {/* Tiny companion leaf blade */}
+                <mesh geometry={GRASS_BLADE_GEO} position={[0, 0.008, 0]} rotation={[0.15, 1.2, 0.35]} scale={[0.7, 0.72, 0.7]}>
+                  <BrightMat color="#e8b856" boost={0.36} />
+                </mesh>
+              </>
+            )}
           </group>
         ))}
 
