@@ -204,6 +204,7 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
   const groundPosRefs = useRef<(THREE.Group | null)[]>([]);
   const groundNegRefs = useRef<(THREE.Group | null)[]>([]);
   const treeProgressRefs = useRef<{ current: number }[]>(Array.from({ length: N }, () => ({ current: 0 })));
+  const floorFlatRefs = useRef<{ current: boolean }[]>(Array.from({ length: N }, () => ({ current: false })));
   const target = useMemo(() => new THREE.Vector3(), []);
   // Scratch vectors & matrix for exact origami floor-triangle basis computation (zero per-frame GC)
   const origamiScratch = useMemo(
@@ -313,6 +314,8 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
         const rate = wantProg > cur ? 2.8 : 4.6;
         const prog = cur + (wantProg - cur) * (1 - Math.exp(-dt * rate));
         treeProgressRefs.current[p].current = prog;
+        // Exact moment this spread's floor settles flat (open >= 0.98) — triggers root extension immediately!
+        floorFlatRefs.current[p].current = open >= 0.98 && book.open >= 0.96 && focus > 0.5;
 
         // Visible whenever this page is actively unfolding or folding (keeps transitions lush & alive)
         const active = prog > 0.015 && open > 0.34 && focus > 0.04;
@@ -436,7 +439,11 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
                 treeRefs.current[p] = el;
               }}
             >
-              <SeasonTree3D season={season} progressRef={treeProgressRefs.current[p]} />
+              <SeasonTree3D
+                season={season}
+                progressRef={treeProgressRefs.current[p]}
+                floorFlatRef={floorFlatRefs.current[p]}
+              />
             </group>
             <group
               ref={(el) => {

@@ -132,26 +132,42 @@ const autumn: Room = {
 };
 
 /* ============================================================================
-   4. WINTER — Luminous ice-blue twilight & crisp bright snow
+   4. WINTER — Luminous storybook blue-hour starry night & moonlit snow
    ============================================================================ */
 const winter: Room = {
   name: "winter",
-  mood: "quiet snowfall, warm lantern glow",
+  mood: "moonlit winter night, quiet snowfall & warm lantern glow",
   left(s) {
-    s.washAll(tint("#d8e8f8"), 1);
-    drawHorizonMist(s, 0.72, "#e8f2fc");
-    s.star(0.24, 0.20, 0.015, { alpha: 0.7 });
-    s.star(0.44, 0.16, 0.012, { alpha: 0.65 });
+    s.washAll(tint("#5c7bc0"), 1);
+    drawHorizonMist(s, 0.70, "#95b5eb");
+    for (const [sx, sy, sr] of [
+      [0.16, 0.16, 0.015],
+      [0.34, 0.22, 0.011],
+      [0.48, 0.14, 0.014],
+      [0.64, 0.20, 0.010],
+      [0.24, 0.36, 0.009],
+      [0.74, 0.30, 0.009],
+    ] as const) {
+      s.blob(sx, sy, sr * 0.58, sr * 0.58, tint("#fff8d6"), { w: 0, alpha: 0.95 });
+    }
   },
   right(s) {
-    s.washAll(tint("#d8e8f8"), 1);
-    drawHorizonMist(s, 0.72, "#e8f2fc");
-    s.star(0.76, 0.18, 0.015, { alpha: 0.7 });
-    drawSignpost(s, 0.72, 0.62, "winter", "#b6c7dc", "#f8fbff");
+    s.washAll(tint("#5c7bc0"), 1);
+    drawHorizonMist(s, 0.70, "#95b5eb");
+    for (const [sx, sy, sr] of [
+      [0.24, 0.18, 0.012],
+      [0.46, 0.24, 0.010],
+      [0.68, 0.15, 0.015],
+      [0.82, 0.28, 0.012],
+      [0.56, 0.34, 0.009],
+    ] as const) {
+      s.blob(sx, sy, sr * 0.58, sr * 0.58, tint("#fff8d6"), { w: 0, alpha: 0.95 });
+    }
+    drawSignpost(s, 0.72, 0.62, "winter", "#7b95c4", "#f4f8ff");
   },
   floor(s) {
-    s.washAll(tint("#f2f7fd"), 1);
-    s.shadow(s.ellipsePts(...F(0.48, 0.48), 0.22, 0.17), 0.12, 22);
+    s.washAll(tint("#e4effc"), 1);
+    s.shadow(s.ellipsePts(...F(0.48, 0.48), 0.22, 0.17), 0.16, 22);
   },
   popups: [],
 };

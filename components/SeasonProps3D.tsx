@@ -34,6 +34,49 @@ function createGooseWingOuterGeo(): THREE.BufferGeometry {
 const GOOSE_WING_INNER_GEO = createGooseWingInnerGeo();
 const GOOSE_WING_OUTER_GEO = createGooseWingOuterGeo();
 
+// Sculpted curved waterfall ribbon from bamboo flume over wheel paddles into the pond
+const WATERFALL_STREAM_GEO = (() => {
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0.168, -0.055),
+    new THREE.Vector3(0, 0.158, 0.005),
+    new THREE.Vector3(0, 0.135, 0.052),
+    new THREE.Vector3(0, 0.075, 0.082),
+    new THREE.Vector3(0, 0.012, 0.102),
+  ]);
+  const geo = new THREE.TubeGeometry(curve, 24, 0.011, 8, false);
+  geo.scale(1.35, 1, 0.72); // flatten into a graceful water ribbon
+  return geo;
+})();
+
+function createFlowingWaterTexture(): THREE.CanvasTexture | null {
+  if (typeof document === "undefined") return null;
+  const c = document.createElement("canvas");
+  c.width = 64;
+  c.height = 128;
+  const ctx = c.getContext("2d");
+  if (!ctx) return null;
+  const grad = ctx.createLinearGradient(0, 0, 64, 0);
+  grad.addColorStop(0, "rgba(116, 206, 250, 0.78)");
+  grad.addColorStop(0.5, "rgba(178, 236, 255, 0.92)");
+  grad.addColorStop(1, "rgba(116, 206, 250, 0.78)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 64, 128);
+  // Soft flowing white foam streaks
+  ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+  for (let i = 0; i < 14; i++) {
+    const x = (i * 19 + 7) % 56;
+    const y = (i * 29) % 128;
+    const h = 18 + (i % 4) * 9;
+    ctx.fillRect(x, y, 3, h);
+    if (y + h > 128) ctx.fillRect(x, 0, 3, y + h - 128);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1, 2.2);
+  return tex;
+}
+
 function BrightMat({
   color,
   boost = 0.34,
@@ -122,7 +165,11 @@ export function SeasonGroundProps3D({ season }: { season: SeasonKey }) {
   const mailBounceRef = useRef(0);
 
   const waterWheelRef = useRef<THREE.Group>(null);
+  const waterDropRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const waterFoamRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const splashRingRef = useRef<THREE.Mesh>(null);
   const rippleRef = useRef<THREE.Mesh>(null);
+  const waterTex = useMemo(() => createFlowingWaterTexture(), []);
   const scarecrowRef = useRef<THREE.Group>(null);
   const flameOuterRef = useRef<THREE.Mesh>(null);
   const flameInnerRef = useRef<THREE.Mesh>(null);
@@ -153,10 +200,41 @@ export function SeasonGroundProps3D({ season }: { season: SeasonKey }) {
       mailboxFlagRef.current.rotation.z = Math.sin(t * 2.2) * 0.06 + (mailBounce > 0 ? Math.sin(mailBounce * 18) * 0.2 : 0);
     }
 
-    // Summer waterwheel + pond ripple easter egg
+    // Summer waterwheel + scrolling waterfall ribbon + splash ring + fine mist droplets
     if (waterWheelRef.current) {
-      const spd = 1.4 + waterBoost * 3.2;
+      const spd = 1.6 + waterBoost * 3.2;
       waterWheelRef.current.rotation.x += dt * spd;
+    }
+    if (waterTex) {
+      waterTex.offset.y -= dt * (1.5 + waterBoost * 1.4);
+    }
+    if (splashRingRef.current) {
+      const su = (t * (1.1 + waterBoost * 0.5)) % 1;
+      splashRingRef.current.scale.setScalar(0.55 + su * 1.15);
+      const mat = splashRingRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = (1 - su) * 0.65;
+    }
+    const flowSpd = 1.35 + waterBoost * 0.8;
+    for (let i = 0; i < 6; i++) {
+      const drop = waterDropRefs.current[i];
+      if (!drop) continue;
+      const u = (t * flowSpd + i / 6) % 1;
+      // Tiny bouncing mist droplets around the waterfall splash zone
+      const ang = i * 1.05 + t * 0.6;
+      const rad = 0.012 + u * 0.026;
+      drop.position.set(
+        Math.cos(ang) * rad,
+        0.014 + Math.sin(u * Math.PI) * 0.026,
+        0.076 + Math.sin(ang) * rad * 0.7,
+      );
+      drop.scale.setScalar((1 - u * 0.6) * 0.0042);
+    }
+    for (let i = 0; i < 3; i++) {
+      const fm = waterFoamRefs.current[i];
+      if (!fm) continue;
+      const u = (t * (1.4 + waterBoost * 0.6) + i / 3) % 1;
+      fm.position.set((i - 1) * 0.012, 0.012, 0.078 + u * 0.018);
+      fm.scale.setScalar((1 - u * 0.4) * (0.0065 + Math.sin(u * Math.PI) * 0.004));
     }
     if (rippleRef.current) {
       if (rippleTime > 0) {
@@ -190,7 +268,7 @@ export function SeasonGroundProps3D({ season }: { season: SeasonKey }) {
       flameInnerRef.current.scale.set(0.85 * boostMul * 0.85, f * boostMul, 0.85 * boostMul * 0.85);
     }
     if (fireLightRef.current) {
-      fireLightRef.current.intensity = (0.75 + Math.sin(t * 13) * 0.15) * boostMul;
+      fireLightRef.current.intensity = (0.38 + Math.sin(t * 13) * 0.08) * boostMul;
     }
     for (let i = 0; i < 4; i++) {
       const em = emberRefs.current[i];
@@ -412,16 +490,85 @@ export function SeasonGroundProps3D({ season }: { season: SeasonKey }) {
           </group>
         </group>
 
-        {/* 2. Right-back (behind pond): Rotating Wooden Waterwheel + Cattail Reeds (clickable!) */}
+        {/* 2. Right-back bank of the pond: Rotating Wooden Waterwheel + Flowing Water + Cattail Reeds (clickable!) */}
         <group
-          position={[0.33, 0, -0.06]}
-          rotation={[0, -0.42, 0]}
+          position={[0.31, 0, 0.06]}
+          rotation={[0, -0.58, 0]}
           onClick={(e) => {
             stopProp(e);
             waterBoostRef.current = 2.0;
             rippleTimeRef.current = 1.4;
           }}
         >
+          {/* Elevated Bamboo/Wood Water Flume feeding water onto the top of the wheel */}
+          <group position={[0, 0.158, -0.048]} rotation={[0.16, 0, 0]}>
+            {/* Flume trough bottom & side walls */}
+            <mesh position={[0, 0, 0]}>
+              <boxGeometry args={[0.036, 0.006, 0.105]} />
+              <BrightMat color="#9dbf76" boost={0.34} />
+            </mesh>
+            <mesh position={[-0.018, 0.008, 0]}>
+              <boxGeometry args={[0.005, 0.016, 0.105]} />
+              <BrightMat color="#8ab065" boost={0.32} />
+            </mesh>
+            <mesh position={[0.018, 0.008, 0]}>
+              <boxGeometry args={[0.005, 0.016, 0.105]} />
+              <BrightMat color="#8ab065" boost={0.32} />
+            </mesh>
+            {/* Flume wooden stilt legs */}
+            <mesh position={[-0.016, -0.082, -0.035]} rotation={[-0.16, 0, 0]}>
+              <cylinderGeometry args={[0.004, 0.005, 0.165, 6]} />
+              <BrightMat color="#a87448" boost={0.30} />
+            </mesh>
+            <mesh position={[0.016, -0.082, -0.035]} rotation={[-0.16, 0, 0]}>
+              <cylinderGeometry args={[0.004, 0.005, 0.165, 6]} />
+              <BrightMat color="#a87448" boost={0.30} />
+            </mesh>
+          </group>
+
+          {/* Sculpted UV-scrolling translucent waterfall ribbon pouring from flume into pond */}
+          <mesh geometry={WATERFALL_STREAM_GEO}>
+            <meshBasicMaterial
+              map={waterTex ?? undefined}
+              color="#c8f0ff"
+              transparent
+              opacity={0.88}
+              depthWrite={false}
+            />
+          </mesh>
+
+          {/* Pulsing concentric splash ring where the waterfall meets the pond */}
+          <mesh ref={splashRingRef} position={[0, 0.013, 0.076]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.018, 0.025, 20]} />
+            <meshBasicMaterial color="#ffffff" transparent opacity={0.6} depthWrite={false} />
+          </mesh>
+
+          {/* Fine shimmering mist droplets bouncing around the splash */}
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <mesh
+              key={`wd-${i}`}
+              ref={(el) => {
+                waterDropRefs.current[i] = el;
+              }}
+            >
+              <sphereGeometry args={[1, 6, 6]} />
+              <BrightMat color="#e6f8ff" boost={0.58} opacity={0.85} />
+            </mesh>
+          ))}
+
+          {/* Gentle white foam bubbles at the waterfall base */}
+          {[0, 1, 2].map((i) => (
+            <mesh
+              key={`wf-${i}`}
+              ref={(el) => {
+                waterFoamRefs.current[i] = el;
+              }}
+            >
+              <sphereGeometry args={[1, 6, 6]} />
+              <BrightMat color="#ffffff" boost={0.6} opacity={0.82} />
+            </mesh>
+          ))}
+
           {/* A-frame support */}
           <mesh position={[0.035, 0.065, 0]} rotation={[0, 0, 0.15]}>
             <boxGeometry args={[0.012, 0.13, 0.016]} />
@@ -692,7 +839,7 @@ export function SeasonGroundProps3D({ season }: { season: SeasonKey }) {
       </group>
 
       {/* 2. Right-wing: Vintage Warm Streetlamp + Pair of Wooden Skis */}
-      <group position={[0.34, 0, 0.06]} rotation={[0, -0.45, 0]}>
+      <group position={[0.35, 0, 0.10]} rotation={[0, -0.45, 0]}>
         {/* Streetlamp pole */}
         <mesh position={[0, 0.13, 0]}>
           <cylinderGeometry args={[0.006, 0.01, 0.26, 8]} />

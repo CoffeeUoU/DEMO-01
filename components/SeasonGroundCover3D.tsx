@@ -29,6 +29,10 @@ function createGrassBladeGeo(): THREE.BufferGeometry {
 
 const GRASS_BLADE_GEO = createGrassBladeGeo();
 const BLOB_GEO = new THREE.IcosahedronGeometry(1, 1);
+// Exact half-dome geometries split cleanly along x = 0 so the two halves hug both folded floor triangles
+// and merge seamlessly into one complete round root mound when the page opens flat!
+const HALF_MOUND_POS_X_GEO = new THREE.SphereGeometry(1, 16, 10, Math.PI / 2, Math.PI, 0, Math.PI * 0.5);
+const HALF_MOUND_NEG_X_GEO = new THREE.SphereGeometry(1, 16, 10, -Math.PI / 2, Math.PI, 0, Math.PI * 0.5);
 
 function BrightMat({
   color,
@@ -85,12 +89,12 @@ const SEASON_ZONES: Record<Season, CircleZone[]> = {
     [0.24, 0.18, 0.175], // lotus pond
     [-0.24, 0.18, 0.11], // park bench
     [-0.36, 0.07, 0.095], // beach umbrella + table
-    [0.33, -0.06, 0.085], // waterwheel
+    [0.31, 0.06, 0.085], // waterwheel on pond bank
     [0.13, 0.31, 0.065], // watermelon & bucket
   ],
   autumn: [
     ...BASE_ZONES,
-    [0.20, -0.18, 0.14], // cottage
+    [0.31, -0.09, 0.135], // cottage
     [-0.22, 0.20, 0.10], // pumpkins
     [-0.35, 0.04, 0.095], // wheelbarrow
     [-0.31, -0.10, 0.06], // scarecrow
@@ -98,11 +102,11 @@ const SEASON_ZONES: Record<Season, CircleZone[]> = {
   ],
   winter: [
     ...BASE_ZONES,
-    [0.20, -0.18, 0.14], // snowy cottage
+    [0.31, -0.09, 0.135], // snowy cottage
     [-0.23, 0.19, 0.085], // snowman
     [0.24, 0.18, 0.155], // frozen pond
     [-0.33, 0.04, 0.085], // campfire
-    [0.34, 0.06, 0.065], // streetlamp & skis
+    [0.35, 0.10, 0.065], // streetlamp & skis
     [0.11, 0.31, 0.08], // sled
   ],
 };
@@ -116,6 +120,31 @@ export default function SeasonGroundCover3D({
 }) {
   const swayRefs = useRef<(THREE.Group | null)[]>([]);
   const keepX = (x: number) => (side === "all" ? true : side === "posX" ? x >= 0 : x < 0);
+
+  // Seamless origami-split root mound: posX half hugs O-A-P, negX half hugs O-P-B, merging along x = 0!
+  const moundColor =
+    season === "spring"
+      ? "#c7ebb0"
+      : season === "summer"
+        ? "#a6e08b"
+        : season === "autumn"
+          ? "#fce1a2"
+          : "#cfe0f4";
+  const moundBoost = season === "winter" ? 0.14 : 0.32;
+  const splitMoundEl = (
+    <group>
+      {(side === "all" || side === "posX") && (
+        <mesh geometry={HALF_MOUND_POS_X_GEO} position={[0, 0.001, 0]} scale={[0.22, 0.044, 0.22]}>
+          <BrightMat color={moundColor} boost={moundBoost} />
+        </mesh>
+      )}
+      {(side === "all" || side === "negX") && (
+        <mesh geometry={HALF_MOUND_NEG_X_GEO} position={[0, 0.001, 0]} scale={[0.22, 0.044, 0.22]}>
+          <BrightMat color={moundColor} boost={moundBoost} />
+        </mesh>
+      )}
+    </group>
+  );
 
   // 1. SPRING: Tender grass tufts + dandelion puffs + fallen cherry blossom petals & clover pads
   const springData = useMemo(() => {
@@ -296,16 +325,16 @@ export default function SeasonGroundCover3D({
     const zones = SEASON_ZONES.winter;
 
     const snowdrifts: { x: number; z: number; sx: number; sy: number; sz: number; col: string }[] = [
-      { x: -0.14, z: 0.08, sx: 0.095, sy: 0.024, sz: 0.075, col: "#ffffff" },
-      { x: 0.14, z: 0.05, sx: 0.09, sy: 0.022, sz: 0.07, col: "#f2f8ff" },
-      { x: -0.36, z: 0.15, sx: 0.085, sy: 0.026, sz: 0.068, col: "#ffffff" },
-      { x: -0.14, z: 0.34, sx: 0.08, sy: 0.022, sz: 0.065, col: "#edf6ff" },
-      { x: 0.36, z: -0.06, sx: 0.085, sy: 0.025, sz: 0.07, col: "#ffffff" },
-      { x: 0.04, z: -0.22, sx: 0.10, sy: 0.028, sz: 0.075, col: "#f5faff" },
-      { x: -0.34, z: -0.10, sx: 0.085, sy: 0.024, sz: 0.068, col: "#eef6ff" },
-      { x: 0.24, z: 0.30, sx: 0.075, sy: 0.020, sz: 0.06, col: "#ffffff" },
-      { x: -0.06, z: 0.45, sx: 0.07, sy: 0.018, sz: 0.055, col: "#f2f8ff" },
-      { x: 0.38, z: 0.16, sx: 0.072, sy: 0.022, sz: 0.058, col: "#ffffff" },
+      { x: -0.14, z: 0.08, sx: 0.095, sy: 0.024, sz: 0.075, col: "#d8e6f7" },
+      { x: 0.14, z: 0.05, sx: 0.09, sy: 0.022, sz: 0.07, col: "#ccddf2" },
+      { x: -0.36, z: 0.15, sx: 0.085, sy: 0.026, sz: 0.068, col: "#d5e4f6" },
+      { x: -0.14, z: 0.34, sx: 0.08, sy: 0.022, sz: 0.065, col: "#c8daf0" },
+      { x: 0.36, z: -0.06, sx: 0.085, sy: 0.025, sz: 0.07, col: "#d8e6f7" },
+      { x: 0.04, z: -0.22, sx: 0.10, sy: 0.028, sz: 0.075, col: "#cfdff4" },
+      { x: -0.34, z: -0.10, sx: 0.085, sy: 0.024, sz: 0.068, col: "#c8daf0" },
+      { x: 0.24, z: 0.30, sx: 0.075, sy: 0.020, sz: 0.06, col: "#d6e5f6" },
+      { x: -0.06, z: 0.45, sx: 0.07, sy: 0.018, sz: 0.055, col: "#ccddf2" },
+      { x: 0.38, z: 0.16, sx: 0.072, sy: 0.022, sz: 0.058, col: "#d8e6f7" },
     ];
 
     const frostGrass: { x: number; z: number; s: number; ry: number; phase: number }[] = [];
@@ -396,6 +425,7 @@ export default function SeasonGroundCover3D({
   if (season === "spring") {
     return (
       <group>
+        {splitMoundEl}
         {/* 46 swaying 3-blade tender spring grass tufts */}
         {springData.tufts.map((tuft, i) => (
           <group
@@ -452,6 +482,7 @@ export default function SeasonGroundCover3D({
   if (season === "summer") {
     return (
       <group>
+        {splitMoundEl}
         {/* 42 lush summer grass & fanned fern clusters */}
         {summerData.tufts.map((tuft, i) => (
           <group
@@ -516,6 +547,7 @@ export default function SeasonGroundCover3D({
   if (season === "autumn") {
     return (
       <group>
+        {splitMoundEl}
         {/* 56 swaying golden wheat / rice stalks with drooping grain heads (麦浪!) */}
         {autumnData.wheat.map((w, i) => (
           <group
@@ -575,10 +607,11 @@ export default function SeasonGroundCover3D({
   // WINTER: Billowing snowdrifts + frost-tipped grass + snow-capped holly shrubs + snow footprints + ice crystals
   return (
     <group>
+      {splitMoundEl}
       {/* 10 soft sculpted billowing snowdrifts breaking up the flat snow floor */}
       {winterData.snowdrifts.map((sd, i) => (
         <mesh key={`sd-${i}`} geometry={BLOB_GEO} position={[sd.x, 0.005, sd.z]} scale={[sd.sx, sd.sy, sd.sz]}>
-          <BrightMat color={sd.col} boost={0.46} />
+          <BrightMat color={sd.col} boost={0.14} />
         </mesh>
       ))}
 
@@ -609,7 +642,7 @@ export default function SeasonGroundCover3D({
             <BrightMat color="#6ca384" boost={0.34} />
           </mesh>
           <mesh geometry={BLOB_GEO} position={[0, sh.s * 0.42, 0]} scale={[sh.s * 0.95, sh.s * 0.45, sh.s * 0.88]}>
-            <BrightMat color="#ffffff" boost={0.48} />
+            <BrightMat color="#d8e8f8" boost={0.16} />
           </mesh>
           <mesh position={[sh.s * 0.55, sh.s * 0.15, sh.s * 0.55]}>
             <sphereGeometry args={[0.006, 6, 6]} />

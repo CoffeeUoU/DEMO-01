@@ -15,7 +15,7 @@ type ClusterSpec = {
   phase: number;
 };
 
-const INK_COLOR = "#463d66";
+const INK_COLOR = "#4c5896";
 
 function makeRng(seed: number) {
   let a = seed >>> 0 || 1;
@@ -75,7 +75,8 @@ function createTaperedBranch(points: [number, number, number][], rStart: number,
       const b = (i + 1) * stride + j;
       const c = (i + 1) * stride + (j + 1);
       const d = i * stride + (j + 1);
-      indices.push(a, b, d, b, c, d);
+      // Outward-facing CCW winding so front bark renders outside & BackSide outline renders only as a silhouette rim!
+      indices.push(a, d, b, b, d, c);
     }
   }
 
@@ -161,14 +162,15 @@ function Cloud3D({ pos, scale = 1, color = "#ffffff" }: { pos: [number, number, 
 
 /** Cozy 3D miniature storybook cottage tucked into the hillside (autumn & winter). */
 function Cottage3D({ pos, rotY, snowy }: { pos: [number, number, number]; rotY: number; snowy: boolean }) {
-  const roofCol = snowy ? "#f5f9ff" : "#e38462";
-  const wallCol = snowy ? "#eef4fa" : "#fff2dc";
+  const roofCol = snowy ? "#d8e6f6" : "#e38462";
+  const wallCol = snowy ? "#ceddf0" : "#fff2dc";
+  const boost = snowy ? 0.14 : 0.32;
   return (
     <group position={pos} rotation={[0, rotY, 0]}>
       {/* Cottage walls */}
       <mesh position={[0, 0.065, 0]}>
         <boxGeometry args={[0.14, 0.13, 0.12]} />
-        <BrightMat color={wallCol} boost={0.32} />
+        <BrightMat color={wallCol} boost={boost} />
       </mesh>
       <mesh position={[0, 0.065, 0]} scale={1.04} material={OUTLINE_MAT}>
         <boxGeometry args={[0.14, 0.13, 0.12]} />
@@ -315,12 +317,16 @@ function easeOutBack(t: number, overshoot = 1.55) {
 export default function SeasonTree3D({
   season,
   progressRef,
+  floorFlatRef,
 }: {
   season: Season;
   progressRef?: { current: number };
+  floorFlatRef?: { current: boolean };
 }) {
   const bgStageRef = useRef<THREE.Group | null>(null);
   const trunkRef = useRef<THREE.Group | null>(null);
+  const rootsRef = useRef<THREE.Group | null>(null);
+  const rootGrowthRef = useRef<number>(0);
   const canopyRef = useRef<THREE.Group | null>(null);
   const clusterRefs = useRef<(THREE.Group | null)[]>([]);
   const bloomExtrasRef = useRef<THREE.Group | null>(null);
@@ -343,7 +349,7 @@ export default function SeasonTree3D({
     switch (season) {
       case "spring":
         return {
-          bark: "#b99272",
+          bark: "#c4966c",
           mound: "#c7ebb0",
           hillBack: "#c2e6b8",
           hillMid: "#d4f0be",
@@ -354,7 +360,7 @@ export default function SeasonTree3D({
         };
       case "summer":
         return {
-          bark: "#a67d5d",
+          bark: "#b88960",
           mound: "#9ee08c",
           hillBack: "#8dd696",
           hillMid: "#a6e39b",
@@ -365,7 +371,7 @@ export default function SeasonTree3D({
         };
       case "autumn":
         return {
-          bark: "#ad7e5c",
+          bark: "#b5835a",
           mound: "#f7d99e",
           hillBack: "#f3be8a",
           hillMid: "#f8d39a",
@@ -376,12 +382,12 @@ export default function SeasonTree3D({
         };
       case "winter":
         return {
-          bark: "#a8a4b8",
-          mound: "#f2f8ff",
-          hillBack: "#cfe2f7",
-          hillMid: "#e6f2ff",
-          hillSide: "#d9eafc",
-          fence: "#c7d6e8",
+          bark: "#9e867c",
+          mound: "#e4effc",
+          hillBack: "#9ab8e4",
+          hillMid: "#b2cbf0",
+          hillSide: "#8aa8d8",
+          fence: "#adc2de",
           scaleY: 0.98,
           scaleXZ: 0.98,
         };
@@ -480,8 +486,8 @@ export default function SeasonTree3D({
         }
       }
     } else {
-      // Winter: lush snow-laden canopy (slightly airier than autumn) — looks like soft snow blanketing the tree
-      const snowCols = ["#ffffff", "#f5faff", "#eaf4ff", "#ffffff", "#e2f0fe"];
+      // Winter: softly shaded moonlit snow-laden canopy (no blown-out flat white!)
+      const snowCols = ["#dce9f8", "#cfe1f5", "#c4d9f0", "#d8e7f6", "#cadcf2"];
       const anchors: [number, number, number, number][] = [
         [-0.24, 0.55, 0.11, 0.140],
         [0.25, 0.54, 0.10, 0.140],
@@ -510,50 +516,105 @@ export default function SeasonTree3D({
     return out;
   }, [season]);
 
-  // 28 blooming 3D crimson & rose-red plum blossoms nestled across the snowy winter canopy
+  // Blooming 3D crimson & rose-red plum blossoms placed directly onto ACTUAL triangle faces
+  // of the transformed winter snow canopy meshes (0 floating AND 0 facet clipping!)
   const winterPlumBlossoms = useMemo(() => {
-    const r = makeRng(909);
+    if (season !== "winter") return [];
+    const r = makeRng(2026);
     const cols = ["#e8465a", "#f25c6e", "#d9384e", "#ff7588", "#e54b5e"];
-    const spots: [number, number, number][] = [
-      [-0.28, 0.58, 0.21],
-      [-0.20, 0.64, 0.24],
-      [-0.10, 0.78, 0.19],
-      [0.02, 0.88, 0.14],
-      [0.14, 0.80, 0.16],
-      [0.24, 0.66, 0.23],
-      [0.31, 0.56, 0.20],
-      [-0.02, 0.68, 0.22],
-      [0.08, 0.62, 0.23],
-      [-0.14, 0.54, 0.23],
-      [0.16, 0.53, 0.22],
-      [-0.34, 0.54, 0.08],
-      [0.35, 0.53, 0.06],
-      [-0.26, 0.68, -0.04],
-      [0.27, 0.69, -0.03],
-      [-0.18, 0.78, -0.08],
-      [0.18, 0.79, -0.09],
-      [0.0, 0.92, 0.02],
-      [-0.12, 0.86, 0.08],
-      [0.11, 0.86, 0.05],
-      [-0.25, 0.64, -0.22],
-      [0.25, 0.65, -0.21],
-      [0.0, 0.72, -0.24],
-      [-0.07, 0.60, 0.24],
-      [0.21, 0.72, 0.12],
-      [-0.22, 0.72, 0.12],
-    ];
-    return spots.map(([x, y, z]) => {
-      // Orient each blossom generally outward from the canopy center (0, 0.66, 0)
-      const yaw = Math.atan2(x, z);
-      const pitch = -(y - 0.66) * 1.4;
-      return {
-        pos: [x, y, z] as [number, number, number],
-        rot: [pitch, yaw, r() * 6.28] as [number, number, number],
-        scale: 0.92 + r() * 0.45,
-        color: cols[Math.floor(r() * cols.length)],
-      };
-    });
-  }, []);
+    const center = new THREE.Vector3(0, 0.64, 0);
+    const zAxis = new THREE.Vector3(0, 0, 1);
+    const quat = new THREE.Quaternion();
+    const euler = new THREE.Euler();
+    const posAttr = SHARED_BLOB_GEO.attributes.position as THREE.BufferAttribute;
+    const triCount = Math.floor(posAttr.count / 3);
+
+    const va = new THREE.Vector3();
+    const vb = new THREE.Vector3();
+    const vc = new THREE.Vector3();
+    const ab = new THREE.Vector3();
+    const ac = new THREE.Vector3();
+    const faceNormal = new THREE.Vector3();
+    const faceCenter = new THREE.Vector3();
+    const mat4 = new THREE.Matrix4();
+    const rotQ = new THREE.Quaternion();
+    const sclV = new THREE.Vector3();
+    const posV = new THREE.Vector3();
+    const out: { pos: [number, number, number]; rot: [number, number, number]; scale: number; color: string }[] = [];
+
+    // Helper to place up to `limit` well-spaced blossoms matching a surface filter
+    const fillZone = (limit: number, minDist: number, match: (fc: THREE.Vector3, fn: THREE.Vector3) => boolean) => {
+      let added = 0;
+      for (let pass = 0; pass < 4 && added < limit; pass++) {
+        for (let i = 0; i < clusters.length && added < limit; i++) {
+          const c = clusters[i];
+          posV.set(c.pos[0], c.pos[1], c.pos[2]);
+          rotQ.setFromEuler(new THREE.Euler(c.rot[0], c.rot[1], c.rot[2]));
+          sclV.set(c.scale[0], c.scale[1], c.scale[2]);
+          mat4.compose(posV, rotQ, sclV);
+
+          for (let attempt = 0; attempt < 24; attempt++) {
+            const tIdx = Math.floor(r() * triCount) * 3;
+            va.fromBufferAttribute(posAttr, tIdx).applyMatrix4(mat4);
+            vb.fromBufferAttribute(posAttr, tIdx + 1).applyMatrix4(mat4);
+            vc.fromBufferAttribute(posAttr, tIdx + 2).applyMatrix4(mat4);
+
+            faceCenter.copy(va).add(vb).add(vc).multiplyScalar(1 / 3);
+            ab.subVectors(vb, va);
+            ac.subVectors(vc, va);
+            faceNormal.crossVectors(ab, ac).normalize();
+
+            if (faceNormal.dot(faceCenter.clone().sub(posV)) < 0) faceNormal.negate();
+            if (faceNormal.dot(faceCenter.clone().sub(center).normalize()) < 0.30) continue;
+            if (!match(faceCenter, faceNormal)) continue;
+
+            const p = faceCenter.clone().addScaledVector(faceNormal, 0.006);
+
+            let clear = true;
+            for (let j = 0; j < clusters.length; j++) {
+              if (j === i) continue;
+              const o = clusters[j];
+              const nx = (p.x - o.pos[0]) / (o.scale[0] * 1.18);
+              const ny = (p.y - o.pos[1]) / (o.scale[1] * 1.18);
+              const nz = (p.z - o.pos[2]) / (o.scale[2] * 1.18);
+              if (nx * nx + ny * ny + nz * nz < 1.0) {
+                clear = false;
+                break;
+              }
+            }
+            if (clear) {
+              for (const prev of out) {
+                const dx = p.x - prev.pos[0];
+                const dy = p.y - prev.pos[1];
+                const dz = p.z - prev.pos[2];
+                if (dx * dx + dy * dy + dz * dz < minDist * minDist) {
+                  clear = false;
+                  break;
+                }
+              }
+            }
+            if (!clear) continue;
+
+            quat.setFromUnitVectors(zAxis, faceNormal);
+            euler.setFromQuaternion(quat);
+            out.push({
+              pos: [p.x, p.y, p.z],
+              rot: [euler.x, euler.y, euler.z + r() * Math.PI * 2],
+              scale: 0.90 + r() * 0.26,
+              color: cols[Math.floor(r() * cols.length)],
+            });
+            added++;
+            break;
+          }
+        }
+      }
+    };
+
+    // Exact 7 : 3 ratio -> 14 front-facing blossoms (70%) + 6 crown-top / upper-back blossoms (30%)
+    fillZone(14, 0.075, (fc, fn) => fn.z > 0.25 && fc.z > 0.01);
+    fillZone(6, 0.075, (fc, fn) => fn.y > 0.52 && fc.y > 0.74);
+    return out;
+  }, [season, clusters]);
 
   // Winter fairy string lights draped gracefully between the 3D boughs
   const winterFairyLights = useMemo(() => {
@@ -688,6 +749,21 @@ export default function SeasonTree3D({
         palette.scaleXZ * (0.35 + 0.65 * k),
       );
       trunkRef.current.rotation.x = (1 - k) * -0.14;
+    }
+
+    // Layer 1B: 4 gripping surface roots start extending the EXACT moment the floor settles flat (~1.8s)
+    if (rootsRef.current) {
+      const isFlat = floorFlatRef ? floorFlatRef.current : prog > 0.72;
+      if (isFlat) {
+        rootGrowthRef.current = Math.min(1, rootGrowthRef.current + dt * 0.55);
+      } else {
+        rootGrowthRef.current = Math.max(0, rootGrowthRef.current - dt * 4.5);
+      }
+      const u = rootGrowthRef.current;
+      // Gentle smoothstep so the roots glide outward unhurriedly
+      const rk = u * u * (3 - 2 * u);
+      rootsRef.current.visible = rk > 0.01;
+      rootsRef.current.scale.set(Math.max(0.01, rk), 0.3 + 0.7 * rk, Math.max(0.01, rk));
     }
 
     // Layer 2 (Hero Bloom): Individual 3D canopy clusters bloom in a staggered wave with soft spring overshoot
@@ -858,24 +934,49 @@ export default function SeasonTree3D({
             </group>
           </>
         ) : (
-          /* Winter 3D Glowing Moon & 3D Stars */
-          <group position={[-0.14, 0.98, -0.34]}>
+          /* Winter Night: Luminous 3D Full Moon cleanly framed inside upper-left sky */
+          <group position={[-0.22, 0.92, -0.35]}>
+            {/* Main Full Moon */}
             <mesh>
-              <sphereGeometry args={[0.058, 16, 16]} />
-              <meshBasicMaterial color="#fff9e2" />
+              <sphereGeometry args={[0.076, 24, 24]} />
+              <meshBasicMaterial color="#fff7d6" />
             </mesh>
+            {/* Subtle storybook lunar maria patches */}
+            <mesh position={[-0.020, 0.018, 0.068]} scale={[0.021, 0.018, 0.007]}>
+              <sphereGeometry args={[1, 10, 10]} />
+              <meshBasicMaterial color="#eddba8" transparent opacity={0.55} />
+            </mesh>
+            <mesh position={[0.022, -0.015, 0.070]} scale={[0.016, 0.013, 0.007]}>
+              <sphereGeometry args={[1, 10, 10]} />
+              <meshBasicMaterial color="#eddba8" transparent opacity={0.48} />
+            </mesh>
+            <mesh position={[0.010, 0.030, 0.066]} scale={[0.012, 0.010, 0.007]}>
+              <sphereGeometry args={[1, 10, 10]} />
+              <meshBasicMaterial color="#e8d49c" transparent opacity={0.45} />
+            </mesh>
+            {/* Inner warm moonbeam glow */}
             <mesh>
-              <sphereGeometry args={[0.105, 16, 16]} />
-              <meshBasicMaterial color="#d8ecff" transparent opacity={0.32} depthWrite={false} />
+              <sphereGeometry args={[0.112, 20, 20]} />
+              <meshBasicMaterial color="#ffefc2" transparent opacity={0.28} depthWrite={false} />
             </mesh>
+            {/* Outer dreamy silver-blue night aura */}
+            <mesh>
+              <sphereGeometry args={[0.158, 20, 20]} />
+              <meshBasicMaterial color="#a8cbff" transparent opacity={0.16} depthWrite={false} />
+            </mesh>
+            {/* Twinkling 3D stars across the winter night sky */}
             {[
-              [0.24, 0.04, 0.02],
-              [0.34, -0.06, 0.05],
-              [0.14, -0.08, 0.04],
-              [-0.12, -0.05, 0.06],
-            ].map(([sx, sy, sz], i) => (
+              [0.24, 0.06, 0.02, 0.016],
+              [0.38, -0.02, 0.04, 0.014],
+              [0.48, 0.07, 0.03, 0.012],
+              [0.18, -0.08, 0.04, 0.011],
+              [-0.14, -0.06, 0.05, 0.013],
+              [-0.10, 0.11, 0.03, 0.010],
+              [0.31, 0.11, 0.02, 0.011],
+              [0.44, -0.10, 0.05, 0.010],
+            ].map(([sx, sy, sz, sr], i) => (
               <mesh key={i} position={[sx, sy, sz]}>
-                <octahedronGeometry args={[0.015, 0]} />
+                <octahedronGeometry args={[sr, 0]} />
                 <meshBasicMaterial color="#fff8d6" />
               </mesh>
             ))}
@@ -888,17 +989,28 @@ export default function SeasonTree3D({
 
       {/* ==================== 2. LAYER 2 & 3: CENTRAL 3D TREE & SPRING-BLOOM CANOPY ==================== */}
       <group ref={trunkRef} scale={[palette.scaleXZ, palette.scaleY, palette.scaleXZ]}>
-        <mesh geometry={SHARED_BLOB_GEO} position={[0, 0.018, 0]} scale={[0.24, 0.05, 0.24]}>
-          <BrightMat color={palette.mound} boost={0.32} />
-        </mesh>
-
+        {/* Main trunk & upper boughs (indices 0 and 5+) */}
         <group>
-          {branchGeos.map((geo, idx) => (
-            <group key={idx}>
+          {branchGeos.map((geo, idx) =>
+            idx >= 1 && idx <= 4 ? null : (
+              <group key={idx}>
+                <mesh geometry={geo}>
+                  <BrightMat color={palette.bark} boost={season === "winter" ? 0.16 : 0.22} />
+                </mesh>
+                <mesh geometry={geo} scale={idx === 0 ? [1.042, 1.005, 1.042] : 1.03} material={OUTLINE_MAT} />
+              </group>
+            ),
+          )}
+        </group>
+
+        {/* 4 gripping surface roots (indices 1..4) — extend outward only after the page settles flat */}
+        <group ref={rootsRef}>
+          {branchGeos.slice(1, 5).map((geo, idx) => (
+            <group key={`root-${idx}`}>
               <mesh geometry={geo}>
-                <BrightMat color={palette.bark} boost={0.26} />
+                <BrightMat color={palette.bark} boost={season === "winter" ? 0.16 : 0.22} />
               </mesh>
-              <mesh geometry={geo} scale={1.05} material={OUTLINE_MAT} />
+              <mesh geometry={geo} scale={1.03} material={OUTLINE_MAT} />
             </group>
           ))}
         </group>
@@ -915,9 +1027,9 @@ export default function SeasonTree3D({
               scale={c.scale}
             >
               <mesh geometry={SHARED_BLOB_GEO}>
-                <BrightMat color={c.color} boost={0.34} />
+                <BrightMat color={c.color} boost={season === "winter" ? 0.14 : 0.34} />
               </mesh>
-              <mesh geometry={SHARED_BLOB_GEO} scale={1.045} material={OUTLINE_MAT} />
+              <mesh geometry={SHARED_BLOB_GEO} scale={1.03} material={OUTLINE_MAT} />
             </group>
           ))}
 
@@ -1082,9 +1194,9 @@ export default function SeasonTree3D({
       {/* AUTUMN PROPS: Cozy 3D Cottage with Rising Chimney Smoke + Pumpkin Patch + Leaf Carpet */}
       {season === "autumn" && (
         <>
-          <Cottage3D pos={[0.20, 0.03, -0.18]} rotY={-0.65} snowy={false} />
+          <Cottage3D pos={[0.31, 0.005, -0.09]} rotY={-0.65} snowy={false} />
           {/* Rising chimney smoke */}
-          <group position={[0.23, 0.24, -0.17]}>
+          <group position={[0.34, 0.215, -0.08]}>
             {[0, 1, 2].map((i) => (
               <mesh
                 key={i}
@@ -1129,19 +1241,19 @@ export default function SeasonTree3D({
       {/* WINTER PROPS: Snowy Cottage + Glowing Tree Lanterns + 3D Snowman + Mini Snow Pines */}
       {season === "winter" && (
         <>
-          <Cottage3D pos={[0.20, 0.03, -0.18]} rotY={-0.65} snowy={true} />
+          <Cottage3D pos={[0.31, 0.005, -0.09]} rotY={-0.65} snowy={true} />
           <MiniPine3D pos={[-0.22, 0.02, -0.16]} scale={0.98} />
-          <MiniPine3D pos={[0.28, 0.01, -0.02]} scale={0.80} />
+          <MiniPine3D pos={[0.18, 0.015, -0.20]} scale={0.82} />
 
           {/* 3D Cute Snowman with Red Scarf & Top Hat */}
           <group position={[-0.23, 0, 0.19]} rotation={[0, 0.55, 0]}>
             <mesh position={[0, 0.048, 0]}>
               <sphereGeometry args={[0.055, 14, 14]} />
-              <BrightMat color="#ffffff" boost={0.42} />
+              <BrightMat color="#d8e7f7" boost={0.16} />
             </mesh>
             <mesh position={[0, 0.118, 0]}>
               <sphereGeometry args={[0.038, 14, 14]} />
-              <BrightMat color="#ffffff" boost={0.42} />
+              <BrightMat color="#dceaf9" boost={0.16} />
             </mesh>
             {/* Red scarf */}
             <mesh position={[0, 0.088, 0]}>
@@ -1167,7 +1279,7 @@ export default function SeasonTree3D({
           {/* Frozen icy pond */}
           <mesh position={[0.24, 0.006, 0.18]} scale={[1.2, 0.12, 0.9]}>
             <cylinderGeometry args={[0.12, 0.12, 0.05, 18]} />
-            <BrightMat color="#d2ebff" boost={0.48} />
+            <BrightMat color="#a9cef2" boost={0.20} />
           </mesh>
 
           {/* Two warm glowing 3D hanging lanterns */}
@@ -1188,7 +1300,7 @@ export default function SeasonTree3D({
                 <sphereGeometry args={[0.072, 12, 12]} />
                 <meshBasicMaterial color="#ffd97d" transparent opacity={0.34} depthWrite={false} />
               </mesh>
-              <pointLight position={[0, -0.12, 0]} color="#ffd578" intensity={0.8} distance={1.4} decay={2} />
+              <pointLight position={[0, -0.12, 0]} color="#ffd578" intensity={0.32} distance={1.1} decay={2} />
             </group>
           ))}
 
