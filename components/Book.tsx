@@ -12,6 +12,7 @@ import { ROOMS } from "@/lib/rooms";
 import { book } from "@/lib/store";
 import type { BookTextures } from "@/lib/textures";
 import SeasonTree3D, { type Season } from "./SeasonTree3D";
+import SeasonGroundCover3D from "./SeasonGroundCover3D";
 
 const PAGE_GAP = 0.014; // thickness between pages when the book is shut
 const INK_HEX = `#${INK.getHexString()}`;
@@ -200,8 +201,23 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
   const outlineRefs = useRef<(Line2 | null)[]>([]);
   const popRefs = useRef<{ outer: THREE.Group | null; hinge: THREE.Group | null }[][]>(Array.from({ length: N }, () => []));
   const treeRefs = useRef<(THREE.Group | null)[]>([]);
+  const groundPosRefs = useRef<(THREE.Group | null)[]>([]);
+  const groundNegRefs = useRef<(THREE.Group | null)[]>([]);
   const treeProgressRefs = useRef<{ current: number }[]>(Array.from({ length: N }, () => ({ current: 0 })));
   const target = useMemo(() => new THREE.Vector3(), []);
+  // Scratch vectors & matrix for exact origami floor-triangle basis computation (zero per-frame GC)
+  const origamiScratch = useMemo(
+    () => ({
+      vP: new THREE.Vector3(),
+      vA: new THREE.Vector3(),
+      vB: new THREE.Vector3(),
+      uZ: new THREE.Vector3(),
+      uX: new THREE.Vector3(),
+      uY: new THREE.Vector3(),
+      mat: new THREE.Matrix4(),
+    }),
+    [],
+  );
 
   useFrame((_, dtRaw) => {
     const dt = Math.min(dtRaw, 1 / 20);
@@ -311,6 +327,42 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
         const liftScale = 0.55 + 0.45 * smooth((open - 0.40) / 0.60);
         tree.scale.set(squeezeX * liftScale, liftScale, liftScale);
       }
+
+      // Rigid origami floor-hinge transform for SeasonGroundCover3D:
+      // Left/right halves (posX on triangle O-A-P, negX on triangle O-P-B) stay 100% glued flush
+      // to both folding paper triangles at every fold angle, pressing flat smoothly as walls shut!
+      const gPos = groundPosRefs.current[p];
+      const gNeg = groundNegRefs.current[p];
+      if (gPos && gNeg) {
+        const focus = focusOf(p, f);
+        const flatPress = smooth((open - 0.14) / 0.36) * smooth((book.open - 0.18) / 0.36);
+        const showGround = flatPress > 0.01 && focus > 0.03;
+        gPos.visible = showGround;
+        gNeg.visible = showGround;
+        if (showGround) {
+          const { vP, vA, vB, uZ, uX, uY, mat } = origamiScratch;
+          vP.set(P[0], P[1], P[2]);
+          vA.set(A[0], A[1], A[2]);
+          vB.set(B[0], B[1], B[2]);
+          uZ.copy(vP).normalize();
+
+          // Wing A (x >= 0): triangle O-A-P
+          uX.copy(vA).addScaledVector(vP, -0.5).normalize();
+          uY.crossVectors(uZ, uX).normalize();
+          mat.makeBasis(uX, uY, uZ);
+          gPos.position.set(P[0] * 0.48 + uY.x * 0.002, P[1] * 0.48 + uY.y * 0.002, P[2] * 0.48 + uY.z * 0.002);
+          gPos.quaternion.setFromRotationMatrix(mat);
+          gPos.scale.set(1, flatPress, 1);
+
+          // Wing B (x < 0): triangle O-P-B
+          uX.copy(vP).multiplyScalar(0.5).sub(vB).normalize();
+          uY.crossVectors(uZ, uX).normalize();
+          mat.makeBasis(uX, uY, uZ);
+          gNeg.position.set(P[0] * 0.48 + uY.x * 0.002, P[1] * 0.48 + uY.y * 0.002, P[2] * 0.48 + uY.z * 0.002);
+          gNeg.quaternion.setFromRotationMatrix(mat);
+          gNeg.scale.set(1, flatPress, 1);
+        }
+      }
     }
 
     // camera: front view of the cover when shut, looking into the focused room when open
@@ -378,13 +430,28 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
       {Array.from({ length: N }, (_, p) => {
         const season = ROOMS[logicalOf(p)].name as Season;
         return (
-          <group
-            key={`tree3d-${p}`}
-            ref={(el) => {
-              treeRefs.current[p] = el;
-            }}
-          >
-            <SeasonTree3D season={season} progressRef={treeProgressRefs.current[p]} />
+          <group key={`diorama-${p}`}>
+            <group
+              ref={(el) => {
+                treeRefs.current[p] = el;
+              }}
+            >
+              <SeasonTree3D season={season} progressRef={treeProgressRefs.current[p]} />
+            </group>
+            <group
+              ref={(el) => {
+                groundPosRefs.current[p] = el;
+              }}
+            >
+              <SeasonGroundCover3D season={season} side="posX" />
+            </group>
+            <group
+              ref={(el) => {
+                groundNegRefs.current[p] = el;
+              }}
+            >
+              <SeasonGroundCover3D season={season} side="negX" />
+            </group>
           </group>
         );
       })}
