@@ -34,7 +34,7 @@ type RidgeConfig = {
 
 type MountainParams = { height: number; width: number; length: number };
 
-const DEFAULT_MOUNTAIN: MountainParams = { height: 1, width: 1, length: 1 };
+const DEFAULT_MOUNTAIN: MountainParams = { height: 0.48, width: 1.74, length: 1.4 };
 
 /** Exact surface evaluator matching createSlopedMountainGeo so every prop sits solidly on the 3D slope */
 function evalSlopePoint(
@@ -624,14 +624,22 @@ export default function SeasonWall3D({
   const windmillBladesRef = useRef<THREE.Group>(null);
   const swallowsRef = useRef<THREE.Group>(null);
   const starRefs = useRef<(THREE.Mesh | null)[]>([]);
-  const lastMountain = useRef({ h: 1, w: 1, l: 1 });
+  const lastMountain = useRef({
+    h: DEFAULT_MOUNTAIN.height,
+    w: DEFAULT_MOUNTAIN.width,
+    l: DEFAULT_MOUNTAIN.length,
+  });
 
   const cfgs = RIDGE_CFGS[season][wall];
   const geos = useMemo(() => {
     const src = SLOPED_MOUNTAIN_GEOS[season][wall];
     const back = src.back.clone();
     const front = src.front.clone();
-    if (book.mountain.height !== 1 || book.mountain.width !== 1 || book.mountain.length !== 1) {
+    if (
+      book.mountain.height !== DEFAULT_MOUNTAIN.height ||
+      book.mountain.width !== DEFAULT_MOUNTAIN.width ||
+      book.mountain.length !== DEFAULT_MOUNTAIN.length
+    ) {
       updateSlopedMountainPositions(back, cfgs.back, book.mountain);
       updateSlopedMountainPositions(front, cfgs.front, book.mountain);
     }

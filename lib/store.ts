@@ -21,10 +21,10 @@ export const book = {
   roamTarget: 0,
   /** toggleable micro-weather per season (rain / autumn gust / heavy snowfall) */
   weatherAlt: false,
-  /** Live user-tunable 3D wall mountain parameters (高低 / 宽窄 / 长短) */
+  /** Final user-tuned 3D wall mountain parameters (高低 / 宽窄 / 长短) */
   mountain: {
-    height: 1.0,
-    width: 1.0,
-    length: 1.0,
+    height: 0.48,
+    width: 1.74,
+    length: 1.4,
   },
 };

@@ -90,7 +90,7 @@ function applyGroupOpacity(root: THREE.Object3D, alpha: number) {
   }
 }
 
-/** Dreamy seasonal mist-shimmer & rising stardust halo that blooms while a season wakes up */
+/** Dreamy seasonal rising stardust motes that shimmer while a season wakes up */
 function TransitionVeil3D({
   season,
   revealRef,
@@ -99,7 +99,6 @@ function TransitionVeil3D({
   revealRef: { current: number };
 }) {
   const groupRef = useRef<THREE.Group>(null);
-  const ringMatRef = useRef<THREE.MeshBasicMaterial>(null);
   const motesRef = useRef<(THREE.Mesh | null)[]>([]);
   const colors = VEIL_COLORS[season];
 
@@ -124,9 +123,6 @@ function TransitionVeil3D({
     if (!g.visible) return;
 
     const t = clock.elapsedTime;
-    if (ringMatRef.current) {
-      ringMatRef.current.opacity = veil * 0.42;
-    }
     g.scale.setScalar(0.84 + 0.28 * r);
     for (let i = 0; i < motes.length; i++) {
       const m = motesRef.current[i];
@@ -143,17 +139,6 @@ function TransitionVeil3D({
 
   return (
     <group ref={groupRef} visible={false}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
-        <ringGeometry args={[0.08, 0.42, 32]} />
-        <meshBasicMaterial
-          ref={ringMatRef}
-          color={colors.mist}
-          transparent
-          opacity={0}
-          depthWrite={false}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
       {motes.map((_, i) => (
         <mesh
           key={i}
