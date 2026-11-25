@@ -429,7 +429,8 @@ export default function SeasonTree3D({
         }
       }
     } else if (season === "summer") {
-      const cols = ["#79cc76", "#95de82", "#65bf6d", "#b5eb8c", "#83d47a"];
+      // Soft cozy-cute sunlit emerald & mint-lime canopy
+      const cols = ["#76cc74", "#94df84", "#66c26e", "#b2eb8c", "#84d67c"];
       const anchors: [number, number, number, number][] = [
         [-0.26, 0.55, 0.11, 0.165],
         [0.27, 0.54, 0.11, 0.165],
@@ -457,8 +458,8 @@ export default function SeasonTree3D({
         }
       }
     } else if (season === "autumn") {
-      // Lush, full autumn maple & ginkgo canopy matching summer's fullness
-      const cols = ["#ff9a5a", "#ffc45c", "#f57656", "#ffda75", "#fba95c"];
+      // Cozy honey-persimmon, apricot & golden ginkgo canopy
+      const cols = ["#ff9f66", "#ffc868", "#f47e60", "#ffdc7d", "#f9ae64"];
       const anchors: [number, number, number, number][] = [
         [-0.25, 0.55, 0.11, 0.158],
         [0.26, 0.54, 0.11, 0.158],
@@ -898,18 +899,6 @@ export default function SeasonTree3D({
             <BrightMat color={palette.fence} boost={0.30} />
           </mesh>
         </group>
-
-        {/* 3D Stepping Stones leading from front corner to the tree */}
-        {[
-          [0.02, 0.36, 0.042],
-          [-0.03, 0.27, 0.038],
-          [0.01, 0.19, 0.036],
-        ].map(([sx, sz, sr], i) => (
-          <mesh key={i} position={[sx, 0.008, sz]} scale={[1.15, 0.25, 0.9]}>
-            <cylinderGeometry args={[sr, sr * 1.1, 0.04, 10]} />
-            <BrightMat color={season === "winter" ? "#dbe8f6" : "#f5efe4"} boost={0.32} />
-          </mesh>
-        ))}
 
         {/* Distant miniature trees/shrubs along back ridge for deeper spatial perspective */}
         <DistantRidgeTrees3D season={season} />
