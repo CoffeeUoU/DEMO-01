@@ -45,7 +45,7 @@ export function getTerrainY(season: Season, x: number, z: number): number {
     const brookZ = 0.28 - (x + 0.10) * 0.32;
     const distBrook = Math.abs(z - brookZ);
     const inBrook = x > -0.34 && x < 0.30 ? Math.max(0, 1 - distBrook / 0.072) : 0;
-    const inPond = Math.max(0, 1 - Math.hypot(x - 0.24, z - 0.18) / 0.18);
+    const inPond = Math.max(0, 1 - Math.hypot(x - 0.24, z - 0.18) / 0.22);
     const waterCut = Math.max(inBrook * inBrook, inPond);
 
     const hills = (Math.max(0, -z + 0.12) * 0.048 + (Math.sin(x * 4.8 + 0.6) * 0.5 + 0.5) * 0.018) * centerFlat;

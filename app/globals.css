@@ -29,6 +29,10 @@ body {
 .stage {
   position: fixed;
   inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   display: grid;
   grid-template-rows: auto 1fr auto;
   user-select: none;
@@ -120,6 +124,160 @@ body {
   color: #edf2ff;
   border-color: rgba(255, 255, 255, 0.28);
 }
+
+/* ---- Live 3D Mountain Parameter Panel (高低 / 宽窄 / 长短) ---- */
+.mountain-panel {
+  position: fixed;
+  top: 66px;
+  right: 28px;
+  z-index: 4;
+  width: 224px;
+  padding: 11px 13px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(94, 75, 110, 0.16);
+  background: rgba(255, 255, 255, 0.78);
+  color: #5e4b6e;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 12px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(94, 75, 110, 0.10);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.stage[data-season="winter"] .mountain-panel {
+  background: rgba(26, 36, 62, 0.72);
+  color: #edf2ff;
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 24px rgba(10, 16, 32, 0.35);
+}
+
+.mountain-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mountain-panel-title {
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.2px;
+}
+
+.mountain-panel-btns {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mountain-mini-btn {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid rgba(94, 75, 110, 0.18);
+  background: rgba(255, 255, 255, 0.65);
+  color: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background-color 0.18s ease, transform 0.15s ease;
+}
+
+.mountain-mini-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-0.5px);
+}
+
+.stage[data-season="winter"] .mountain-mini-btn {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.stage[data-season="winter"] .mountain-mini-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.mountain-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 7px;
+  padding: 4px 8px;
+  border-radius: 9px;
+  background: rgba(94, 75, 110, 0.07);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.92;
+}
+
+.stage[data-season="winter"] .mountain-summary {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.mountain-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.mountain-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.mountain-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 11.5px;
+}
+
+.mountain-row-head small {
+  font-size: 10px;
+  opacity: 0.62;
+  margin-left: 3px;
+}
+
+.mountain-row-head strong {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+}
+
+.mountain-row input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  border-radius: 9999px;
+  background: rgba(94, 75, 110, 0.18);
+  outline: none;
+  cursor: pointer;
+}
+
+.stage[data-season="winter"] .mountain-row input[type="range"] {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.mountain-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff94b8;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 5px rgba(94, 75, 110, 0.30);
+  transition: transform 0.14s ease;
+}
+
+.mountain-row input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.16);
+}
+
+/* Responsive layout overrides placed below base .topbar / .arrow / .caption rules */
 
 .topbar {
   display: flex;
@@ -233,36 +391,165 @@ body {
   margin-top: 6px;
 }
 
-@media (max-width: 640px) {
+.caption-enter {
+  animation: season-caption-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes season-caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@media (max-width: 960px) {
   .topbar {
-    padding: 14px 16px 0;
+    padding: 14px 18px 0;
+    gap: 10px;
   }
   .wordmark {
-    font-size: 32px;
+    font-size: 34px;
+  }
+  .cute-sound-btn {
+    padding: 6px 12px;
+    font-size: 11.5px;
+  }
+  .mountain-panel {
+    top: 62px;
+    right: 18px;
+    width: 204px;
+    padding: 10px 12px;
+  }
+  .arrow-left {
+    left: 10px;
+  }
+  .arrow-right {
+    right: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    padding: 10px 12px 0;
+    gap: 6px;
+    align-items: center;
+  }
+  .topbar-actions {
+    gap: 5px;
+  }
+  .cute-sound-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+    gap: 4px;
+  }
+  .wordmark {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .mountain-panel {
+    top: auto;
+    bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: 380px;
+    margin: 0 auto;
+    padding: 9px 12px;
+    border-radius: 14px;
+  }
+  .mountain-panel.is-collapsed {
+    padding: 7px 11px;
+  }
+  .mountain-panel.is-collapsed .mountain-summary {
+    margin-top: 5px;
   }
   .caption {
-    padding: 0 84px 24px;
+    padding: 0 66px 18px;
+    min-height: 78px;
   }
   .room-name {
-    font-size: 40px;
+    font-size: 34px;
   }
   .room-mood {
-    font-size: 19px;
+    font-size: 16px;
+    margin-top: 3px;
   }
   .arrow {
     top: auto;
-    bottom: 34px;
+    bottom: calc(22px + env(safe-area-inset-bottom, 0px));
     transform: none;
-    padding: 8px;
+    padding: 6px;
+  }
+  .arrow-left {
+    left: 8px;
+  }
+  .arrow-right {
+    right: 8px;
   }
   .arrow:hover:not(:disabled) {
     transform: scale(1.05);
   }
   .arrow svg {
-    width: 58px;
-    height: 42px;
+    width: 48px;
+    height: 36px;
   }
+}
 
+/* Short landscape viewports (landscape phones / split-screen windows) */
+@media (max-height: 540px) and (min-width: 641px) {
+  .topbar {
+    padding: 8px 18px 0;
+  }
+  .wordmark {
+    font-size: 28px;
+  }
+  .cute-sound-btn {
+    padding: 5px 11px;
+    font-size: 11px;
+  }
+  .mountain-panel {
+    top: 48px;
+    right: 16px;
+    width: 194px;
+    padding: 8px 10px;
+  }
+  .mountain-sliders {
+    gap: 6px;
+    margin-top: 7px;
+  }
+  .caption {
+    padding: 0 74px 10px;
+    min-height: 54px;
+  }
+  .room-name {
+    font-size: 30px;
+  }
+  .room-mood {
+    font-size: 15px;
+    margin-top: 2px;
+  }
+  .arrow {
+    top: auto;
+    bottom: 12px;
+    transform: none;
+    padding: 6px;
+  }
+  .arrow-left {
+    left: 12px;
+  }
+  .arrow-right {
+    right: 12px;
+  }
+  .arrow svg {
+    width: 48px;
+    height: 36px;
+  }
 }
 
 /* ---- journal close-ups ------------------------------------------------- */

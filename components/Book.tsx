@@ -13,9 +13,161 @@ import { book } from "@/lib/store";
 import type { BookTextures } from "@/lib/textures";
 import SeasonTree3D, { type Season } from "./SeasonTree3D";
 import SeasonGroundCover3D from "./SeasonGroundCover3D";
+import SeasonWall3D from "./SeasonWall3D";
 
 const PAGE_GAP = 0.014; // thickness between pages when the book is shut
 const INK_HEX = `#${INK.getHexString()}`;
+
+const VEIL_COLORS: Record<Season, { mist: string; spark: string }> = {
+  spring: { mist: "#ffe4f0", spark: "#ffc4dc" },
+  summer: { mist: "#e4fff2", spark: "#a6f0c6" },
+  autumn: { mist: "#fff0d6", spark: "#ffcf82" },
+  winter: { mist: "#e6f2ff", spark: "#c2dcff" },
+};
+
+type CachedFadeItem = {
+  mesh: THREE.Mesh;
+  mat: THREE.Material & { opacity: number; transparent: boolean; depthWrite: boolean; side: THREE.Side };
+  baseOpacity: number;
+  baseTransparent: boolean;
+  baseDepthWrite: boolean;
+  isBackOutline: boolean;
+};
+
+/**
+ * Smoothly modulates opacity across every mesh inside a 3D group using a cached material list
+ * (zero per-frame scene-graph traversal) while preserving each material's original opacity /
+ * transparent / depthWrite when alpha reaches 1.
+ * BackSide ink-outline shells are suppressed until alpha > 0.86 so dark hulls never bleed through!
+ */
+function applyGroupOpacity(root: THREE.Object3D, alpha: number) {
+  const prev = root.userData.__lastAlpha as number | undefined;
+  if (prev !== undefined && Math.abs(prev - alpha) < 0.008) return;
+  root.userData.__lastAlpha = alpha;
+  const full = alpha >= 0.99;
+  const outlineAlpha = smooth((alpha - 0.86) / 0.14);
+
+  let items = root.userData.__fadeItems as CachedFadeItem[] | undefined;
+  if (!items) {
+    items = [];
+    root.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.material) return;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const raw of mats) {
+        const mat = raw as THREE.Material & { opacity: number; transparent: boolean; depthWrite: boolean; side: THREE.Side };
+        items!.push({
+          mesh,
+          mat,
+          baseOpacity: mat.opacity,
+          baseTransparent: mat.transparent,
+          baseDepthWrite: mat.depthWrite,
+          isBackOutline: mat.side === THREE.BackSide,
+        });
+      }
+    });
+    root.userData.__fadeItems = items;
+  }
+
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
+    const m = it.mat;
+    if (full) {
+      m.opacity = it.baseOpacity;
+      m.transparent = it.baseTransparent;
+      m.depthWrite = it.baseDepthWrite;
+      if (it.isBackOutline) it.mesh.visible = true;
+    } else if (it.isBackOutline) {
+      it.mesh.visible = outlineAlpha > 0.02;
+      m.transparent = true;
+      m.opacity = it.baseOpacity * outlineAlpha;
+      m.depthWrite = false;
+    } else {
+      m.transparent = true;
+      m.opacity = it.baseOpacity * alpha;
+      m.depthWrite = alpha > 0.55 ? it.baseDepthWrite : false;
+    }
+  }
+}
+
+/** Dreamy seasonal mist-shimmer & rising stardust halo that blooms while a season wakes up */
+function TransitionVeil3D({
+  season,
+  revealRef,
+}: {
+  season: Season;
+  revealRef: { current: number };
+}) {
+  const groupRef = useRef<THREE.Group>(null);
+  const ringMatRef = useRef<THREE.MeshBasicMaterial>(null);
+  const motesRef = useRef<(THREE.Mesh | null)[]>([]);
+  const colors = VEIL_COLORS[season];
+
+  const motes = useMemo(
+    () =>
+      Array.from({ length: 16 }, (_, i) => {
+        const a = (i / 16) * Math.PI * 2 + (i % 3) * 0.25;
+        const r = 0.14 + (i % 5) * 0.075;
+        const h = 0.08 + (i % 4) * 0.14;
+        const s = 0.011 + (i % 3) * 0.005;
+        return { a, r, h, s, speed: 0.7 + (i % 4) * 0.22 };
+      }),
+    [],
+  );
+
+  useFrame(({ clock }) => {
+    const g = groupRef.current;
+    if (!g) return;
+    const r = revealRef.current;
+    const veil = r > 0.01 && r < 0.99 ? Math.sin(r * Math.PI) : 0;
+    g.visible = veil > 0.01;
+    if (!g.visible) return;
+
+    const t = clock.elapsedTime;
+    if (ringMatRef.current) {
+      ringMatRef.current.opacity = veil * 0.42;
+    }
+    g.scale.setScalar(0.84 + 0.28 * r);
+    for (let i = 0; i < motes.length; i++) {
+      const m = motesRef.current[i];
+      if (!m) continue;
+      const d = motes[i];
+      const ang = d.a + t * 0.45 * d.speed + r * 0.9;
+      m.position.set(Math.cos(ang) * d.r, d.h + r * 0.32 + Math.sin(t * 2 + i) * 0.02, Math.sin(ang) * d.r);
+      const sc = d.s * (0.55 + 0.75 * veil);
+      m.scale.setScalar(sc);
+      const mat = m.material as THREE.MeshBasicMaterial;
+      mat.opacity = veil * 0.82;
+    }
+  });
+
+  return (
+    <group ref={groupRef} visible={false}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
+        <ringGeometry args={[0.08, 0.42, 32]} />
+        <meshBasicMaterial
+          ref={ringMatRef}
+          color={colors.mist}
+          transparent
+          opacity={0}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {motes.map((_, i) => (
+        <mesh
+          key={i}
+          ref={(el) => {
+            motesRef.current[i] = el;
+          }}
+        >
+          <octahedronGeometry args={[1, 0]} />
+          <meshBasicMaterial color={colors.spark} transparent opacity={0} depthWrite={false} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
 
 /** Hand-wobbled closed outline in a page's local XY plane. */
 function wobbleRect(seed: number): THREE.Vector3[] {
@@ -201,8 +353,22 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
   const outlineRefs = useRef<(Line2 | null)[]>([]);
   const popRefs = useRef<{ outer: THREE.Group | null; hinge: THREE.Group | null }[][]>(Array.from({ length: N }, () => []));
   const treeRefs = useRef<(THREE.Group | null)[]>([]);
+  const veilRefs = useRef<(THREE.Group | null)[]>([]);
   const groundPosRefs = useRef<(THREE.Group | null)[]>([]);
   const groundNegRefs = useRef<(THREE.Group | null)[]>([]);
+  const wallLeftRefs = useRef<(THREE.Group | null)[]>([]);
+  const wallRightRefs = useRef<(THREE.Group | null)[]>([]);
+  const wallClipPlanes = useMemo(
+    () =>
+      Array.from({ length: N }, () => ({
+        left: [new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Plane(new THREE.Vector3(0, 0, 1), 2)],
+        right: [new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Plane(new THREE.Vector3(1, 0, 0), 2)],
+      })),
+    [],
+  );
+  const originZero = useMemo(() => new THREE.Vector3(0, 0, 0), []);
+  const creaseNormal = useMemo(() => new THREE.Vector3(), []);
+  const roomRevealRefs = useRef<{ current: number }[]>(Array.from({ length: N }, () => ({ current: 0 })));
   const treeProgressRefs = useRef<{ current: number }[]>(Array.from({ length: N }, () => ({ current: 0 })));
   const floorFlatRefs = useRef<{ current: boolean }[]>(Array.from({ length: N }, () => ({ current: false })));
   const target = useMemo(() => new THREE.Vector3(), []);
@@ -300,70 +466,123 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
         pu.mat.uniforms.uReveal.value = fr;
       });
 
-      // True pop-up book choreography:
-      // Anchor the 3D diorama directly onto the rising diagonal floor crease (0.48 * P)
-      // so it rides cleanly on TOP of the folding paper ridge (never sliced by the floor),
-      // while flattening sideways (scale.x) like a real pop-up paper craft as the walls close!
-      const tree = treeRefs.current[p];
-      if (tree) {
-        const focus = focusOf(p, f);
-        const foldVis = smooth((open - 0.32) / 0.68) * smooth((book.open - 0.35) / 0.65);
-        const wantProg = foldVis * smooth((focus - 0.05) / 0.95);
-        const cur = treeProgressRefs.current[p].current;
-        // Slow graceful bloom when opening; smooth fold-down when closing
-        const rate = wantProg > cur ? 2.8 : 4.6;
-        const prog = cur + (wantProg - cur) * (1 - Math.exp(-dt * rate));
-        treeProgressRefs.current[p].current = prog;
-        // Exact moment this spread's floor settles flat (open >= 0.98) — triggers root extension immediately!
-        floorFlatRefs.current[p].current = open >= 0.98 && book.open >= 0.96 && focus > 0.5;
+      // Dreamy staggered season reveal ("Mist-Veil Awakening"):
+      // The paper room opens cleanly first; once open > 0.80, the new season emerges gently from mist
+      // in 3 staggered waves (1. Ground & hills → 2. Wall mountains → 3. Central tree & roots),
+      // and fades cleanly back into paper before the floor lifts during page turns!
+      const focus = focusOf(p, f);
+      const wantReveal = open > 0.80 && book.open > 0.84 && focus > 0.52 ? 1 : 0;
+      const curRev = roomRevealRefs.current[p].current;
+      const revRate = wantReveal > curRev ? 2.15 : 6.8;
+      let rev = curRev + (wantReveal - curRev) * (1 - Math.exp(-dt * revRate));
+      if (Math.abs(wantReveal - rev) < 0.002) rev = wantReveal;
+      roomRevealRefs.current[p].current = rev;
 
-        // Visible whenever this page is actively unfolding or folding (keeps transitions lush & alive)
-        const active = prog > 0.015 && open > 0.34 && focus > 0.04;
-        tree.visible = active;
+      const groundAlpha = smooth(rev / 0.56);
+      const treeAlpha = smooth((rev - 0.18) / 0.74);
 
-        // Ride right on the floor's diagonal crease apex (matches (dA*0.48 + dB*0.48)*L when flat!)
-        tree.position.set(P[0] * 0.48, P[1] * 0.48 + 0.002, P[2] * 0.48);
-        tree.rotation.y = Math.PI / 2 - mid;
+      // Compute exact origami floor-wing normals (uY_A for right wing O-A-P, uY_B for left wing O-P-B)
+      // Used both by SeasonGroundCover3D and as exact WebGL clipping planes for SeasonWall3D!
+      const { vP, vA, vB, uZ, uX, uY, mat } = origamiScratch;
+      vP.set(P[0], P[1], P[2]);
+      vA.set(A[0], A[1], A[2]);
+      vB.set(B[0], B[1], B[2]);
+      uZ.copy(vP).normalize();
 
-        // Squeeze sideways along the closing wall angle so the 3D tree flattens cleanly between the pages
-        const squeezeX = Math.max(0.06, Math.pow(open, 2.4));
-        const liftScale = 0.55 + 0.45 * smooth((open - 0.40) / 0.60);
-        tree.scale.set(squeezeX * liftScale, liftScale, liftScale);
+      // Wing A (right wall O-A-P) upward normal
+      uX.copy(vA).addScaledVector(vP, -0.5).normalize();
+      uY.crossVectors(uZ, uX).normalize();
+      const clipSet = wallClipPlanes[p];
+      clipSet.right[0].setFromNormalAndCoplanarPoint(uY, originZero);
+      clipSet.right[0].constant -= 0.001;
+
+      const veil = veilRefs.current[p];
+      if (veil) {
+        veil.position.set(P[0] * 0.48, P[1] * 0.48 + 0.004, P[2] * 0.48);
+        veil.rotation.y = Math.PI / 2 - mid;
       }
 
-      // Rigid origami floor-hinge transform for SeasonGroundCover3D:
-      // Left/right halves (posX on triangle O-A-P, negX on triangle O-P-B) stay 100% glued flush
-      // to both folding paper triangles at every fold angle, pressing flat smoothly as walls shut!
+      const tree = treeRefs.current[p];
+      if (tree) {
+        treeProgressRefs.current[p].current = treeAlpha;
+        // Trigger gentle root extension once the floor is flat and the tree begins blooming
+        floorFlatRefs.current[p].current = open >= 0.96 && book.open >= 0.94 && focus > 0.5 && rev > 0.35;
+
+        const active = treeAlpha > 0.01;
+        tree.visible = active;
+        if (active) {
+          tree.position.set(P[0] * 0.48, P[1] * 0.48 + 0.002, P[2] * 0.48);
+          tree.rotation.y = Math.PI / 2 - mid + (1 - treeAlpha) * 0.14;
+          const bloomScale = 0.76 + 0.24 * treeAlpha;
+          const squeezeX = Math.max(0.18, Math.pow(open, 2.0));
+          tree.scale.set(squeezeX * bloomScale, bloomScale, bloomScale);
+          applyGroupOpacity(tree, treeAlpha);
+        }
+      }
+
+      // Rigid origami floor-hinge transform for SeasonGroundCover3D with dreamy wave-1 fade & rise
       const gPos = groundPosRefs.current[p];
       const gNeg = groundNegRefs.current[p];
+      const showGround = groundAlpha > 0.01;
       if (gPos && gNeg) {
-        const focus = focusOf(p, f);
-        const flatPress = smooth((open - 0.14) / 0.36) * smooth((book.open - 0.18) / 0.36);
-        const showGround = flatPress > 0.01 && focus > 0.03;
         gPos.visible = showGround;
         gNeg.visible = showGround;
         if (showGround) {
-          const { vP, vA, vB, uZ, uX, uY, mat } = origamiScratch;
-          vP.set(P[0], P[1], P[2]);
-          vA.set(A[0], A[1], A[2]);
-          vB.set(B[0], B[1], B[2]);
-          uZ.copy(vP).normalize();
-
-          // Wing A (x >= 0): triangle O-A-P
-          uX.copy(vA).addScaledVector(vP, -0.5).normalize();
-          uY.crossVectors(uZ, uX).normalize();
+          const gLift = 0.08 + 0.92 * groundAlpha;
+          // Wing A (x >= 0): triangle O-A-P (uX, uY, uZ already computed above)
           mat.makeBasis(uX, uY, uZ);
           gPos.position.set(P[0] * 0.48 + uY.x * 0.002, P[1] * 0.48 + uY.y * 0.002, P[2] * 0.48 + uY.z * 0.002);
           gPos.quaternion.setFromRotationMatrix(mat);
-          gPos.scale.set(1, flatPress, 1);
+          gPos.scale.set(1, gLift, 1);
+          applyGroupOpacity(gPos, groundAlpha);
+        }
+      }
 
-          // Wing B (x < 0): triangle O-P-B
-          uX.copy(vP).multiplyScalar(0.5).sub(vB).normalize();
-          uY.crossVectors(uZ, uX).normalize();
-          mat.makeBasis(uX, uY, uZ);
-          gNeg.position.set(P[0] * 0.48 + uY.x * 0.002, P[1] * 0.48 + uY.y * 0.002, P[2] * 0.48 + uY.z * 0.002);
-          gNeg.quaternion.setFromRotationMatrix(mat);
-          gNeg.scale.set(1, flatPress, 1);
+      // Wing B (left wall O-P-B) upward normal
+      uX.copy(vP).multiplyScalar(0.5).sub(vB).normalize();
+      uY.crossVectors(uZ, uX).normalize();
+      clipSet.left[0].setFromNormalAndCoplanarPoint(uY, originZero);
+      clipSet.left[0].constant -= 0.001;
+
+      if (gPos && gNeg && showGround) {
+        const gLift = 0.08 + 0.92 * groundAlpha;
+        mat.makeBasis(uX, uY, uZ);
+        gNeg.position.set(P[0] * 0.48 + uY.x * 0.002, P[1] * 0.48 + uY.y * 0.002, P[2] * 0.48 + uY.z * 0.002);
+        gNeg.quaternion.setFromRotationMatrix(mat);
+        gNeg.scale.set(1, gLift, 1);
+        applyGroupOpacity(gNeg, groundAlpha);
+      }
+
+      // Diagonal crease guard planes: keep each wall's fixed-parameter mountain strictly inside its own
+      // wall-floor wedge while folding, then smoothly release as the floor settles flat at 90°!
+      const pXzLen = Math.hypot(P[0], P[2]) || 1;
+      const creaseSlack = smooth((open - 0.88) / 0.12) * 2.0;
+      creaseNormal.set(P[2] / pXzLen, 0, -P[0] / pXzLen);
+      clipSet.right[1].set(creaseNormal, creaseSlack);
+      creaseNormal.set(-P[2] / pXzLen, 0, P[0] / pXzLen);
+      clipSet.left[1].set(creaseNormal, creaseSlack);
+
+      // 3D Low-Poly Wall Mountains keep 100% FIXED user-set parameters (scale 1,1,1) and reveal
+      // organically from the top down as the wall-to-floor angle opens wider — ZERO floor clipping!
+      const wL = wallLeftRefs.current[p];
+      const wR = wallRightRefs.current[p];
+      if (wL || wR) {
+        const wallOpenAlpha =
+          smooth((open - 0.18) / 0.34) * smooth((book.open - 0.22) / 0.35) * smooth((focus - 0.04) / 0.32);
+        const showWall = wallOpenAlpha > 0.01;
+        if (wL) {
+          wL.visible = showWall;
+          if (showWall) {
+            wL.scale.set(1, 1, 1);
+            applyGroupOpacity(wL, wallOpenAlpha);
+          }
+        }
+        if (wR) {
+          wR.visible = showWall;
+          if (showWall) {
+            wR.scale.set(1, 1, 1);
+            applyGroupOpacity(wR, wallOpenAlpha);
+          }
         }
       }
     }
@@ -384,12 +603,19 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
     target.z += (book.zoomAt[2] - target.z) * zm;
     camera.position.set(target.x + Math.cos(yaw) * Math.cos(pitch) * 10, target.y + Math.sin(pitch) * 10, target.z + Math.sin(yaw) * Math.cos(pitch) * 10);
     camera.lookAt(target);
-    // tall enough for the folded page stacks, which rise well above the open room
-    const viewH = 1.7 + 1.0 * e;
-    const narrow = size.width < 640;
-    const viewW = (narrow ? 1.35 : 1.9) + (narrow ? 1.0 : 1.2) * e;
+    // Responsive framing across mobile portrait, tablet, short landscape, and desktop
+    const isMobile = size.width < 640;
+    const isTablet = size.width >= 640 && size.width < 1024;
+    const isShort = size.height < 540;
+    if (isMobile) {
+      // Nudge slightly up in screen space on portrait phones to leave comfortable breathing room for bottom UI
+      target.y -= 0.08 * e * (1 - zm);
+    }
+    const viewH = isShort ? 1.62 + 0.96 * e : isMobile ? 1.78 + 1.05 * e : 1.7 + 1.0 * e;
+    const viewW = isMobile ? 1.45 + 0.92 * e : isTablet ? 1.75 + 1.10 * e : 1.9 + 1.2 * e;
     const ortho = camera as THREE.OrthographicCamera;
-    ortho.zoom = Math.min(size.height / viewH, size.width / viewW) * (1 + 0.68 * rm) * (1 + 2.6 * zm);
+    const roamBoost = isMobile ? 0.52 : 0.68;
+    ortho.zoom = Math.min(size.height / viewH, size.width / viewW) * (1 + roamBoost * rm) * (1 + 2.6 * zm);
     ortho.updateProjectionMatrix();
   });
 
@@ -405,6 +631,22 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
         <group key={k} ref={(el) => void (pageRefs.current[k] = el)}>
           <mesh geometry={pageGeo.front} material={m.front} />
           <mesh geometry={pageGeo.back} material={m.back} />
+          {/* 3D Low-Poly Wall Relief on front face (Room k's RIGHT wall) */}
+          {k < N && (
+            <group ref={(el) => void (wallRightRefs.current[k] = el)}>
+              <SeasonWall3D season={ROOMS[logicalOf(k)].name as Season} wall="right" clipPlanes={wallClipPlanes[k].right} />
+            </group>
+          )}
+          {/* 3D Low-Poly Wall Relief on back face (Room k-1's LEFT wall) */}
+          {k > 0 && (
+            <group
+              ref={(el) => void (wallLeftRefs.current[k - 1] = el)}
+              position={[L, 0, 0]}
+              rotation={[0, Math.PI, 0]}
+            >
+              <SeasonWall3D season={ROOMS[logicalOf(k - 1)].name as Season} wall="left" clipPlanes={wallClipPlanes[k - 1].left} />
+            </group>
+          )}
           {hots.front[k].map(({ room, hot }) => (
             <Hotspot key={`f${hot.spot}`} hot={hot} room={room} onPick={pick(room)} />
           ))}
@@ -436,6 +678,13 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
         const season = ROOMS[logicalOf(p)].name as Season;
         return (
           <group key={`diorama-${p}`}>
+            <group
+              ref={(el) => {
+                veilRefs.current[p] = el;
+              }}
+            >
+              <TransitionVeil3D season={season} revealRef={roomRevealRefs.current[p]} />
+            </group>
             <group
               ref={(el) => {
                 treeRefs.current[p] = el;

@@ -22,6 +22,16 @@ export default function Experience() {
   const [soundOn, setSoundOn] = useState(false);
   const [weatherAlt, setWeatherAlt] = useState(false);
   const [roamOn, setRoamOn] = useState(false);
+  const [mHeight, setMHeight] = useState(book.mountain.height);
+  const [mWidth, setMWidth] = useState(book.mountain.width);
+  const [mLength, setMLength] = useState(book.mountain.length);
+  const [panelOpen, setPanelOpen] = useState(true);
+  // On narrow mobile or short landscape screens, start the mountain slider panel collapsed to its compact summary bar
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window.innerWidth <= 768 || window.innerHeight <= 540)) {
+      setPanelOpen(false);
+    }
+  }, []);
   const drag = useRef({ x: 0, startX: 0, active: false });
   const roomRef = useRef(0);
   useEffect(() => {
@@ -106,12 +116,17 @@ export default function Experience() {
 
   useEffect(() => () => stopAudio(), [stopAudio]);
 
-  // Draw every surface once the handwriting font is ready.
+  // Draw every surface once the handwriting font is ready (with a 1.2s safety timeout so slow mobile/WeChat WebViews never hang).
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
-        await Promise.all([document.fonts.load(`700 64px ${FONT}`), document.fonts.load(`500 64px ${FONT}`)]);
+        if (document.fonts?.load) {
+          await Promise.race([
+            Promise.all([document.fonts.load(`700 64px ${FONT}`), document.fonts.load(`500 64px ${FONT}`)]),
+            new Promise((resolve) => setTimeout(resolve, 1200)),
+          ]);
+        }
       } catch {
         /* fall back to whatever cursive font is around */
       }
@@ -242,9 +257,111 @@ export default function Experience() {
         </div>
       </header>
 
+      {open && !writing && (
+        <aside
+          className={`mountain-panel ${panelOpen ? "is-open" : "is-collapsed"}`}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <div className="mountain-panel-head">
+            <span className="mountain-panel-title">⛰ 山体参数</span>
+            <div className="mountain-panel-btns">
+              <button
+                type="button"
+                className="mountain-mini-btn"
+                onClick={() => {
+                  book.mountain.height = 1.0;
+                  book.mountain.width = 1.0;
+                  book.mountain.length = 1.0;
+                  setMHeight(1.0);
+                  setMWidth(1.0);
+                  setMLength(1.0);
+                }}
+                title="恢复默认参数"
+              >
+                重置
+              </button>
+              <button
+                type="button"
+                className="mountain-mini-btn"
+                onClick={() => setPanelOpen((v) => !v)}
+              >
+                {panelOpen ? "收起" : "展开"}
+              </button>
+            </div>
+          </div>
+
+          <div className="mountain-summary">
+            <span>高 {mHeight.toFixed(2)}×</span>
+            <span>宽 {mWidth.toFixed(2)}×</span>
+            <span>长 {mLength.toFixed(2)}×</span>
+          </div>
+
+          {panelOpen && (
+            <div className="mountain-sliders">
+              <label className="mountain-row">
+                <div className="mountain-row-head">
+                  <span>高低 <small>山峰高度</small></span>
+                  <strong>{mHeight.toFixed(2)}×</strong>
+                </div>
+                <input
+                  type="range"
+                  min={0.4}
+                  max={1.8}
+                  step={0.02}
+                  value={mHeight}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    book.mountain.height = v;
+                    setMHeight(v);
+                  }}
+                />
+              </label>
+
+              <label className="mountain-row">
+                <div className="mountain-row-head">
+                  <span>宽窄 <small>向树纵深</small></span>
+                  <strong>{mWidth.toFixed(2)}×</strong>
+                </div>
+                <input
+                  type="range"
+                  min={0.4}
+                  max={1.8}
+                  step={0.02}
+                  value={mWidth}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    book.mountain.width = v;
+                    setMWidth(v);
+                  }}
+                />
+              </label>
+
+              <label className="mountain-row">
+                <div className="mountain-row-head">
+                  <span>长短 <small>沿墙跨度</small></span>
+                  <strong>{mLength.toFixed(2)}×</strong>
+                </div>
+                <input
+                  type="range"
+                  min={0.4}
+                  max={1.4}
+                  step={0.02}
+                  value={mLength}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    book.mountain.length = v;
+                    setMLength(v);
+                  }}
+                />
+              </label>
+            </div>
+          )}
+        </aside>
+      )}
+
       <div className="canvas-wrap" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onDoubleClick={() => setBookOpen(!open)}>
         {tex && (
-          <Canvas orthographic flat linear dpr={[1, 2]} camera={{ position: [0, 2, 10], zoom: 200, near: 0.1, far: 100 }} gl={{ alpha: true, antialias: true }}>
+          <Canvas orthographic flat linear dpr={[1, 1.5]} camera={{ position: [0, 2, 10], zoom: 200, near: 0.1, far: 100 }} gl={{ alpha: true, antialias: true, powerPreference: "high-performance", localClippingEnabled: true }}>
             <Book
               tex={tex}
               onSpot={(li, spot) => {
@@ -253,7 +370,7 @@ export default function Experience() {
                 setTimeout(() => setWriting({ room: ROOMS[li].name, spot }), 380);
               }}
             />
-            <ContactShadows position={[0, -0.04, 0]} scale={5} resolution={512} far={1.4} blur={2.4} opacity={0.32} color="#2a2350" frames={Infinity} />
+            <ContactShadows position={[0, -0.04, 0]} scale={2.6} resolution={256} far={1.2} blur={2.4} opacity={0.30} color="#2a2350" frames={2} />
           </Canvas>
         )}
         {!tex && <div className="loading">sharpening pencils…</div>}
@@ -278,10 +395,10 @@ export default function Experience() {
 
       <footer className="caption">
         {open ? (
-          <>
+          <div key={current.name} className="caption-enter">
             <div className="room-name">{current.name}</div>
             <div className="room-mood">{current.mood}</div>
-          </>
+          </div>
         ) : (
           <div className="room-mood">tap the cover to open</div>
         )}

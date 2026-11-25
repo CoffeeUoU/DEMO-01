@@ -1,6 +1,6 @@
-// Clean, luminous watercolor sky & ground backdrops for the full-3D four-seasons dioramas.
-// All foreground trees, hills, cottages, ponds, windmills, snowmen, clouds, and sun/moon
-// are rendered as unified 3D models in components/SeasonTree3D.tsx.
+// Clean, luminous matte pastel sky backdrops for the full-3D four-seasons dioramas.
+// All foreground trees, hills, critters, AND wall clouds/mountains/rainbows/balloons/stars
+// are rendered as unified 3D Low-Poly models in SeasonTree3D.tsx & SeasonWall3D.tsx!
 
 import type { Pt, Sketch } from "./sketch";
 import { tint } from "./style";
@@ -29,47 +29,28 @@ function drawSignpost(s: Sketch, x: number, y: number, label: string, woodCol: s
   s.mark("journal", board, 0.03);
 }
 
-function drawHorizonMist(s: Sketch, y: number, col: string) {
+function drawSkyBand(s: Sketch, y: number, col: string, alpha = 0.5) {
   const band: Pt[] = [
     [0, 1],
     [0, y],
-    [0.35, y - 0.03],
-    [0.72, y + 0.02],
-    [1, y - 0.01],
+    [0.5, y - 0.02],
+    [1, y],
     [1, 1],
   ];
-  s.fill(band, tint(col), { alpha: 0.55, jitter: 0.3 });
+  s.fill(band, tint(col), { alpha, jitter: 0.15 });
 }
 
-function drawBird(s: Sketch, x: number, y: number, r: number) {
-  s.stroke(
-    [
-      [x - r, y + r * 0.22],
-      [x - r * 0.45, y - r * 0.22],
-      [x, y + r * 0.08],
-      [x + r * 0.45, y - r * 0.22],
-      [x + r, y + r * 0.22],
-    ],
-    { w: 1.5, overshoot: 0, alpha: 0.72 },
-  );
-}
-
-/* ============================================================================
-   1. SPRING — Bright pastel sky & sunlit meadow
-   ============================================================================ */
 const spring: Room = {
   name: "spring",
   mood: "first blossoms, warm morning breeze",
   left(s) {
-    s.washAll(tint("#eef7fe"), 1);
-    drawHorizonMist(s, 0.72, "#e0f2d9");
-    drawBird(s, 0.30, 0.26, 0.028);
-    drawBird(s, 0.38, 0.22, 0.020);
+    s.washAll(tint("#eaf5ff"), 1);
+    drawSkyBand(s, 0.56, "#fff2f7", 0.55);
   },
   right(s) {
-    s.washAll(tint("#f1f8ff"), 1);
-    drawHorizonMist(s, 0.72, "#e0f2d9");
-    drawSignpost(s, 0.72, 0.62, "spring", "#ebd1ae", "#fffbf2");
+    s.washAll(tint("#ecf6ff"), 1);
+    drawSkyBand(s, 0.56, "#fff2f7", 0.55);
+    drawSignpost(s, 0.76, 0.62, "spring", "#ebd1ae", "#fffbf2");
   },
   floor(s) {
     s.washAll(tint("#dff2cf"), 1);
@@ -78,22 +59,17 @@ const spring: Room = {
   popups: [],
 };
 
-/* ============================================================================
-   2. SUMMER — Clear azure sky & vibrant green lawn
-   ============================================================================ */
 const summer: Room = {
   name: "summer",
   mood: "bright skies, deep green shade",
   left(s) {
-    s.washAll(tint("#dff1fd"), 1);
-    drawHorizonMist(s, 0.72, "#c8eac0");
-    drawBird(s, 0.26, 0.24, 0.026);
-    drawBird(s, 0.34, 0.20, 0.018);
+    s.washAll(tint("#d2ecfd"), 1);
+    drawSkyBand(s, 0.56, "#ebf9ff", 0.55);
   },
   right(s) {
-    s.washAll(tint("#dff1fd"), 1);
-    drawHorizonMist(s, 0.72, "#c8eac0");
-    drawSignpost(s, 0.72, 0.62, "summer", "#e0be96", "#fffef5");
+    s.washAll(tint("#d2ecfd"), 1);
+    drawSkyBand(s, 0.56, "#ebf9ff", 0.55);
+    drawSignpost(s, 0.76, 0.62, "summer", "#e0be96", "#fffef5");
   },
   floor(s) {
     s.washAll(tint("#c8e8b6"), 1);
@@ -102,27 +78,19 @@ const summer: Room = {
   popups: [],
 };
 
-/* ============================================================================
-   3. AUTUMN — Warm golden peach dusk & honey-gold lawn
-   ============================================================================ */
 const autumn: Room = {
   name: "autumn",
   mood: "amber dusk, drifting maple leaves",
   left(s) {
-    s.washAll(tint("#fff0df"), 1);
-    drawHorizonMist(s, 0.72, "#f9d7b4");
-    for (const [bx, by, br] of [
-      [0.24, 0.28, 0.024],
-      [0.30, 0.25, 0.020],
-      [0.36, 0.28, 0.018],
-    ] as const) {
-      drawBird(s, bx, by, br);
-    }
+    s.washAll(tint("#ffeedb"), 1);
+    drawSkyBand(s, 0.46, "#ffd8b4", 0.45);
+    drawSkyBand(s, 0.62, "#ffc594", 0.42);
   },
   right(s) {
-    s.washAll(tint("#ffedda"), 1);
-    drawHorizonMist(s, 0.72, "#f9d7b4");
-    drawSignpost(s, 0.72, 0.62, "autumn", "#deb28a", "#fff7ea");
+    s.washAll(tint("#ffecd8"), 1);
+    drawSkyBand(s, 0.46, "#ffd8b4", 0.45);
+    drawSkyBand(s, 0.62, "#ffc594", 0.42);
+    drawSignpost(s, 0.76, 0.62, "autumn", "#deb28a", "#fff7ea");
   },
   floor(s) {
     s.washAll(tint("#f8e4be"), 1);
@@ -131,39 +99,17 @@ const autumn: Room = {
   popups: [],
 };
 
-/* ============================================================================
-   4. WINTER — Luminous storybook blue-hour starry night & moonlit snow
-   ============================================================================ */
 const winter: Room = {
   name: "winter",
   mood: "moonlit winter night, quiet snowfall & warm lantern glow",
   left(s) {
-    s.washAll(tint("#5c7bc0"), 1);
-    drawHorizonMist(s, 0.70, "#95b5eb");
-    for (const [sx, sy, sr] of [
-      [0.16, 0.16, 0.015],
-      [0.34, 0.22, 0.011],
-      [0.48, 0.14, 0.014],
-      [0.64, 0.20, 0.010],
-      [0.24, 0.36, 0.009],
-      [0.74, 0.30, 0.009],
-    ] as const) {
-      s.blob(sx, sy, sr * 0.58, sr * 0.58, tint("#fff8d6"), { w: 0, alpha: 0.95 });
-    }
+    s.washAll(tint("#5876bc"), 1);
+    drawSkyBand(s, 0.58, "#8aa8e2", 0.48);
   },
   right(s) {
-    s.washAll(tint("#5c7bc0"), 1);
-    drawHorizonMist(s, 0.70, "#95b5eb");
-    for (const [sx, sy, sr] of [
-      [0.24, 0.18, 0.012],
-      [0.46, 0.24, 0.010],
-      [0.68, 0.15, 0.015],
-      [0.82, 0.28, 0.012],
-      [0.56, 0.34, 0.009],
-    ] as const) {
-      s.blob(sx, sy, sr * 0.58, sr * 0.58, tint("#fff8d6"), { w: 0, alpha: 0.95 });
-    }
-    drawSignpost(s, 0.72, 0.62, "winter", "#7b95c4", "#f4f8ff");
+    s.washAll(tint("#5876bc"), 1);
+    drawSkyBand(s, 0.58, "#8aa8e2", 0.48);
+    drawSignpost(s, 0.76, 0.62, "winter", "#7b95c4", "#f4f8ff");
   },
   floor(s) {
     s.washAll(tint("#e4effc"), 1);

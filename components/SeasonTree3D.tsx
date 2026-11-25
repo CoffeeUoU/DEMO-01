@@ -1072,20 +1072,20 @@ export default function SeasonTree3D({
       {/* SPRING PROPS: Spinning 3D Pinwheel Windmill + Colorful 3D Flower Field + Cute Mailbox */}
       {season === "spring" && (
         <>
-          {/* Spinning 3D Windmill on the right slope (clickable speed boost!) */}
+          {/* Spinning 3D Windmill on the right-front meadow (100% clear of rope swing & mailbox!) */}
           <group
-            position={[0.26, 0, 0.14]}
+            position={[0.32, 0, 0.19]}
             rotation={[0, -0.5, 0]}
             onClick={(e) => {
               e.stopPropagation();
               windmillBoostRef.current = 2.0;
             }}
           >
-            <mesh position={[0, 0.10, 0]}>
-              <cylinderGeometry args={[0.008, 0.011, 0.20, 8]} />
+            <mesh position={[0, 0.085, 0]}>
+              <cylinderGeometry args={[0.008, 0.011, 0.17, 8]} />
               <BrightMat color="#e4c29a" boost={0.3} />
             </mesh>
-            <group ref={windmillRef} position={[0, 0.19, 0.015]}>
+            <group ref={windmillRef} position={[0, 0.165, 0.015]}>
               {[0, 1, 2, 3].map((k) => (
                 <group key={k} rotation={[0, 0, (k * Math.PI) / 2]}>
                   <mesh position={[0, 0.045, 0]}>
@@ -1120,8 +1120,8 @@ export default function SeasonTree3D({
       {/* SUMMER PROPS: 3D Lily-Pad Pond with Lotus + Shady Bench with Straw Hat & Lemonade */}
       {season === "summer" && (
         <>
-          {/* 3D Pond on the right-front */}
-          <group position={[0.24, 0.008, 0.18]}>
+          {/* 3D Pond on the right-front (clearly elevated above sunken meadow basin!) */}
+          <group position={[0.24, 0.015, 0.18]}>
             <mesh scale={[1.25, 0.15, 0.95]}>
               <cylinderGeometry args={[0.14, 0.145, 0.06, 20]} />
               <BrightMat color="#8fd4f8" boost={0.40} />
@@ -1185,9 +1185,9 @@ export default function SeasonTree3D({
       {/* AUTUMN PROPS: Cozy 3D Cottage with Rising Chimney Smoke + Pumpkin Patch + Leaf Carpet */}
       {season === "autumn" && (
         <>
-          <Cottage3D pos={[0.31, 0.005, -0.09]} rotY={-0.65} snowy={false} />
+          <Cottage3D pos={[0.29, 0.012, -0.05]} rotY={-0.65} snowy={false} />
           {/* Rising chimney smoke */}
-          <group position={[0.34, 0.215, -0.08]}>
+          <group position={[0.32, 0.222, -0.04]}>
             {[0, 1, 2].map((i) => (
               <mesh
                 key={i}
@@ -1232,7 +1232,7 @@ export default function SeasonTree3D({
       {/* WINTER PROPS: Snowy Cottage + Glowing Tree Lanterns + 3D Snowman + Mini Snow Pines */}
       {season === "winter" && (
         <>
-          <Cottage3D pos={[0.31, 0.005, -0.09]} rotY={-0.65} snowy={true} />
+          <Cottage3D pos={[0.29, 0.012, -0.05]} rotY={-0.65} snowy={true} />
           <MiniPine3D pos={[-0.22, 0.02, -0.16]} scale={0.98} />
           <MiniPine3D pos={[0.18, 0.015, -0.20]} scale={0.82} />
 
@@ -1268,7 +1268,7 @@ export default function SeasonTree3D({
           </group>
 
           {/* Frozen icy pond */}
-          <mesh position={[0.24, 0.006, 0.18]} scale={[1.2, 0.12, 0.9]}>
+          <mesh position={[0.24, 0.012, 0.18]} scale={[1.2, 0.12, 0.9]}>
             <cylinderGeometry args={[0.12, 0.12, 0.05, 18]} />
             <BrightMat color="#a9cef2" boost={0.20} />
           </mesh>

@@ -347,9 +347,9 @@ export function SeasonGroundProps3D({ season }: { season: SeasonKey }) {
           </group>
         </group>
 
-        {/* 2. Right-wing: Mint-Green Vintage Mailbox with peeking letter (clickable!) */}
+        {/* 2. Right-wing: Mint-Green Vintage Mailbox with peeking letter (clickable, clear of right-wall sakura!) */}
         <group
-          position={[0.34, 0, -0.06]}
+          position={[0.34, 0, 0.04]}
           rotation={[0, -0.55, 0]}
           onClick={(e) => {
             stopProp(e);
@@ -716,7 +716,7 @@ export function SeasonGroundProps3D({ season }: { season: SeasonKey }) {
         {/* 2. Left-back slope: Swaying Cute Scarecrow with Straw Hat (clickable!) */}
         <group
           ref={scarecrowRef}
-          position={[-0.31, 0.015, -0.10]}
+          position={[-0.28, 0.015, -0.05]}
           rotation={[0, 0.48, 0]}
           onClick={(e) => {
             stopProp(e);
@@ -784,7 +784,7 @@ export function SeasonGroundProps3D({ season }: { season: SeasonKey }) {
     <group>
       {/* 1. Left-wing: Cozy Crackling Campfire with Stone Ring + Flickering Flames (clickable!) */}
       <group
-        position={[-0.33, 0, 0.04]}
+        position={[-0.30, 0.016, 0.08]}
         onClick={(e) => {
           stopProp(e);
           fireBoostRef.current = 2.2;

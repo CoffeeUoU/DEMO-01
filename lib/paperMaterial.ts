@@ -53,14 +53,7 @@ const fragment = /* glsl */ `
     // the room in front is lit more evenly, like the reference sketches
     col *= mix(mix(0.8 + 0.2 * l, 0.92 + 0.08 * l, uReveal), 1.0, uFlat);
 
-    // pen hatching on faces turned away from the light
-    float dark = clamp((0.78 - l) / 0.45, 0.0, 1.0) * (1.0 - 0.85 * uReveal) * (1.0 - uFlat);
-    float s = (vUv.x + vUv.y * 0.55) * 46.0 + sin(vUv.y * 21.0 + uSeed) * 0.18 + noise(vUv * 30.0) * 0.25;
-    float d = abs(fract(s) - 0.5);
-    float h = smoothstep(0.075, 0.025, d) * dark * 0.34;
-    col = mix(col, uInk, h);
-
-    // the drawing itself
+    // Clean matte storybook paper (removed ink-pen cross-hatching to match cute 3D low-poly style)
     col = mix(col, uInk, ink * uInkAmt);
     gl_FragColor = vec4(col, uOpacity);
   }
