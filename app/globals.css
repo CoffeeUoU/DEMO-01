@@ -1,7 +1,7 @@
 :root {
-  --ink: #2b1fd6;
-  --ink-soft: rgba(43, 31, 214, 0.55);
-  --paper: #ecebe7;
+  --ink: #5e4b6e;
+  --ink-soft: rgba(94, 75, 110, 0.62);
+  --paper: #f7f3ec;
   --hand: "Caveat", cursive;
 }
 
@@ -32,6 +32,68 @@ body {
   display: grid;
   grid-template-rows: auto 1fr auto;
   user-select: none;
+  transition: background 0.9s ease, color 0.6s ease;
+}
+
+/* Cozy cute seasonal stage backdrops breathing smoothly with each page */
+.stage[data-season="cover"] {
+  background: radial-gradient(ellipse at 50% 44%, #fffaf2 0%, #f3ece2 68%, #ebe2d5 100%);
+}
+
+.stage[data-season="spring"] {
+  background: radial-gradient(ellipse at 50% 42%, #fff8fa 0%, #fceef3 58%, #f3e4ec 100%);
+}
+
+.stage[data-season="summer"] {
+  background: radial-gradient(ellipse at 50% 42%, #f7fdfb 0%, #e7f6f2 56%, #dcedf7 100%);
+}
+
+.stage[data-season="autumn"] {
+  background: radial-gradient(ellipse at 50% 42%, #fff9f0 0%, #faecda 58%, #f1dcc3 100%);
+}
+
+.stage[data-season="winter"] {
+  --ink: #edf2ff;
+  --ink-soft: rgba(237, 242, 255, 0.78);
+  color: var(--ink);
+  background: radial-gradient(ellipse at 50% 38%, #354670 0%, #263354 58%, #1b243d 100%);
+}
+
+.cute-sound-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 15px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(94, 75, 110, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  color: #5e4b6e;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 3px 12px rgba(94, 75, 110, 0.08);
+  transition: transform 0.18s ease, background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.cute-sound-btn:hover {
+  transform: translateY(-1px) scale(1.03);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.cute-sound-btn.is-on {
+  background: #ff9ec2;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 4px 14px rgba(255, 140, 184, 0.35);
+}
+
+.stage[data-season="winter"] .cute-sound-btn:not(.is-on) {
+  background: rgba(255, 255, 255, 0.16);
+  color: #edf2ff;
+  border-color: rgba(255, 255, 255, 0.28);
 }
 
 .topbar {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef } from "react";
+import React, { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import type { Season } from "./SeasonTree3D";
@@ -34,6 +34,19 @@ const BLOB_GEO = new THREE.IcosahedronGeometry(1, 1);
 const HALF_MOUND_POS_X_GEO = new THREE.SphereGeometry(1, 16, 10, Math.PI / 2, Math.PI, 0, Math.PI * 0.5);
 const HALF_MOUND_NEG_X_GEO = new THREE.SphereGeometry(1, 16, 10, -Math.PI / 2, Math.PI, 0, Math.PI * 0.5);
 
+// Seamless flat half-diamond lawn triangles (inset 0.014 inside the blue ink border, facing +Y)
+function createFlatHalfLawnGeo(posX: boolean): THREE.BufferGeometry {
+  const geo = new THREE.BufferGeometry();
+  const verts = posX
+    ? new Float32Array([0, 0, -0.662, 0, 0, 0.718, 0.690, 0, 0.028])
+    : new Float32Array([0, 0, -0.662, -0.690, 0, 0.028, 0, 0, 0.718]);
+  geo.setAttribute("position", new THREE.BufferAttribute(verts, 3));
+  geo.computeVertexNormals();
+  return geo;
+}
+const LAWN_POS_X_GEO = createFlatHalfLawnGeo(true);
+const LAWN_NEG_X_GEO = createFlatHalfLawnGeo(false);
+
 function BrightMat({
   color,
   boost = 0.36,
@@ -56,14 +69,39 @@ function BrightMat({
 
 type CircleZone = [number, number, number]; // [cx, cz, radius]
 
-function isClear(x: number, z: number, zones: CircleZone[], maxManh = 0.60): boolean {
-  if (Math.abs(x) + Math.abs(z) > maxManh) return false;
+function isClear(x: number, z: number, zones: CircleZone[], maxManh = 0.66): boolean {
+  // Exact diamond floor centered at z = +0.028 has half-diagonal 0.707
+  if (Math.abs(x) + Math.abs(z - 0.028) > maxManh) return false;
   for (const [cx, cz, r] of zones) {
     const dx = x - cx;
     const dz = z - cz;
     if (dx * dx + dz * dz < r * r) return false;
   }
   return true;
+}
+
+// Winding Spring garden footpath centerline from front tip (0, 0.66) up to tree & branching toward windmill
+const SPRING_PATH_STONES: { x: number; z: number; sx: number; sz: number; ry: number; col: string }[] = [
+  { x: 0.01, z: 0.63, sx: 0.044, sz: 0.036, ry: 0.15, col: "#f2eadc" },
+  { x: -0.02, z: 0.55, sx: 0.048, sz: 0.038, ry: -0.22, col: "#ebe1cf" },
+  { x: -0.04, z: 0.47, sx: 0.046, sz: 0.038, ry: 0.12, col: "#f5eee0" },
+  { x: -0.01, z: 0.39, sx: 0.048, sz: 0.040, ry: -0.18, col: "#ede4d4" },
+  { x: 0.03, z: 0.31, sx: 0.046, sz: 0.038, ry: 0.28, col: "#f3ebdd" },
+  { x: 0.02, z: 0.23, sx: 0.044, sz: 0.036, ry: -0.10, col: "#ece2d0" },
+  // Gentle fork toward picnic blanket (left) and windmill/mailbox (right)
+  { x: -0.09, z: 0.22, sx: 0.034, sz: 0.028, ry: 0.45, col: "#f0e7d8" },
+  { x: -0.17, z: 0.19, sx: 0.032, sz: 0.026, ry: 0.30, col: "#e8decb" },
+  { x: 0.11, z: 0.20, sx: 0.034, sz: 0.028, ry: -0.40, col: "#f2eadc" },
+  { x: 0.19, z: 0.17, sx: 0.032, sz: 0.026, ry: -0.28, col: "#ebe1cf" },
+];
+
+function isOnSpringPath(x: number, z: number): boolean {
+  for (const st of SPRING_PATH_STONES) {
+    const dx = x - st.x;
+    const dz = z - st.z;
+    if (dx * dx + dz * dz < 0.062 * 0.062) return true;
+  }
+  return false;
 }
 
 // Shared exclusion zones (tree root mound + stepping stones + back hills)
@@ -119,6 +157,7 @@ export default function SeasonGroundCover3D({
   side?: "all" | "posX" | "negX";
 }) {
   const swayRefs = useRef<(THREE.Group | null)[]>([]);
+  const springBladeMeshRef = useRef<THREE.InstancedMesh>(null);
   const keepX = (x: number) => (side === "all" ? true : side === "posX" ? x >= 0 : x < 0);
 
   // Seamless origami-split root mound: posX half hugs O-A-P, negX half hugs O-P-B, merging along x = 0!
@@ -146,55 +185,119 @@ export default function SeasonGroundCover3D({
     </group>
   );
 
-  // 1. SPRING: Dense lush meadow of ~125 swaying grass tufts + dandelions + tiny buds + cherry petals
+  // 1. SPRING: Full edge-to-edge lush meadow carpet (InstancedMesh turf cushions + ~560 clustered 3D grass blades)
+  //            parting neatly along the winding stone footpath, plus flower bouquets, dandelions & cherry petals!
   const springData = useMemo(() => {
-    const r = makeRng(1101);
+    const r = makeRng(1108);
     const zones = SEASON_ZONES.spring;
-    const grassCols = ["#8fd97c", "#a8e685", "#7bc972", "#bce88c", "#95de7e", "#c9f094"];
-    const tufts: { x: number; z: number; s: number; ry: number; col: string; phase: number }[] = [];
-    // Stratified jittered grid covers EVERY open corner evenly with zero bald spots!
-    for (let gx = -0.60; gx <= 0.60; gx += 0.072) {
-      for (let gz = -0.58; gz <= 0.58; gz += 0.072) {
-        const x = gx + (r() - 0.5) * 0.056;
-        const z = gz + (r() - 0.5) * 0.056;
-        if (!isClear(x, z, zones, 0.625)) continue;
-        if (r() < 0.16) continue; // organic breathing variation
-        tufts.push({
-          x,
-          z,
-          s: 0.65 + r() * 0.62,
-          ry: r() * Math.PI * 2,
-          col: grassCols[Math.floor(r() * grassCols.length)],
-          phase: x * 6 + z * 5 + r() * 1.2,
+    const grassCols = ["#79ce70", "#92df7b", "#aee986", "#6ac266", "#a2e582", "#c2ee8e"];
+
+    const blades: { x: number; z: number; rx: number; ry: number; rz: number; sx: number; sy: number; col: string }[] = [];
+
+    // Dense stratified coverage reaching ALL 4 diamond corners (|x| + |z - 0.028| <= 0.672)
+    for (let gx = -0.66; gx <= 0.66; gx += 0.078) {
+      for (let gz = -0.60; gz <= 0.69; gz += 0.078) {
+        const cx = gx + (r() - 0.5) * 0.048;
+        const cz = gz + (r() - 0.5) * 0.048;
+        if (!isClear(cx, cz, zones, 0.672)) continue;
+        if (isOnSpringPath(cx, cz)) continue;
+
+        // 4-6 clustered radiating grass blades growing directly out of the unified flat lawn
+        const bladeCount = 4 + Math.floor(r() * 3);
+        for (let bi = 0; bi < bladeCount; bi++) {
+          const ba = (bi / bladeCount) * Math.PI * 2 + r() * 0.55;
+          const dist = 0.006 + r() * 0.024;
+          const bx = cx + Math.cos(ba) * dist;
+          const bz = cz + Math.sin(ba) * dist;
+          if (!isClear(bx, bz, zones, 0.678) || isOnSpringPath(bx, bz)) continue;
+          blades.push({
+            x: bx,
+            z: bz,
+            rx: 0.14 + r() * 0.24,
+            ry: ba,
+            rz: (r() - 0.5) * 0.24,
+            sx: 0.85 + r() * 0.4,
+            sy: 0.62 + r() * 0.68,
+            col: grassCols[Math.floor(r() * grassCols.length)],
+          });
+        }
+      }
+    }
+
+    // Small decorative pebbles edging the winding footpath
+    const pathPebbles: { x: number; z: number; s: number; col: string }[] = [];
+    for (const st of SPRING_PATH_STONES) {
+      for (const sideSign of [-1, 1]) {
+        if (r() < 0.35) continue;
+        const px = st.x + sideSign * (st.sx + 0.012 + r() * 0.012);
+        const pz = st.z + (r() - 0.5) * 0.032;
+        if (Math.abs(px) + Math.abs(pz - 0.028) > 0.67) continue;
+        pathPebbles.push({
+          x: px,
+          z: pz,
+          s: 0.009 + r() * 0.006,
+          col: r() < 0.5 ? "#e6decb" : "#d9d1c0",
         });
       }
     }
 
+    // Clustered dandelion patches
     const dandelions: { x: number; z: number; h: number }[] = [];
-    for (let tries = 0; tries < 160 && dandelions.length < 16; tries++) {
-      const x = (r() - 0.5) * 1.08;
-      const z = -0.18 + r() * 0.72;
-      if (!isClear(x, z, zones, 0.60)) continue;
-      dandelions.push({ x, z, h: 0.045 + r() * 0.026 });
+    for (let tries = 0; tries < 120 && dandelions.length < 18; tries++) {
+      const cx = (r() - 0.5) * 1.18;
+      const cz = -0.15 + r() * 0.78;
+      if (!isClear(cx, cz, zones, 0.64) || isOnSpringPath(cx, cz)) continue;
+      const n = 2 + (r() < 0.5 ? 1 : 0);
+      for (let k = 0; k < n; k++) {
+        const x = cx + (r() - 0.5) * 0.038;
+        const z = cz + (r() - 0.5) * 0.038;
+        if (!isClear(x, z, zones, 0.65) || isOnSpringPath(x, z)) continue;
+        dandelions.push({ x, z, h: 0.038 + r() * 0.034 });
+      }
     }
 
-    const buds: { x: number; z: number; col: string; h: number }[] = [];
-    const bCols = ["#ffb3cf", "#ffe680", "#b8dcff", "#ffd0b0"];
-    for (let tries = 0; tries < 180 && buds.length < 20; tries++) {
-      const x = (r() - 0.5) * 1.10;
-      const z = (r() - 0.5) * 1.05;
-      if (!isClear(x, z, zones, 0.60)) continue;
-      buds.push({ x, z, col: bCols[Math.floor(r() * bCols.length)], h: 0.026 + r() * 0.018 });
+    // 22 lush spring wildflower bouquets across all 4 corners
+    const flowerPalettes = [
+      ["#ffa8cb", "#ffc4dd", "#ffe8f2"],
+      ["#ffe278", "#fff0a6", "#ffffff"],
+      ["#a8d4ff", "#cce6ff", "#ffffff"],
+      ["#d4b8ff", "#e8d6ff", "#ffcce2"],
+      ["#ffb899", "#ffd8b8", "#fff0c4"],
+    ];
+    const flowerClusters: {
+      x: number;
+      z: number;
+      stems: { dx: number; dz: number; h: number; col: string; sz: number }[];
+    }[] = [];
+    for (let tries = 0; tries < 280 && flowerClusters.length < 22; tries++) {
+      const x = (r() - 0.5) * 1.24;
+      const z = (r() - 0.5) * 1.20;
+      if (!isClear(x, z, zones, 0.65) || isOnSpringPath(x, z)) continue;
+      if (flowerClusters.some((fc) => (fc.x - x) ** 2 + (fc.z - z) ** 2 < 0.095 * 0.095)) continue;
+      const pal = flowerPalettes[Math.floor(r() * flowerPalettes.length)];
+      const count = 4 + (r() < 0.5 ? 1 : 0);
+      const stems = Array.from({ length: count }, (_, k) => {
+        const a = (k / count) * Math.PI * 2 + r() * 0.6;
+        const d = k === 0 ? 0 : 0.015 + r() * 0.016;
+        return {
+          dx: Math.cos(a) * d,
+          dz: Math.sin(a) * d,
+          h: 0.024 + r() * 0.026,
+          col: pal[Math.floor(r() * pal.length)],
+          sz: 0.0085 + r() * 0.0045,
+        };
+      });
+      flowerClusters.push({ x, z, stems });
     }
 
     const petals: { x: number; z: number; ry: number; s: number; col: string }[] = [];
     const pCols = ["#ffc2da", "#ffd9e8", "#ffa8ca", "#ffeaf2"];
-    for (let i = 0; i < 38; i++) {
+    for (let i = 0; i < 48; i++) {
       const ang = r() * Math.PI * 2;
-      const dist = 0.09 + r() * 0.42;
+      const dist = 0.09 + r() * 0.50;
       const x = Math.cos(ang) * dist;
       const z = Math.sin(ang) * dist;
-      if (Math.abs(x) + Math.abs(z) > 0.60) continue;
+      if (Math.abs(x) + Math.abs(z - 0.028) > 0.65) continue;
       petals.push({
         x,
         z,
@@ -205,9 +308,11 @@ export default function SeasonGroundCover3D({
     }
 
     return {
-      tufts: tufts.filter((it) => keepX(it.x)),
+      blades: blades.filter((it) => keepX(it.x)),
+      pathStones: SPRING_PATH_STONES.filter((it) => keepX(it.x)),
+      pathPebbles: pathPebbles.filter((it) => keepX(it.x)),
       dandelions: dandelions.filter((it) => keepX(it.x)),
-      buds: buds.filter((it) => keepX(it.x)),
+      flowerClusters: flowerClusters.filter((it) => keepX(it.x)),
       petals: petals.filter((it) => keepX(it.x)),
     };
   }, [side]);
@@ -433,16 +538,43 @@ export default function SeasonGroundCover3D({
     };
   }, [side]);
 
+  // Populate Spring InstancedMesh grass blades once on mount / side change (zero draw-call overhead!)
+  useLayoutEffect(() => {
+    if (season !== "spring") return;
+    const dummy = new THREE.Object3D();
+    const color = new THREE.Color();
+
+    if (springBladeMeshRef.current) {
+      springData.blades.forEach((b, i) => {
+        dummy.position.set(b.x, 0.002, b.z);
+        dummy.rotation.set(b.rx, b.ry, b.rz);
+        dummy.scale.set(b.sx, b.sy, b.sx);
+        dummy.updateMatrix();
+        springBladeMeshRef.current!.setMatrixAt(i, dummy.matrix);
+        color.set(b.col);
+        springBladeMeshRef.current!.setColorAt(i, color);
+      });
+      springBladeMeshRef.current.instanceMatrix.needsUpdate = true;
+      if (springBladeMeshRef.current.instanceColor) springBladeMeshRef.current.instanceColor.needsUpdate = true;
+    }
+  }, [season, springData]);
+
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
+    if (season === "spring") {
+      // Gentle collective breeze sway on the full-meadow instanced grass blade carpet
+      if (springBladeMeshRef.current) {
+        springBladeMeshRef.current.rotation.z = Math.sin(t * 1.7) * 0.025;
+        springBladeMeshRef.current.rotation.x = Math.cos(t * 1.3) * 0.015;
+      }
+      return;
+    }
     const count =
-      season === "spring"
-        ? springData.tufts.length
-        : season === "summer"
-          ? summerData.tufts.length
-          : season === "autumn"
-            ? autumnData.wheat.length
-            : winterData.frostGrass.length;
+      season === "summer"
+        ? summerData.tufts.length
+        : season === "autumn"
+          ? autumnData.wheat.length
+          : winterData.frostGrass.length;
 
     const amp = season === "autumn" ? 0.16 : season === "winter" ? 0.05 : 0.10;
     const spd = season === "autumn" ? 2.1 : 1.7;
@@ -451,13 +583,11 @@ export default function SeasonGroundCover3D({
       const g = swayRefs.current[i];
       if (!g) continue;
       const ph =
-        season === "spring"
-          ? springData.tufts[i].phase
-          : season === "summer"
-            ? summerData.tufts[i].phase
-            : season === "autumn"
-              ? autumnData.wheat[i].phase
-              : winterData.frostGrass[i].phase;
+        season === "summer"
+          ? summerData.tufts[i].phase
+          : season === "autumn"
+            ? autumnData.wheat[i].phase
+            : winterData.frostGrass[i].phase;
       g.rotation.z = Math.sin(t * spd + ph) * amp;
       g.rotation.x = Math.cos(t * spd * 0.8 + ph) * amp * 0.5;
     }
@@ -466,31 +596,55 @@ export default function SeasonGroundCover3D({
   if (season === "spring") {
     return (
       <group>
+        {/* Seamless unified flat spring green meadow lawn covering the whole diamond floor */}
+        {(side === "all" || side === "posX") && (
+          <mesh geometry={LAWN_POS_X_GEO} position={[0, 0.001, 0]}>
+            <BrightMat color="#a2e07e" boost={0.34} />
+          </mesh>
+        )}
+        {(side === "all" || side === "negX") && (
+          <mesh geometry={LAWN_NEG_X_GEO} position={[0, 0.001, 0]}>
+            <BrightMat color="#a2e07e" boost={0.34} />
+          </mesh>
+        )}
+
         {splitMoundEl}
-        {/* 46 swaying 3-blade tender spring grass tufts */}
-        {springData.tufts.map((tuft, i) => (
-          <group
-            key={`sg-${i}`}
-            ref={(el) => {
-              swayRefs.current[i] = el;
-            }}
-            position={[tuft.x, 0.002, tuft.z]}
-            rotation={[0, tuft.ry, 0]}
-            scale={tuft.s}
+
+        {/* Winding Spring garden footpath (flagstones + edging pebbles) */}
+        {springData.pathStones.map((st, i) => (
+          <mesh
+            key={`pst-${i}`}
+            position={[st.x, 0.005, st.z]}
+            rotation={[0, st.ry, 0]}
+            scale={[st.sx, 0.009, st.sz]}
           >
-            <mesh geometry={GRASS_BLADE_GEO} rotation={[0.16, 0, -0.22]}>
-              <BrightMat color={tuft.col} boost={0.38} />
-            </mesh>
-            <mesh geometry={GRASS_BLADE_GEO} rotation={[-0.14, 2.1, 0.2]} scale={[0.9, 0.85, 0.9]}>
-              <BrightMat color={tuft.col} boost={0.38} />
-            </mesh>
-            <mesh geometry={GRASS_BLADE_GEO} rotation={[0.1, 4.2, 0.18]} scale={[0.85, 0.72, 0.85]}>
-              <BrightMat color="#a6e88a" boost={0.40} />
-            </mesh>
-          </group>
+            <cylinderGeometry args={[1, 1.08, 1, 10]} />
+            <BrightMat color={st.col} boost={0.34} />
+          </mesh>
+        ))}
+        {springData.pathPebbles.map((pb, i) => (
+          <mesh
+            key={`ppb-${i}`}
+            geometry={BLOB_GEO}
+            position={[pb.x, 0.004, pb.z]}
+            scale={[pb.s * 1.2, pb.s * 0.55, pb.s]}
+          >
+            <BrightMat color={pb.col} boost={0.32} />
+          </mesh>
         ))}
 
-        {/* 16 fluffy white dandelion puffs */}
+        {/* Full-floor instanced clustered 3D spring grass blades growing directly out of the unified lawn */}
+        {springData.blades.length > 0 && (
+          <instancedMesh
+            ref={springBladeMeshRef}
+            args={[GRASS_BLADE_GEO, undefined, springData.blades.length]}
+            frustumCulled={false}
+          >
+            <meshLambertMaterial color="#ffffff" emissive="#88d878" emissiveIntensity={0.32} />
+          </instancedMesh>
+        )}
+
+        {/* Clustered white dandelion patches */}
         {springData.dandelions.map((d, i) => (
           <group key={`dan-${i}`} position={[d.x, 0.002, d.z]}>
             <mesh position={[0, d.h / 2, 0]}>
@@ -504,21 +658,29 @@ export default function SeasonGroundCover3D({
           </group>
         ))}
 
-        {/* 20 tiny pastel spring meadow flower buds tucked among the grass */}
-        {springData.buds.map((b, i) => (
-          <group key={`bud-${i}`} position={[b.x, 0.002, b.z]}>
-            <mesh position={[0, b.h / 2, 0]}>
-              <cylinderGeometry args={[0.0018, 0.0024, b.h, 5]} />
-              <BrightMat color="#7bc972" boost={0.34} />
-            </mesh>
-            <mesh position={[0, b.h, 0]}>
-              <sphereGeometry args={[0.0085, 7, 7]} />
-              <BrightMat color={b.col} boost={0.46} />
-            </mesh>
+        {/* 22 blooming spring wildflower bouquets growing cleanly out of the unified lawn */}
+        {springData.flowerClusters.map((fc, i) => (
+          <group key={`fc-${i}`} position={[fc.x, 0.002, fc.z]}>
+            {fc.stems.map((st, si) => (
+              <group key={si} position={[st.dx, 0, st.dz]}>
+                <mesh position={[0, st.h / 2, 0]}>
+                  <cylinderGeometry args={[0.0018, 0.0025, st.h, 5]} />
+                  <BrightMat color="#76c76e" boost={0.35} />
+                </mesh>
+                <mesh position={[0, st.h, 0]}>
+                  <sphereGeometry args={[st.sz, 7, 7]} />
+                  <BrightMat color={st.col} boost={0.46} />
+                </mesh>
+                <mesh position={[0, st.h + st.sz * 0.45, 0]}>
+                  <sphereGeometry args={[st.sz * 0.42, 6, 6]} />
+                  <BrightMat color="#ffe678" boost={0.5} />
+                </mesh>
+              </group>
+            ))}
           </group>
         ))}
 
-        {/* 26 scattered pink cherry blossom petals on the meadow */}
+        {/* 46 scattered pink cherry blossom petals on the meadow */}
         {springData.petals.map((p, i) => (
           <mesh
             key={`pet-${i}`}

@@ -19,7 +19,90 @@ export default function Experience() {
   const [room, setRoom] = useState(0); // logical index
   const [open, setOpen] = useState(false);
   const [writing, setWriting] = useState<{ room: string; spot: string } | null>(null);
+  const [soundOn, setSoundOn] = useState(false);
   const drag = useRef({ x: 0, startX: 0, active: false });
+  const roomRef = useRef(0);
+  useEffect(() => {
+    roomRef.current = room;
+  }, [room]);
+
+  // Cozy optional Web Audio healing breeze + music-box pentatonic chimes
+  const audioRef = useRef<{ ctx: AudioContext; timer: number; gain: GainNode } | null>(null);
+  const stopAudio = useCallback(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    window.clearInterval(a.timer);
+    try {
+      a.gain.gain.exponentialRampToValueAtTime(0.0001, a.ctx.currentTime + 0.3);
+      setTimeout(() => a.ctx.close().catch(() => {}), 350);
+    } catch {
+      a.ctx.close().catch(() => {});
+    }
+    audioRef.current = null;
+  }, []);
+
+  const toggleSound = useCallback(() => {
+    if (audioRef.current) {
+      stopAudio();
+      setSoundOn(false);
+      return;
+    }
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const master = ctx.createGain();
+    master.gain.value = 0.13;
+    master.connect(ctx.destination);
+
+    // Soft filtered breeze
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < data.length; i++) {
+      last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02;
+      data[i] = last * 0.7;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+    noise.loop = true;
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 320;
+    const bg = ctx.createGain();
+    bg.gain.value = 0.18;
+    noise.connect(lp);
+    lp.connect(bg);
+    bg.connect(master);
+    noise.start();
+
+    const notes = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5];
+    const chime = () => {
+      if (ctx.state !== "running") return;
+      const mult = roomRef.current === 3 ? 0.5 : roomRef.current === 2 ? 0.75 : 1.0;
+      const freq = notes[Math.floor(Math.random() * notes.length)] * mult;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(0.16, ctx.currentTime + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 2.4);
+      osc.connect(g);
+      g.connect(master);
+      osc.start();
+      osc.stop(ctx.currentTime + 2.5);
+    };
+    chime();
+    const timer = window.setInterval(() => {
+      if (Math.random() < 0.7) chime();
+    }, 2300);
+    audioRef.current = { ctx, timer, gain: master };
+    setSoundOn(true);
+  }, [stopAudio]);
+
+  useEffect(() => () => stopAudio(), [stopAudio]);
 
   // Draw every surface once the handwriting font is ready.
   useEffect(() => {
@@ -92,14 +175,23 @@ export default function Experience() {
   };
 
   const current = ROOMS[room];
+  const stageSeason = open ? current.name : "cover";
 
   return (
-    <main className="stage">
+    <main className="stage" data-season={stageSeason}>
       <header className="topbar">
         <div className="wordmark">
           unfold
           <HandUnderline />
         </div>
+        <button
+          type="button"
+          className={`cute-sound-btn ${soundOn ? "is-on" : ""}`}
+          onClick={toggleSound}
+          title="开启 / 关闭治愈微风与风铃声"
+        >
+          <span>{soundOn ? "♪ 治愈音开" : "♪ 治愈音"}</span>
+        </button>
       </header>
 
       <div className="canvas-wrap" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onDoubleClick={() => setBookOpen(!open)}>

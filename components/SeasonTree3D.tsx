@@ -15,7 +15,7 @@ type ClusterSpec = {
   phase: number;
 };
 
-const INK_COLOR = "#4c5896";
+const INK_COLOR = "#5e4b6e";
 
 function makeRng(seed: number) {
   let a = seed >>> 0 || 1;
