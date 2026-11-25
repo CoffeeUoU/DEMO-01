@@ -196,7 +196,7 @@ export default function Experience() {
             : "🌙 静谧满月";
 
   return (
-    <main className="stage" data-season={stageSeason}>
+    <main className="stage" data-season={stageSeason} data-weather={weatherAlt ? "alt" : "clear"}>
       <header className="topbar">
         <div className="wordmark">
           unfold

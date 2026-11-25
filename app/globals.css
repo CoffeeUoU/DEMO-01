@@ -59,6 +59,23 @@ body {
   background: radial-gradient(ellipse at 50% 38%, #354670 0%, #263354 58%, #1b243d 100%);
 }
 
+/* Subtle full-stage mood shift when micro-weather (rain / gust / heavy snowfall) is toggled on */
+.stage[data-season="spring"][data-weather="alt"] {
+  background: radial-gradient(ellipse at 50% 42%, #f1f4fa 0%, #e4e9f5 58%, #d7dfef 100%);
+}
+
+.stage[data-season="summer"][data-weather="alt"] {
+  background: radial-gradient(ellipse at 50% 42%, #eaf3f7 0%, #d8e9f2 58%, #c7deec 100%);
+}
+
+.stage[data-season="autumn"][data-weather="alt"] {
+  background: radial-gradient(ellipse at 50% 42%, #faebd9 0%, #f0d7bd 58%, #e2c2a2 100%);
+}
+
+.stage[data-season="winter"][data-weather="alt"] {
+  background: radial-gradient(ellipse at 50% 38%, #2a395e 0%, #1d2947 58%, #131b30 100%);
+}
+
 .topbar-actions {
   display: flex;
   align-items: center;

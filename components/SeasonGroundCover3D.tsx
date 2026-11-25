@@ -4,6 +4,7 @@ import React, { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import type { Season } from "./SeasonTree3D";
+import { book } from "@/lib/store";
 
 function makeRng(seed: number) {
   let a = seed >>> 0 || 1;
@@ -663,14 +664,15 @@ export default function SeasonGroundCover3D({
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
-    const amp = season === "winter" ? 0.012 : 0.024;
+    const gust = book.weatherAlt ? 1.30 : 1.0;
+    const amp = (season === "winter" ? 0.012 : 0.024) * gust;
     if (bladeMeshRef.current) {
-      bladeMeshRef.current.rotation.z = Math.sin(t * 1.7) * amp;
-      bladeMeshRef.current.rotation.x = Math.cos(t * 1.3) * amp * 0.6;
+      bladeMeshRef.current.rotation.z = Math.sin(t * (1.7 * gust)) * amp;
+      bladeMeshRef.current.rotation.x = Math.cos(t * (1.3 * gust)) * amp * 0.6;
     }
     if (wheatMeshRef.current) {
-      wheatMeshRef.current.rotation.z = Math.sin(t * 2.0) * 0.038;
-      wheatMeshRef.current.rotation.x = Math.cos(t * 1.6) * 0.022;
+      wheatMeshRef.current.rotation.z = Math.sin(t * (2.0 * gust)) * 0.038 * gust;
+      wheatMeshRef.current.rotation.x = Math.cos(t * (1.6 * gust)) * 0.022 * gust;
     }
   });
 
