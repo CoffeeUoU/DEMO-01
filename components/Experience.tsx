@@ -20,6 +20,8 @@ export default function Experience() {
   const [open, setOpen] = useState(false);
   const [writing, setWriting] = useState<{ room: string; spot: string } | null>(null);
   const [soundOn, setSoundOn] = useState(false);
+  const [weatherAlt, setWeatherAlt] = useState(false);
+  const [roamOn, setRoamOn] = useState(false);
   const drag = useRef({ x: 0, startX: 0, active: false });
   const roomRef = useRef(0);
   useEffect(() => {
@@ -176,6 +178,22 @@ export default function Experience() {
 
   const current = ROOMS[room];
   const stageSeason = open ? current.name : "cover";
+  const weatherLabel =
+    current.name === "spring"
+      ? weatherAlt
+        ? "🌧 樱花微雨"
+        : "☀ 晴日樱风"
+      : current.name === "summer"
+        ? weatherAlt
+          ? "🌧 阵雨荷风"
+          : "☀ 晴朗夏日"
+        : current.name === "autumn"
+          ? weatherAlt
+            ? "🍃 枫叶阵风"
+            : "☀ 秋日暖阳"
+          : weatherAlt
+            ? "❄ 漫天飞雪"
+            : "🌙 静谧满月";
 
   return (
     <main className="stage" data-season={stageSeason}>
@@ -184,14 +202,44 @@ export default function Experience() {
           unfold
           <HandUnderline />
         </div>
-        <button
-          type="button"
-          className={`cute-sound-btn ${soundOn ? "is-on" : ""}`}
-          onClick={toggleSound}
-          title="开启 / 关闭治愈微风与风铃声"
-        >
-          <span>{soundOn ? "♪ 治愈音开" : "♪ 治愈音"}</span>
-        </button>
+        <div className="topbar-actions">
+          {open && (
+            <>
+              <button
+                type="button"
+                className={`cute-sound-btn ${weatherAlt ? "is-on" : ""}`}
+                onClick={() => {
+                  const next = !weatherAlt;
+                  book.weatherAlt = next;
+                  setWeatherAlt(next);
+                }}
+                title="切换四季微气候"
+              >
+                <span>{weatherLabel}</span>
+              </button>
+              <button
+                type="button"
+                className={`cute-sound-btn ${roamOn ? "is-on" : ""}`}
+                onClick={() => {
+                  const next = !roamOn;
+                  book.roamTarget = next ? 1 : 0;
+                  setRoamOn(next);
+                }}
+                title="切换近景微缩漫游视角"
+              >
+                <span>{roamOn ? "📖 退回全景" : "🔍 近景漫游"}</span>
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            className={`cute-sound-btn ${soundOn ? "is-on" : ""}`}
+            onClick={toggleSound}
+            title="开启 / 关闭治愈微风与风铃声"
+          >
+            <span>{soundOn ? "♪ 治愈音开" : "♪ 治愈音"}</span>
+          </button>
+        </div>
       </header>
 
       <div className="canvas-wrap" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onDoubleClick={() => setBookOpen(!open)}>

@@ -369,11 +369,13 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
     }
 
     // camera: front view of the cover when shut, looking into the focused room when open
+    book.roam += (book.roamTarget - book.roam) * (1 - Math.exp(-dt * 4.2));
+    const rm = smooth(book.roam) * e;
     const gF = focusAngle(phi, f);
     const yaw = Math.PI / 2 + (gF - Math.PI / 2) * e;
-    const pitch = THREE.MathUtils.degToRad(8 + 24 * e);
+    const pitch = THREE.MathUtils.degToRad(8 + 24 * e - 11 * rm);
     const dF = dirOf(gF);
-    target.set(L / 2 + (dF[0] * 0.45 - L / 2) * e, H / 2 + (0.5 - H / 2) * e, dF[2] * 0.45 * e);
+    target.set(L / 2 + (dF[0] * 0.45 - L / 2) * e, H / 2 + (0.5 - 0.10 * rm - H / 2) * e, dF[2] * 0.45 * e);
     // moving in on a journal spot
     book.zoom += (book.zoomTarget - book.zoom) * (1 - Math.exp(-dt * 6));
     const zm = smooth(book.zoom);
@@ -387,7 +389,7 @@ export default function Book({ tex, onSpot }: { tex: BookTextures; onSpot: (room
     const narrow = size.width < 640;
     const viewW = (narrow ? 1.35 : 1.9) + (narrow ? 1.0 : 1.2) * e;
     const ortho = camera as THREE.OrthographicCamera;
-    ortho.zoom = Math.min(size.height / viewH, size.width / viewW) * (1 + 2.6 * zm);
+    ortho.zoom = Math.min(size.height / viewH, size.width / viewW) * (1 + 0.68 * rm) * (1 + 2.6 * zm);
     ortho.updateProjectionMatrix();
   });
 

@@ -4,6 +4,8 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { DistantRidgeTrees3D, SeasonAirProps3D, SeasonGroundProps3D } from "./SeasonProps3D";
+import SeasonCritters3D from "./SeasonCritters3D";
+import SeasonAtmosphere3D from "./SeasonAtmosphere3D";
 
 export type Season = "spring" | "summer" | "autumn" | "winter";
 
@@ -1360,10 +1362,13 @@ export default function SeasonTree3D({
 
       {/* Season-specific expanded outer-quadrant 3D storybook props & interactive easter eggs */}
       <SeasonGroundProps3D season={season} />
+      {/* Interactive cute seasonal animal companions (bunny / frog & koi / squirrel / cozy kitty) */}
+      <SeasonCritters3D season={season} />
       </group>
 
-      {/* ==================== 4. LAYER 5B: REAL-TIME 3D SEASONAL PARTICLES ==================== */}
+      {/* ==================== 4. LAYER 5B: REAL-TIME 3D SEASONAL PARTICLES & VOLUMETRIC ATMOSPHERE ==================== */}
       <group ref={particlesGroupRef}>
+      <SeasonAtmosphere3D season={season} />
       {particles.map((p, i) => (
         <mesh
           key={i}

@@ -16,4 +16,9 @@ export const book = {
   zoomTarget: 0,
   /** world position of the spot being zoomed into */
   zoomAt: [0, 0.5, 0] as [number, number, number],
+  /** 0..1, close-up miniature roam camera mode */
+  roam: 0,
+  roamTarget: 0,
+  /** toggleable micro-weather per season (rain / autumn gust / heavy snowfall) */
+  weatherAlt: false,
 };
