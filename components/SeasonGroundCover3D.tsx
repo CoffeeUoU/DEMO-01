@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import type { Season } from "./SeasonTree3D";
 import { book } from "@/lib/store";
+import { fbm2D, perlin2D } from "@/lib/noise";
 
 function makeRng(seed: number) {
   let a = seed >>> 0 || 1;
@@ -33,40 +34,40 @@ export function getTerrainY(season: Season, x: number, z: number): number {
   const centerFlat = Math.min(1, Math.max(0, (rCenter - 0.08) / 0.14));
 
   if (season === "spring") {
-    // Soft terraced sakura hillside rising gently toward the back & left picnic meadow
-    const backSlope = Math.max(0, -z + 0.18) * 0.062;
-    const ripple = (Math.sin(x * 5.2) * Math.cos(z * 4.6) * 0.5 + 0.5) * 0.016;
+    // Soft FBM Perlin-sculpted terraced sakura hillside rising gently toward the back & left picnic meadow
+    const backSlope = Math.max(0, -z + 0.18) * 0.058;
+    const ripple = (fbm2D(x * 3.4, z * 3.4, 3, 101) * 0.5 + 0.5) * 0.022;
     const terrace = Math.floor((backSlope + ripple) * 34) / 34 * 0.35 + (backSlope + ripple) * 0.65;
     return 0.002 + env * (0.006 + terrace * (0.35 + 0.65 * centerFlat));
   }
 
   if (season === "summer") {
-    // Lush rolling meadow with a sunken crystal brook curving toward the right-front lotus pond [0.24, 0.18]
+    // Lush FBM Perlin rolling meadow with a sunken crystal brook curving toward the right-front lotus pond [0.24, 0.18]
     const brookZ = 0.28 - (x + 0.10) * 0.32;
     const distBrook = Math.abs(z - brookZ);
     const inBrook = x > -0.34 && x < 0.30 ? Math.max(0, 1 - distBrook / 0.072) : 0;
     const inPond = Math.max(0, 1 - Math.hypot(x - 0.24, z - 0.18) / 0.22);
     const waterCut = Math.max(inBrook * inBrook, inPond);
 
-    const hills = (Math.max(0, -z + 0.12) * 0.048 + (Math.sin(x * 4.8 + 0.6) * 0.5 + 0.5) * 0.018) * centerFlat;
+    const hills = (Math.max(0, -z + 0.12) * 0.046 + (fbm2D(x * 3.2, z * 3.2, 3, 202) * 0.5 + 0.5) * 0.022) * centerFlat;
     const raw = (0.016 + hills) * (1 - waterCut * 0.92);
     return 0.002 + env * Math.max(0.001, raw);
   }
 
   if (season === "autumn") {
-    // Rolling golden harvest hills with a cozy knoll under the right cottage [0.31, -0.09]
+    // Rolling FBM Perlin golden harvest hills with a cozy knoll under the right cottage [0.31, -0.09]
     const cottageKnoll = Math.exp(-((x - 0.30) ** 2 + (z + 0.09) ** 2) / 0.045) * 0.032;
     const scarecrowKnoll = Math.exp(-((x + 0.30) ** 2 + (z + 0.10) ** 2) / 0.05) * 0.028;
-    const wave = (Math.sin(x * 5.0 - 0.4) * Math.cos(z * 4.4) * 0.5 + 0.5) * 0.022;
-    const backRise = Math.max(0, -z + 0.05) * 0.036;
+    const wave = (fbm2D(x * 3.6, z * 3.6, 3, 303) * 0.5 + 0.5) * 0.026;
+    const backRise = Math.max(0, -z + 0.05) * 0.034;
     return 0.002 + env * (0.006 + (cottageKnoll + scarecrowKnoll + wave + backRise) * (0.35 + 0.65 * centerFlat));
   }
 
-  // WINTER: Sheltering moonlit snow valley cradling the front-right mirror frozen pond
+  // WINTER: Sheltering moonlit snow valley with FBM Perlin wind-sculpted snowdrifts
   const inLake = Math.max(0, 1 - Math.hypot(x - 0.24, z - 0.18) / 0.19);
-  const backRim = Math.max(0, -z + 0.08) * 0.052;
-  const sideBanks = Math.max(0, Math.abs(x) - 0.14) * 0.045;
-  const drift = (Math.sin(x * 5.4 + 1.1) * Math.sin(z * 5.0) * 0.5 + 0.5) * 0.015;
+  const backRim = Math.max(0, -z + 0.08) * 0.050;
+  const sideBanks = Math.max(0, Math.abs(x) - 0.14) * 0.042;
+  const drift = (fbm2D(x * 3.8, z * 3.2, 3, 404) * 0.5 + 0.5) * 0.020;
   const raw = (0.008 + (backRim + sideBanks + drift) * (0.35 + 0.65 * centerFlat)) * (1 - inLake * 0.88);
   return 0.002 + env * Math.max(0.001, raw);
 }
@@ -664,15 +665,18 @@ export default function SeasonGroundCover3D({
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
-    const gust = book.weatherAlt ? 1.30 : 1.0;
-    const amp = (season === "winter" ? 0.012 : 0.024) * gust;
+    const gust = book.weatherAlt ? 1.35 : 1.0;
+    const amp = (season === "winter" ? 0.014 : 0.028) * gust;
+    // Continuous 2D Perlin wind field so grass & wheat sway in organic gusts instead of rigid sine waves
+    const windZ = perlin2D(t * 0.55 * gust, 1.3, 501);
+    const windX = perlin2D(t * 0.42 * gust, 7.9, 509);
     if (bladeMeshRef.current) {
-      bladeMeshRef.current.rotation.z = Math.sin(t * (1.7 * gust)) * amp;
-      bladeMeshRef.current.rotation.x = Math.cos(t * (1.3 * gust)) * amp * 0.6;
+      bladeMeshRef.current.rotation.z = windZ * amp;
+      bladeMeshRef.current.rotation.x = windX * amp * 0.65;
     }
     if (wheatMeshRef.current) {
-      wheatMeshRef.current.rotation.z = Math.sin(t * (2.0 * gust)) * 0.038 * gust;
-      wheatMeshRef.current.rotation.x = Math.cos(t * (1.6 * gust)) * 0.022 * gust;
+      wheatMeshRef.current.rotation.z = windZ * 0.045 * gust;
+      wheatMeshRef.current.rotation.x = windX * 0.026 * gust;
     }
   });
 

@@ -6,6 +6,7 @@ import { useFrame } from "@react-three/fiber";
 import type { Season } from "./SeasonTree3D";
 import { H, L } from "@/lib/fold";
 import { book } from "@/lib/store";
+import { fbm2D, perlin2D, ridged2D } from "@/lib/noise";
 
 const BLOB_GEO = new THREE.IcosahedronGeometry(1, 1);
 
@@ -55,20 +56,16 @@ function evalSlopePoint(
   const baseRidge = cfg.ridgeFn(uSample) * H * smoothEdge * params.height;
   // Broad, plump dome-like mountain slope (cos falloff stays wide and generous before gliding smoothly to y = 0)
   const slopeFalloff = Math.pow(Math.cos(v * Math.PI * 0.5), cfg.alpine ? 1.12 : 1.05);
-  const ripple =
-    Math.sin(uSample * 17.0 + v * 4.5 + cfg.phase) *
-    Math.cos(uSample * 10.0 - v * 3.5 + cfg.phase) *
-    (cfg.alpine ? 0.018 : 0.011) *
-    params.height *
-    Math.sin(v * Math.PI) *
-    smoothEdge;
+  // Real 2D Noise relief: Ridged Multifractal Noise for crisp Winter alpine crags, FBM Perlin Noise for soft rolling hills
+  const seed = Math.round(cfg.phase * 10) + 17;
+  const noiseRelief = cfg.alpine
+    ? (ridged2D(uSample * 4.2, v * 2.6, 3, seed) - 0.42) * 0.046
+    : fbm2D(uSample * 3.6, v * 2.4, 3, seed) * 0.030;
+  const ripple = noiseRelief * params.height * Math.sin(v * Math.PI) * smoothEdge;
 
   const y = Math.max(0, baseRidge * slopeFalloff + ripple);
-  const localDepth =
-    cfg.maxDepth *
-    params.width *
-    (0.82 + 0.18 * Math.sin(uSample * Math.PI * 2.2 + cfg.phase)) *
-    (0.48 + 0.52 * smoothEdge);
+  const depthNoise = 0.84 + 0.16 * fbm2D(uSample * 2.8, 0.5, 2, seed + 5);
+  const localDepth = cfg.maxDepth * params.width * depthNoise * (0.48 + 0.52 * smoothEdge);
   const z = 0.002 + v * localDepth;
   return [x, y, z];
 }
@@ -84,11 +81,9 @@ function evalHeightAtUZ(
   const taperWidth = params.length > 1 ? 0.09 / params.length : 0.09;
   const edgeTaper = Math.min(1, Math.min(u, 1 - u) / taperWidth);
   const smoothEdge = edgeTaper * edgeTaper * (3 - 2 * edgeTaper);
-  const localDepth =
-    cfg.maxDepth *
-    params.width *
-    (0.82 + 0.18 * Math.sin(uSample * Math.PI * 2.2 + cfg.phase)) *
-    (0.48 + 0.52 * smoothEdge);
+  const seed = Math.round(cfg.phase * 10) + 17;
+  const depthNoise = 0.84 + 0.16 * fbm2D(uSample * 2.8, 0.5, 2, seed + 5);
+  const localDepth = cfg.maxDepth * params.width * depthNoise * (0.48 + 0.52 * smoothEdge);
   const v = (z - 0.002) / Math.max(0.001, localDepth);
   if (v < 0 || v >= 1) return 0;
   return evalSlopePoint(cfg, u, v, params)[1];
@@ -148,7 +143,9 @@ function createSlopedMountainGeo(
       const [x, y, z] = evalSlopePoint(cfg, u, v);
       positions.push(x, y, z);
 
-      const hNorm = Math.min(1, y / (peakNormH * H));
+      // FBM Perlin tonal variation blended with height so mountain facets look organically painted
+      const tintNoise = fbm2D(u * 4.5, v * 3.5, 2, Math.round(cfg.phase * 10) + 91) * 0.14;
+      const hNorm = Math.min(1, Math.max(0, y / (peakNormH * H * DEFAULT_MOUNTAIN.height) + tintNoise));
       if (hNorm < 0.5) {
         tmp.copy(cLow).lerp(cMid, hNorm / 0.5);
       } else {
@@ -678,12 +675,20 @@ export default function SeasonWall3D({
 
     const t = clock.elapsedTime;
     if (balloonRef.current) {
-      balloonRef.current.position.y = 0.72 * H + Math.sin(t * 1.1) * 0.022;
-      balloonRef.current.rotation.z = Math.sin(t * 0.75) * 0.05;
+      const b = book.balloon;
+      const gustY = perlin2D(t * 0.35, 1.7, 11) * 0.026;
+      const gustRot = perlin2D(t * 0.28, 4.3, 19) * 0.075;
+      balloonRef.current.position.set(b.x * L, b.y * H + gustY, b.z);
+      balloonRef.current.scale.setScalar(b.scale);
+      balloonRef.current.rotation.z = gustRot;
     }
     if (balloon2Ref.current) {
-      balloon2Ref.current.position.y = 0.64 * H + Math.sin(t * 0.95 + 1.4) * 0.016;
-      balloon2Ref.current.rotation.z = Math.sin(t * 0.65 + 1.0) * 0.04;
+      const b2 = book.balloon2;
+      const gustY2 = perlin2D(t * 0.32 + 5.2, 2.9, 23) * 0.020;
+      const gustRot2 = perlin2D(t * 0.24 + 3.1, 6.1, 29) * 0.06;
+      balloon2Ref.current.position.set(b2.x * L, b2.y * H + gustY2, b2.z);
+      balloon2Ref.current.scale.setScalar(b2.scale);
+      balloon2Ref.current.rotation.z = gustRot2;
     }
     if (windmillBladesRef.current) {
       windmillBladesRef.current.rotation.z = -t * 1.35;
@@ -823,7 +828,7 @@ export default function SeasonWall3D({
             <SoftCloud3D x={0.44} y={0.80} z={0.11} sc={0.78} col="#ffffff" />
             <SoftCloud3D x={0.65} y={0.86} z={0.12} sc={0.86} col="#ffffff" />
             {/* Main Volumetric 3D Striped Pastel Hot-Air Balloon */}
-            <group ref={balloonRef} position={[0.23 * L, 0.72 * H, 0.155]}>
+            <group ref={balloonRef} position={[0.05 * L, 0.88 * H, 0.17]} scale={1.44}>
               <mesh scale={[0.048, 0.056, 0.048]}>
                 <sphereGeometry args={[1, 14, 12]} />
                 <SoftMat color="#ff96ae" boost={0.40} />
@@ -848,7 +853,7 @@ export default function SeasonWall3D({
               </mesh>
             </group>
             {/* Smaller distant second pastel-sky hot-air balloon */}
-            <group ref={balloon2Ref} position={[0.36 * L, 0.65 * H, 0.12]} scale={0.70}>
+            <group ref={balloon2Ref} position={[0.05 * L, 0.6 * H, 0.13]} scale={0.94}>
               <mesh scale={[0.045, 0.053, 0.045]}>
                 <sphereGeometry args={[1, 12, 10]} />
                 <SoftMat color="#8ad4ff" boost={0.42} />

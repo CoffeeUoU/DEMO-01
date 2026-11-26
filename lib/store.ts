@@ -27,4 +27,17 @@ export const book = {
     width: 1.74,
     length: 1.4,
   },
+  /** Final user-tuned Summer hot-air balloons (主粉红球 / 蓝黄小球) */
+  balloon: {
+    x: 0.05,
+    y: 0.88,
+    z: 0.17,
+    scale: 1.44,
+  },
+  balloon2: {
+    x: 0.05,
+    y: 0.6,
+    z: 0.13,
+    scale: 0.94,
+  },
 };
