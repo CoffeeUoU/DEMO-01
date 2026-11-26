@@ -91,12 +91,6 @@ function createTaperedBranch(points: [number, number, number][], rStart: number,
 
 const SHARED_BLOB_GEO = createOrganicBlobGeo(2);
 
-/** Subtle soft-ink outline so 3D props blend seamlessly with the hand-drawn book pages. */
-const OUTLINE_MAT = new THREE.MeshBasicMaterial({
-  color: INK_COLOR,
-  side: THREE.BackSide,
-});
-
 /** Bright, airy storybook material (prevents dark linear shading). */
 function BrightMat({ color, boost = 0.28, opacity = 1 }: { color: string; boost?: number; opacity?: number }) {
   return (
@@ -174,16 +168,10 @@ function Cottage3D({ pos, rotY, snowy }: { pos: [number, number, number]; rotY: 
         <boxGeometry args={[0.14, 0.13, 0.12]} />
         <BrightMat color={wallCol} boost={boost} />
       </mesh>
-      <mesh position={[0, 0.065, 0]} scale={1.04} material={OUTLINE_MAT}>
-        <boxGeometry args={[0.14, 0.13, 0.12]} />
-      </mesh>
       {/* Pitched pyramid roof */}
       <mesh position={[0, 0.165, 0]} rotation={[0, Math.PI / 4, 0]}>
         <coneGeometry args={[0.125, 0.10, 4]} />
         <BrightMat color={roofCol} boost={0.32} />
-      </mesh>
-      <mesh position={[0, 0.165, 0]} rotation={[0, Math.PI / 4, 0]} scale={1.05} material={OUTLINE_MAT}>
-        <coneGeometry args={[0.125, 0.10, 4]} />
       </mesh>
       {/* Chimney */}
       <mesh position={[0.042, 0.185, -0.02]}>
@@ -248,9 +236,6 @@ function Birdhouse3D({ pos, rotY }: { pos: [number, number, number]; rotY: numbe
       <mesh position={[0, 0, 0]}>
         <boxGeometry args={[0.052, 0.058, 0.048]} />
         <BrightMat color="#e2b98f" boost={0.32} />
-      </mesh>
-      <mesh position={[0, 0, 0]} scale={1.06} material={OUTLINE_MAT}>
-        <boxGeometry args={[0.052, 0.058, 0.048]} />
       </mesh>
       {/* Snow-covered roof */}
       <mesh position={[0, 0.044, 0]} rotation={[0, Math.PI / 4, 0]}>
@@ -402,8 +387,8 @@ export default function SeasonTree3D({
     const out: ClusterSpec[] = [];
 
     if (season === "spring") {
-      // Full, lush sakura blossom canopy matching summer's richness
-      const cols = ["#ffd6e5", "#ffc2d9", "#ffe8f1", "#ffb3cf", "#daf4c4"];
+      // Full, lush pure sakura blossom canopy matching summer's richness
+      const cols = ["#ffd6e5", "#ffc2d9", "#ffe8f1", "#ffb3cf", "#ffcadf"];
       const anchors: [number, number, number, number][] = [
         [-0.25, 0.55, 0.11, 0.16],
         [0.26, 0.54, 0.11, 0.16],
@@ -988,7 +973,6 @@ export default function SeasonTree3D({
                 <mesh geometry={geo}>
                   <BrightMat color={palette.bark} boost={season === "winter" ? 0.16 : 0.22} />
                 </mesh>
-                <mesh geometry={geo} scale={idx === 0 ? [1.042, 1.005, 1.042] : 1.03} material={OUTLINE_MAT} />
               </group>
             ),
           )}
@@ -1001,7 +985,6 @@ export default function SeasonTree3D({
               <mesh geometry={geo}>
                 <BrightMat color={palette.bark} boost={season === "winter" ? 0.16 : 0.22} />
               </mesh>
-              <mesh geometry={geo} scale={1.03} material={OUTLINE_MAT} />
             </group>
           ))}
         </group>
@@ -1020,7 +1003,6 @@ export default function SeasonTree3D({
               <mesh geometry={SHARED_BLOB_GEO}>
                 <BrightMat color={c.color} boost={season === "winter" ? 0.14 : 0.34} />
               </mesh>
-              <mesh geometry={SHARED_BLOB_GEO} scale={1.03} material={OUTLINE_MAT} />
             </group>
           ))}
 
